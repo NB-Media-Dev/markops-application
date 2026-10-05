@@ -1,0 +1,1240 @@
+<div class="designer-dashboard" [class.embedded-mode]="embedded">
+  <!-- Page Header -->
+  @if (!embedded) {
+    <header class="page-header">
+      <div class="header-titles-group">
+        <div class="title-with-role">
+          <h1 class="page-heading">
+            <a routerLink="/dashboard" class="title-back-btn" title="Back to Dashboard">
+              <span class="arrow-char">←</span>
+            </a>
+            <span>Tasks & Designer Assignments</span>
+          </h1>
+        </div>
+        <p class="page-sub">
+          Assign creative deliverables, track task queues, review design assets, and coordinate BDM
+          workflows
+        </p>
+      </div>
+      <div class="header-actions">
+        <button
+          class="btn-obsidian-sync"
+          (click)="taskService.loadTasks(); userService.loadUsersFromDatabase()"
+        >
+          <span class="material-symbols-outlined btn-gold-icon">refresh</span>
+          <span>Sync Tasks</span>
+        </button>
+      </div>
+    </header>
+  }
+
+  <!-- Top Navigation Toolbar matching user design: Tabs on Left, Date Filters & Assign Task on Right -->
+  @if (!isDesigner()) {
+    <div class="pkg-top-subtabs-nav">
+      <!-- Left: Subtabs Group -->
+      <div class="pkg-subtabs-group">
+        <button
+          type="button"
+          class="pkg-nav-tab"
+          [class.active]="showDesignersDirectory()"
+          (click)="showDesignersDirectory.set(true); selectedDesignerId.set(null)"
+        >
+          <span class="material-symbols-outlined tab-ico">draw</span>
+          <span>Designers</span>
+          @if (totalAllDesigners() > 0) {
+            <span class="tab-badge">{{ totalAllDesigners() }}</span>
+          }
+        </button>
+        <button
+          type="button"
+          class="pkg-nav-tab"
+          [class.active]="!showDesignersDirectory() && activeTaskView() === 'my'"
+          (click)="switchTaskView('my'); clearDesignerFilter()"
+        >
+          <span class="material-symbols-outlined tab-ico">person</span>
+          <span>My Tasks</span>
+          @if (totalMyTasks() > 0) {
+            <span class="tab-badge">{{ totalMyTasks() }}</span>
+          }
+        </button>
+        <button
+          type="button"
+          class="pkg-nav-tab"
+          [class.active]="!showDesignersDirectory() && activeTaskView() === 'all'"
+          (click)="switchTaskView('all'); clearDesignerFilter()"
+        >
+          <span class="material-symbols-outlined tab-ico">format_list_bulleted</span>
+          <span>All Tasks</span>
+          @if (totalAllTasks() > 0) {
+            <span class="tab-badge">{{ totalAllTasks() }}</span>
+          }
+        </button>
+      </div>
+      <!-- Right Cluster: Calendar Date Picker + Quick Date Pills + Assign Task Button -->
+      <div class="pkg-subtabs-right-cluster">
+        <div class="pkg-subtabs-date-filter">
+          <div class="calendar-input-wrapper">
+            <span class="material-symbols-outlined cal-icon">calendar_month</span>
+            <input
+              id="taskDateFilter"
+              type="date"
+              class="cal-date-input"
+              [max]="todayDate"
+              [ngModel]="selectedDateFilter()"
+              (ngModelChange)="setDateFilter($event)"
+              title="Filter by date"
+            />
+          </div>
+          <div class="quick-date-pills">
+            <button
+              type="button"
+              class="quick-pill"
+              [class.active]="selectedDateFilter() === todayDate"
+              (click)="setQuickDate('today')"
+            >
+              Today
+            </button>
+            <button
+              type="button"
+              class="quick-pill"
+              [class.active]="selectedDateFilter() === yesterdayDate"
+              (click)="setQuickDate('yesterday')"
+            >
+              Yesterday
+            </button>
+            <button
+              type="button"
+              class="quick-pill"
+              [class.active]="!selectedDateFilter()"
+              (click)="setQuickDate('all')"
+            >
+              All Dates
+            </button>
+          </div>
+        </div>
+        @if (canCreateTask()) {
+          <div class="pkg-subtabs-actions">
+            <button type="button" class="btn-assign-task" (click)="openCreateTaskModal()">
+              <span class="material-symbols-outlined fs-16">add_task</span>
+              <span>Assign Task</span>
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ========================================================================= -->
+  <!-- VIEW 1: DESIGNERS LIST IN TABLE FORMAT (when showDesignersDirectory() && !isDesigner()) -->
+  <!-- ========================================================================= -->
+  @if (showDesignersDirectory() && !isDesigner()) {
+    <!-- 4 TOP KPI SUMMARY CARDS (Vibrant Luxury Dashboard Theme) -->
+    <section class="kpi-grid">
+      <div class="kpi-card card-designers card-purple">
+        <div class="kpi-squircle-icon icon-purple">
+          <span class="material-symbols-outlined">group</span>
+        </div>
+        <div class="kpi-info-cluster">
+          <span class="kpi-title">Active Designers</span>
+          <div class="kpi-value">{{ totalAllDesigners() }}</div>
+        </div>
+      </div>
+      <div class="kpi-card card-totaltasks card-amber">
+        <div class="kpi-squircle-icon icon-amber">
+          <span class="material-symbols-outlined">folder_open</span>
+        </div>
+        <div class="kpi-info-cluster">
+          <span class="kpi-title">Total Assigned Tasks</span>
+          <div class="kpi-value">{{ totalAllTasks() }}</div>
+        </div>
+      </div>
+      <div class="kpi-card card-pending card-blue">
+        <div class="kpi-squircle-icon icon-blue">
+          <span class="material-symbols-outlined">pending_actions</span>
+        </div>
+        <div class="kpi-info-cluster">
+          <span class="kpi-title">Pending & In-Progress</span>
+          <div class="kpi-value">{{ totalAllPending() }}</div>
+        </div>
+      </div>
+      <div class="kpi-card card-completed card-emerald">
+        <div class="kpi-squircle-icon icon-emerald">
+          <span class="material-symbols-outlined">task_alt</span>
+        </div>
+        <div class="kpi-info-cluster">
+          <span class="kpi-title">Completed Creatives</span>
+          <div class="kpi-value">{{ totalAllCompleted() }}</div>
+        </div>
+      </div>
+    </section>
+    <!-- Designers Table Card Container -->
+    <div class="table-card designers-table-card">
+      <div class="card-title-bar card-search-only-bar">
+        <div class="table-search-wrapper">
+          <span class="material-symbols-outlined search-icon">search</span>
+          <input
+            type="text"
+            class="designer-search-input"
+            placeholder="Search designers by name, email, or department..."
+            [ngModel]="designerSearchQuery()"
+            (input)="onDesignerSearch($event)"
+          />
+          @if (designerSearchQuery()) {
+            <button
+              type="button"
+              class="btn-clear-search"
+              (click)="designerSearchQuery.set('')"
+              title="Clear search"
+            >
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          }
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>DESIGNER</th>
+              <th class="text-center">COMPLETED TASKS</th>
+              <th class="text-center">PENDING TASKS</th>
+              <th class="text-center">TOTAL TASKS</th>
+              <th class="text-right">ACTION</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (designer of filteredDesigners(); track designer) {
+              <tr class="clickable-row" (click)="viewDesignerTasks(designer.id)">
+                <!-- Designer Profile -->
+                <td class="col-designer-profile">
+                  <div class="designer-user-cell">
+                    <div
+                      class="designer-avatar-circle"
+                      [style.backgroundColor]="designer.avatarColor || '#7C3AED'"
+                    >
+                      {{ getInitials(designer.name) }}
+                    </div>
+                    <div class="designer-text-meta">
+                      <span class="designer-name-strong">{{ designer.name }}</span>
+                      <span class="designer-email-sub">{{ designer.email }}</span>
+                    </div>
+                  </div>
+                </td>
+                <!-- Completed Task Count -->
+                <td class="text-center col-count">
+                  <span class="stat-pill pill-completed" title="Completed Tasks">
+                    {{ designer.completedCount }}
+                  </span>
+                </td>
+                <!-- Pending Task Count -->
+                <td class="text-center col-count">
+                  <span class="stat-pill pill-pending" title="Pending Tasks">
+                    {{ designer.pendingCount }}
+                  </span>
+                </td>
+                <!-- Total Task Count -->
+                <td class="text-center col-count">
+                  <span class="stat-pill pill-total" title="Total Assigned Tasks">
+                    {{ designer.totalCount }}
+                  </span>
+                </td>
+                <!-- Action Buttons: View Tasks & Assign Task -->
+                <td class="text-right col-actions" (click)="$event.stopPropagation()">
+                  <div class="action-btn-group">
+                    <button
+                      class="btn-action-view"
+                      (click)="viewDesignerTasks(designer.id)"
+                      title="View all tasks for {{ designer.name }}"
+                    >
+                      <span class="material-symbols-outlined icon-xs">visibility</span>
+                      <span>View</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+            @if (filteredDesigners().length === 0) {
+              <tr>
+                <td colspan="5" class="empty-state-cell">
+                  <div class="empty-state-box">
+                    <div class="empty-icon-squircle">
+                      <span class="material-symbols-outlined">person_search</span>
+                    </div>
+                    <h4 class="empty-title">No Designers Found</h4>
+                    <p class="empty-subtitle">
+                      No designers match your search query "{{ designerSearchQuery() }}".
+                    </p>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- ========================================================================= -->
+  <!-- VIEW 2: DEDICATED TASKS BOARD & TIMELINE (when !showDesignersDirectory() || isDesigner()) -->
+  <!-- ========================================================================= -->
+  @if (!showDesignersDirectory() || isDesigner()) {
+    <!-- Top Navigation & Profile Banner when viewing tasks -->
+    @if (!isDesigner()) {
+      <div class="designer-view-header">
+        <div class="back-nav-bar"></div>
+        @if (selectedDesigner(); as selDes) {
+          <div class="designer-profile-banner">
+            <div class="banner-left">
+              <div class="banner-avatar" [style.backgroundColor]="selDes.avatarColor">
+                {{ getInitials(selDes.name) }}
+              </div>
+              <div class="banner-info">
+                <div class="banner-title-row">
+                  <h2>{{ selDes.name }}</h2>
+                  <span class="dept-badge">{{ selDes.department }}</span>
+                </div>
+                <span class="banner-email">{{ selDes.email }}</span>
+              </div>
+            </div>
+            <div class="banner-right">
+              <div class="designer-stat-badges">
+                <div class="stat-badge-item badge-completed">
+                  <span class="badge-num">{{ selDes.completedCount }}</span>
+                  <span class="badge-label">Completed</span>
+                </div>
+                <div class="stat-badge-item badge-pending">
+                  <span class="badge-num">{{ selDes.pendingCount }}</span>
+                  <span class="badge-label">Pending</span>
+                </div>
+                <div class="stat-badge-item badge-progress">
+                  <span class="badge-num">{{ selDes.inProgressCount }}</span>
+                  <span class="badge-label">In Progress</span>
+                </div>
+                <div class="stat-badge-item badge-total">
+                  <span class="badge-num">{{ selDes.totalCount }}</span>
+                  <span class="badge-label">Total Tasks</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+    <!-- Content Split: Task Board & Real-Time Timeline Panel -->
+    <div class="dashboard-split" [class.panel-open]="!!taskService.selectedTask()">
+      <!-- Main Task Board -->
+      <main class="main-board">
+        <!-- Tasks Section Header with Dynamic Title & View Switcher -->
+        @if (isDesigner()) {
+          <div class="board-toolbar">
+            <div class="search-box">
+              <span class="material-symbols-outlined search-icon">search</span>
+              <input
+                type="text"
+                placeholder="Search {{ activeTaskView() === 'my' ? 'my' : 'all' }} tasks..."
+                (input)="onSearch($event)"
+              />
+            </div>
+            <div class="toolbar-controls">
+              <div class="date-filter-inline">
+                <span class="material-symbols-outlined cal-icon-sm">calendar_month</span>
+                <input
+                  type="date"
+                  class="filter-date-select-sm"
+                  [max]="todayDate"
+                  [ngModel]="selectedDateFilter()"
+                  (ngModelChange)="setDateFilter($event)"
+                  title="Filter by assignment, due, or creation date"
+                />
+                @if (selectedDateFilter()) {
+                  <button
+                    type="button"
+                    class="btn-clear-date-sm"
+                    (click)="clearDateFilter()"
+                    title="Clear date"
+                  >
+                    <span class="material-symbols-outlined">close</span>
+                  </button>
+                }
+              </div>
+              <!-- Priority Filter Dropdown -->
+              <div class="filter-dropdown-wrapper priority-filter-wrapper">
+                <span class="material-symbols-outlined filter-icon">flag</span>
+                <select
+                  class="filter-dropdown-select"
+                  [ngModel]="priorityFilter()"
+                  (change)="onPriorityFilterChange($event)"
+                >
+                  <option value="ALL">All Priorities</option>
+                  <option value="URGENT">Urgent</option>
+                  <option value="HIGH">High</option>
+                  <option value="MEDIUM">Medium</option>
+                  <option value="LOW">Low</option>
+                </select>
+                <span class="material-symbols-outlined arrow-icon">expand_more</span>
+              </div>
+              <!-- Status Filter Dropdown -->
+              <div class="filter-dropdown-wrapper">
+                <span class="material-symbols-outlined filter-icon">filter_list</span>
+                <select
+                  class="filter-dropdown-select"
+                  [ngModel]="statusFilter()"
+                  (change)="onFilterChange($event)"
+                >
+                  <option value="ALL">All Statuses</option>
+                  <option value="IN_PROGRESS">In Progress</option>
+                  <option value="REVISION_REQUIRED">Revisions</option>
+                  <option value="SUBMITTED">Under Review</option>
+                  <option value="COMPLETED">Approved</option>
+                  <option value="BDM_FLOW">BDM Tasks Flow</option>
+                </select>
+                <span class="material-symbols-outlined arrow-icon">expand_more</span>
+              </div>
+            </div>
+          </div>
+        }
+        <!-- Task List Cards Container -->
+        <div class="task-list">
+          <!-- Loading State Indicator -->
+          @if (taskService.isLoading()) {
+            <div class="loading-state-container">
+              <div class="loading-spinner"></div>
+              <p class="loading-text">Loading creative tasks from database...</p>
+            </div>
+          }
+          <!-- Error State Indicator -->
+          @if (!taskService.isLoading() && taskService.error()) {
+            <div class="error-state-box">
+              <span class="material-symbols-outlined error-icon">error</span>
+              <div class="error-content">
+                <h4>Failed to Load Tasks</h4>
+                <p>{{ taskService.error() }}</p>
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-retry"
+                  (click)="taskService.loadTasks()"
+                >
+                  <span class="material-symbols-outlined icon-xs">refresh</span>
+                  Retry
+                </button>
+              </div>
+            </div>
+          }
+          <!-- Task Cards (When loaded and not loading) -->
+          @if (!taskService.isLoading() && !taskService.error()) {
+            @for (task of filteredTasks(); track task) {
+              <div
+                class="task-card"
+                [class.selected]="taskService.selectedTask()?.id === task.id"
+                (click)="viewTask($event, task)"
+              >
+                <!-- Card Header Topbar: Left Squircle + Package Chip | Right Priority & Status -->
+                <div class="task-card-header">
+                  <div class="task-header-left">
+                    <div
+                      class="task-squircle-badge"
+                      [ngClass]="'badge-status-' + (task.status | lowercase)"
+                    >
+                      {{ (task.packageName || task.title || 'C')[0].toUpperCase() }}
+                    </div>
+                  </div>
+                  <div class="task-badges-right">
+                    <span class="priority-pill" [ngClass]="getPriorityBadgeClass(task.priority)">{{
+                      task.priority
+                    }}</span>
+                    <span class="status-badge" [ngClass]="getStatusBadgeClass(task.status)">{{
+                      task.status
+                    }}</span>
+                  </div>
+                </div>
+                <!-- Task Title & Creator-Assignee Flow -->
+                <div class="task-title-section">
+                  <h3 class="task-title" [title]="task.title">{{ task.title }}</h3>
+                  <div class="task-flow-line">
+                    <span class="flow-pill flow-creator" title="Creator">
+                      <span class="material-symbols-outlined icon-4xs">person</span>
+                      <span>{{ getShortCreator(task) }}</span>
+                    </span>
+                    <span class="material-symbols-outlined flow-arrow">arrow_forward</span>
+                    <span class="flow-pill flow-assignee" title="Assigned Designer">
+                      <span class="material-symbols-outlined icon-4xs">brush</span>
+                      <span>{{ getShortAssignee(task) }}</span>
+                    </span>
+                  </div>
+                </div>
+                <!-- Task Description (Comfortable reading size & line-height) -->
+                @if (hasCustomDescription(task)) {
+                  <p class="task-desc">{{ getCleanDescription(task) }}</p>
+                }
+                <!-- Requirement Attachment (Spacious & Clean Chip) -->
+                @if (task.attachmentName || task.attachmentUrl || task.content) {
+                  <div
+                    class="requirement-chip"
+                    (click)="
+                      openDocViewer($event, task.attachmentUrl, task.attachmentName, task.content)
+                    "
+                    [title]="'View requirement: ' + (task.attachmentName || 'Content Brief')"
+                  >
+                    <span class="material-symbols-outlined req-icon">description</span>
+                    <span class="req-name">{{
+                      task.attachmentName || task.content || 'Content_Brief.pdf'
+                    }}</span>
+                    <span class="material-symbols-outlined open-icon">open_in_new</span>
+                  </div>
+                }
+                <!-- Revision Feedback Alert if Redesign was requested -->
+                @if (task.status === 'REVISION_REQUIRED' && task.reviewerFeedback) {
+                  <div class="revision-feedback-alert">
+                    <span class="material-symbols-outlined alert-icon">rate_review</span>
+                    <span class="alert-body">"{{ task.reviewerFeedback }}"</span>
+                  </div>
+                }
+                <!-- Progress Bar -->
+                <div class="progress-container">
+                  <div class="progress-bar-bg">
+                    <div class="progress-fill" [style.width.%]="getTaskProgress(task)"></div>
+                  </div>
+                  <span class="progress-pct">{{ getTaskProgress(task) }}%</span>
+                </div>
+                <!-- Footer: Due Date & Actions -->
+                <div class="task-card-footer">
+                  <div class="footer-meta-left">
+                    <span class="meta-due-date">
+                      <span class="material-symbols-outlined icon-xs">calendar_today</span>
+                      {{ task.dueDate | date: 'mediumDate' }}
+                    </span>
+                    @if (task.versions && task.versions.length > 0) {
+                      <span class="version-chip"> v{{ task.versions[0].versionNumber }}.0 </span>
+                    }
+                  </div>
+                  <div class="task-card-actions" (click)="$event.stopPropagation()">
+                    <!-- 1. Designer: Start Work (When ASSIGNED) -->
+                    @if (canStartWork(task)) {
+                      <button
+                        type="button"
+                        class="btn-card-action btn-card-start"
+                        (click)="startWork(task)"
+                        title="Start Canvas Work"
+                      >
+                        <span class="material-symbols-outlined icon-xs">play_arrow</span>
+                        <span>Start Work</span>
+                      </button>
+                    }
+                    <!-- 2. Designer: Upload Design (When IN_PROGRESS) -->
+                    @if (canUploadDesign(task)) {
+                      <button
+                        type="button"
+                        class="btn-card-action btn-card-upload"
+                        (click)="openUploadModal(task)"
+                        title="Upload Design Creative + Message"
+                      >
+                        <span class="material-symbols-outlined icon-xs">upload_file</span>
+                        <span>Upload Design</span>
+                      </button>
+                    }
+                    <!-- 3. Designer: Start Redesign (When REDESIGN_REQUIRED) -->
+                    @if (canStartRedesign(task)) {
+                      <button
+                        type="button"
+                        class="btn-card-action btn-card-start"
+                        (click)="startRedesign(task)"
+                        title="Start Working on Requested Redesign"
+                      >
+                        <span class="material-symbols-outlined icon-xs">refresh</span>
+                        <span>Start Redesign</span>
+                      </button>
+                    }
+                    <!-- 4. Creator / Manager: Approve & Redesign (When SUBMITTED) -->
+                    @if (canReview(task)) {
+                      <button
+                        type="button"
+                        class="btn-card-action btn-card-start text-success"
+                        (click)="onApproveQuick(task)"
+                        title="Approve Design Creative"
+                      >
+                        <span class="material-symbols-outlined icon-xs">check_circle</span>
+                        <span>Approve</span>
+                      </button>
+                    }
+                    @if (canReview(task)) {
+                      <button
+                        type="button"
+                        class="btn-card-action btn-card-review text-danger"
+                        (click)="openRedesignModal(task)"
+                        title="Request Redesign with Feedback"
+                      >
+                        <span class="material-symbols-outlined icon-xs">rate_review</span>
+                        <span>Redesign</span>
+                      </button>
+                    }
+                    <!-- View Detail Button -->
+                    <button
+                      type="button"
+                      class="btn-card-action btn-card-view"
+                      (click)="viewTask($event, task)"
+                      title="View Details"
+                    >
+                      <span class="material-symbols-outlined icon-xs">visibility</span>
+                      <span>View Detail</span>
+                    </button>
+                    <!-- Delete (Only Task Creator) -->
+                    @if (canDeleteTask(task)) {
+                      <button
+                        type="button"
+                        class="btn-icon-trash"
+                        (click)="deleteTask($event, task)"
+                        title="Delete Task"
+                      >
+                        <span class="material-symbols-outlined icon-xs">delete</span>
+                      </button>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+            <!-- Clean Empty State when search/filter returns 0 tasks -->
+            @if (filteredTasks().length === 0) {
+              <div class="empty-state">
+                <span class="material-symbols-outlined empty-icon">assignment_late</span>
+                @if (activeTaskView() === 'my') {
+                  <h4 class="empty-title">
+                    {{
+                      selectedDesigner()
+                        ? 'No tasks created by you assigned to ' + selectedDesigner()?.name + '.'
+                        : 'No tasks created by you.'
+                    }}
+                  </h4>
+                }
+                @if (activeTaskView() === 'all') {
+                  <h4 class="empty-title">
+                    {{
+                      selectedDesigner()
+                        ? 'No tasks assigned to ' + selectedDesigner()?.name + '.'
+                        : 'No tasks available.'
+                    }}
+                  </h4>
+                }
+                @if (
+                  searchQuery() ||
+                  statusFilter() !== 'ALL' ||
+                  priorityFilter() !== 'ALL' ||
+                  selectedDateFilter()
+                ) {
+                  <p>Try adjusting your search query or filters.</p>
+                }
+              </div>
+            }
+          }
+        </div>
+      </main>
+      <!-- Side Panel: Workflow Pipeline & Task Detail Drawer (Matching Exact Design Spec) -->
+  
+    </div>
+  }
+
+  <!-- Modal: Upload Creative Version (Redesigned Editorial Luxury) -->
+  @if (isUploadModalOpen()) {
+    <div class="modal-backdrop upload-modal-backdrop" (click)="closeUploadModal()">
+      <div class="modal-box upload-modal-box" (click)="$event.stopPropagation()">
+        <!-- Modal Header -->
+        <div class="modal-header upload-modal-header">
+          <div class="modal-title-group">
+            <div class="modal-icon-badge upload-icon-badge">
+              <span class="material-symbols-outlined">upload_file</span>
+            </div>
+            <div>
+              <div class="d-flex align-items-center gap-2">
+                <h2 class="modal-title-text">Upload Design</h2>
+              </div>
+              <span class="modal-subtitle-text">
+                Task: <strong>{{ getActiveUploadTask()?.title || 'Design Task' }}</strong>
+              </span>
+            </div>
+          </div>
+          <button type="button" class="close-btn" (click)="closeUploadModal()" title="Close">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <form [formGroup]="uploadForm" (ngSubmit)="onSubmitUpload()">
+          <div class="modal-body upload-modal-body">
+            <!-- Step 1: Interactive File Dropzone / Selected File Preview -->
+            <div class="form-group mb-2">
+              <!-- When NO file is selected: Dropzone -->
+              @if (!selectedFileObject()) {
+                <div class="creative-upload-dropzone" (click)="triggerFileInput()">
+                  <div class="cloud-icon-circle">
+                    <span class="material-symbols-outlined">cloud_upload</span>
+                  </div>
+                  <div class="dropzone-text-group">
+                    <span class="primary-prompt"
+                      ><strong>Click to browse</strong> or drag & drop design files</span
+                    >
+                    <span class="secondary-hint"
+                      >PNG, JPG, WEBP, PDF, SVG, PSD, AI, MP4 (max 50MB)</span
+                    >
+                  </div>
+                </div>
+              }
+              <!-- When a file IS selected: Compact Preview Card -->
+              @if (selectedFileObject()) {
+                <div class="selected-asset-preview-card">
+                  <div class="asset-icon-box">
+                    <span class="material-symbols-outlined file-ico">
+                      {{
+                        isPdf(uploadForm.get('fileName')?.value || '') ? 'picture_as_pdf' : 'image'
+                      }}
+                    </span>
+                  </div>
+                  <div class="asset-info-col">
+                    <div class="asset-name-row">
+                      <span class="asset-filename">{{
+                        uploadForm.get('fileName')?.value || selectedFileObject()?.name
+                      }}</span>
+                      <span class="asset-ready-badge">
+                        <span class="material-symbols-outlined icon-2xs">check_circle</span>
+                        Ready
+                      </span>
+                    </div>
+                    <div class="asset-meta-row">
+                      <span class="asset-size-pill"
+                        >{{ uploadForm.get('fileSizeMb')?.value }} MB</span
+                      >
+                      @if (selectedFileObject()?.type) {
+                        <span class="asset-type-pill">{{ selectedFileObject()?.type }}</span>
+                      }
+                    </div>
+                  </div>
+                  <div class="asset-actions-col">
+                    <button
+                      type="button"
+                      class="btn-change-file"
+                      (click)="triggerFileInput()"
+                      title="Replace file"
+                    >
+                      <span class="material-symbols-outlined icon-xs">refresh</span>
+                      <span>Change</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-remove-file"
+                      (click)="clearSelectedFile()"
+                      title="Remove file"
+                    >
+                      <span class="material-symbols-outlined icon-xs">close</span>
+                    </button>
+                  </div>
+                </div>
+              }
+              <input
+                id="designerCreativeFileInput"
+                type="file"
+                (change)="onFileSelected($event)"
+                accept="image/*,video/*,.pdf,.psd,.ai,.svg"
+                class="hidden-file-input"
+                style="display: none"
+              />
+            </div>
+            <!-- Step 2: Version File Label & Output Label -->
+            <div class="form-group mb-2">
+              <label class="form-label-bold" for="upFileName"
+                >Version File Label <span class="required-star">*</span></label
+              >
+              <div class="input-with-icon-wrapper">
+                <span class="material-symbols-outlined input-prefix-icon">description</span>
+                <input
+                  id="upFileName"
+                  type="text"
+                  formControlName="fileName"
+                  placeholder="e.g. creative_design_v1.png"
+                  class="form-control-modern"
+                />
+              </div>
+            </div>
+            <!-- Step 3: Changelog & Quick Feedback Tags -->
+            <div class="form-group mb-2">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label-bold" for="upChangelog"
+                  >Hint Message <span class="required-star">*</span></label
+                >
+                <span class="char-hint text-subtle fs-11"
+                  >Click snippets below to add bullet points</span
+                >
+              </div>
+              <textarea
+                id="upChangelog"
+                formControlName="changelog"
+                rows="3"
+                (keydown)="onChangelogKeyDown($event)"
+                class="form-control-modern textarea-modern bullet-textarea"
+                placeholder="• Initial Draft&#10;• Adjusted Spacing & Alignment"
+              ></textarea>
+            </div>
+            <!-- Quick Preset Snippet Chips -->
+            <div class="quick-preset-chips-box mb-1">
+              <span class="chips-label">Quick Snippets:</span>
+              <div class="chips-scroll">
+                <button
+                  type="button"
+                  class="quick-chip-btn"
+                  (click)="appendChangelog('Initial Complete Deliverable')"
+                >
+                  + Initial Draft
+                </button>
+                <button
+                  type="button"
+                  class="quick-chip-btn"
+                  (click)="appendChangelog('Adjusted Spacing & Alignment')"
+                >
+                  + Spacing & Alignment
+                </button>
+                <button
+                  type="button"
+                  class="quick-chip-btn"
+                  (click)="appendChangelog('Color Palette & Brand Font Fixed')"
+                >
+                  + Color & Fonts
+                </button>
+                <button
+                  type="button"
+                  class="quick-chip-btn"
+                  (click)="appendChangelog('High-Res Export (Print & Web Ready)')"
+                >
+                  + High-Res Export
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- Modal Footer -->
+          <div class="modal-footer upload-modal-footer">
+            <div class="footer-btn-group">
+              <button
+                type="submit"
+                class="btn btn-primary-gradient"
+                [disabled]="uploadForm.invalid"
+              >
+                <span class="material-symbols-outlined icon-xs">cloud_upload</span>
+                <span
+                  >Submit Version v{{ (getActiveUploadTask()?.versions?.length || 0) + 1 }}.0</span
+                >
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Modal: Review Design -->
+  @if (isReviewModalOpen()) {
+    <div class="modal-backdrop" (click)="closeReviewModal()">
+      <div class="modal-box upload-modal-box" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <div class="modal-icon-badge" style="background: #2563eb">
+              <span class="material-symbols-outlined">rate_review</span>
+            </div>
+            <div>
+              <h2 class="modal-title-text">Review Design Submission</h2>
+              <span class="modal-subtitle-text"
+                >Approve or request redesign from the creative designer</span
+              >
+            </div>
+          </div>
+          <button class="close-btn" (click)="closeReviewModal()" title="Close">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <form [formGroup]="reviewForm" (ngSubmit)="onSubmitReview()">
+          <div class="modal-body p-4">
+            <div class="form-group mb-3">
+              <label class="form-label-bold">Decision *</label>
+              <select formControlName="action" class="form-control-modern">
+                <option value="APPROVE">Approve Design (Mark Complete)</option>
+                <option value="REQUEST_REVISION">Request Redesign (Return to In-Progress)</option>
+              </select>
+            </div>
+            <div class="form-group mb-2">
+              <label class="form-label-bold">Feedback & Instructions *</label>
+              <textarea
+                formControlName="remark"
+                rows="3"
+                class="form-control-modern textarea-modern"
+                placeholder="Enter review remarks or instructions..."
+              ></textarea>
+            </div>
+          </div>
+          <div class="modal-footer upload-modal-footer">
+            <button type="button" class="btn btn-ghost-modern" (click)="closeReviewModal()">
+              Cancel
+            </button>
+            <button type="submit" class="btn btn-primary-gradient" [disabled]="reviewForm.invalid">
+              Submit Review
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Modal: Request Redesign (Redesigned Compact & Clean) -->
+  @if (isRedesignModalOpen()) {
+    <div class="modal-backdrop redesign-modal-backdrop" (click)="closeRedesignModal()">
+      <div class="modal-box redesign-modal-box" (click)="$event.stopPropagation()">
+        <!-- Modal Header -->
+        <div class="modal-header redesign-modal-header">
+          <div class="modal-title-group">
+            <div class="modal-icon-badge redesign-icon-badge">
+              <span class="material-symbols-outlined">rate_review</span>
+            </div>
+            <div>
+              <div class="d-flex align-items-center gap-2">
+                <h2 class="modal-title-text">Request Design Revision</h2>
+                <span class="redesign-status-pill">Redesign Required</span>
+              </div>
+              <span class="modal-subtitle-text">
+                Task: <strong>{{ getActiveRedesignTask()?.title || 'Design Task' }}</strong>
+              </span>
+            </div>
+          </div>
+          <button type="button" class="close-btn" (click)="closeRedesignModal()" title="Close">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <div class="modal-body redesign-modal-body">
+          <!-- Compact Designer Bar -->
+          <div class="designer-compact-bar mb-2">
+            <span class="material-symbols-outlined designer-compact-icon">brush</span>
+            <span class="designer-compact-label">Assigned Designer:</span>
+            <strong class="designer-compact-name">{{
+              getAssigneeName(getActiveRedesignTask())
+            }}</strong>
+          </div>
+          <!-- Quick Feedback Presets (One-click add) -->
+          <div class="form-group mb-2">
+            <label class="form-label-bold mb-1">Quick Suggestions (Click to Add):</label>
+            <div class="redesign-chips-wrap">
+              <button
+                type="button"
+                class="redesign-preset-chip"
+                (click)="appendRedesignFeedback('Fix brand color palette and contrast')"
+              >
+                <span class="material-symbols-outlined icon-xs">palette</span> Color & Contrast
+              </button>
+              <button
+                type="button"
+                class="redesign-preset-chip"
+                (click)="appendRedesignFeedback('Adjust logo padding, size and clear space')"
+              >
+                <span class="material-symbols-outlined icon-xs">branding_watermark</span> Logo &
+                Branding
+              </button>
+              <button
+                type="button"
+                class="redesign-preset-chip"
+                (click)="appendRedesignFeedback('Improve layout margins and visual balance')"
+              >
+                <span class="material-symbols-outlined icon-xs">aspect_ratio</span> Spacing &
+                Margins
+              </button>
+              <button
+                type="button"
+                class="redesign-preset-chip"
+                (click)="appendRedesignFeedback('Update typography and hierarchy')"
+              >
+                <span class="material-symbols-outlined icon-xs">text_fields</span> Typography
+              </button>
+              <button
+                type="button"
+                class="redesign-preset-chip"
+                (click)="appendRedesignFeedback('Provide high-resolution asset export')"
+              >
+                <span class="material-symbols-outlined icon-xs">high_quality</span> High-Res Quality
+              </button>
+              <button
+                type="button"
+                class="redesign-preset-chip"
+                (click)="appendRedesignFeedback('Strictly follow requirement brief')"
+              >
+                <span class="material-symbols-outlined icon-xs">assignment</span> Follow Brief
+              </button>
+            </div>
+          </div>
+          <!-- Redesign Reason Textarea -->
+          <div class="form-group mb-1">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label class="form-label-bold mb-0" for="redesignInstructions">
+                Revision Notes <span class="required-star">*</span>
+              </label>
+            </div>
+            <textarea
+              id="redesignInstructions"
+              [value]="redesignReason()"
+              (input)="redesignReason.set($any($event.target).value)"
+              (keydown)="onRedesignKeyDown($event)"
+              rows="3"
+              placeholder="• Specify revision points for the designer..."
+              class="form-control-modern textarea-modern redesign-textarea bullet-textarea"
+              required
+            ></textarea>
+          </div>
+        </div>
+        <!-- Modal Footer -->
+        <div class="modal-footer redesign-modal-footer">
+          <div class="footer-left-note text-danger-subtle">
+            <span class="material-symbols-outlined icon-2xs">info</span>
+            <span>Returns task to In-Progress</span>
+          </div>
+          <div class="footer-btn-group">
+            <button type="button" class="btn btn-ghost-modern" (click)="closeRedesignModal()">
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="btn btn-danger-gradient"
+              [disabled]="!redesignReason().trim()"
+              (click)="onSubmitRedesign()"
+            >
+              <span class="material-symbols-outlined icon-xs">rate_review</span>
+              <span>Send Request</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal: Create Task -->
+  @if (isCreateTaskModalOpen()) {
+    <div class="modal-backdrop" (click)="closeCreateTaskModal()">
+      <div class="modal-box create-task-modal-box" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <div class="modal-icon-badge">
+              <span class="material-symbols-outlined">{{
+                getPackageIcon(createTaskForm.get('packageName')?.value)
+              }}</span>
+            </div>
+            <div>
+              <h2>Create {{ createTaskForm.get('packageName')?.value || 'Package' }}</h2>
+            </div>
+          </div>
+          <button class="close-btn" (click)="closeCreateTaskModal()" title="Close">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <form [formGroup]="createTaskForm" (ngSubmit)="onSubmitCreateTask()">
+          <div class="modal-body">
+            <!-- Task Title -->
+            <!-- Row 1: Task Title & Package Workspace Selection -->
+            <div class="form-row">
+              <div class="form-group col-8">
+                <label for="dashTaskTitle">Task Title <span class="required-star">*</span></label>
+                <div class="input-with-icon">
+                  <span class="material-symbols-outlined input-icon">edit_note</span>
+                  <input
+                    id="dashTaskTitle"
+                    type="text"
+                    formControlName="title"
+                    placeholder="e.g. {{
+                      createTaskForm.get('packageName')?.value || 'Package'
+                    }} Banner Design"
+                    class="form-input"
+                  />
+                </div>
+              </div>
+              <div class="form-group col-4">
+                <label for="dashPackageName"
+                  >Package Workspace <span class="required-star">*</span></label
+                >
+                <div class="select-wrapper">
+                  <span class="material-symbols-outlined select-icon">folder_special</span>
+                  <select
+                    id="dashPackageName"
+                    formControlName="packageName"
+                    class="form-input custom-select"
+                  >
+                    @for (pkg of availablePackagesList(); track pkg) {
+                      <option [value]="pkg.name">
+                        {{ pkg.name }}
+                      </option>
+                    }
+                  </select>
+                </div>
+              </div>
+            </div>
+            <!-- Description & Creative Brief -->
+            <div class="form-group">
+              <label for="dashTaskDesc">Creative Brief & Design Instructions</label>
+              <textarea
+                id="dashTaskDesc"
+                formControlName="description"
+                rows="2"
+                placeholder="Provide design requirements ..."
+                class="form-input textarea-input"
+              ></textarea>
+            </div>
+            <!-- Custom File Upload Dropzone -->
+            <div class="form-group">
+              <label>Attach Content Document for Designer</label>
+              <div
+                class="file-upload-zone compact-dropzone"
+                [class.has-file]="createdBriefFileName()"
+              >
+                <input
+                  type="file"
+                  (change)="onTaskBriefFileSelected($event)"
+                  accept="image/*,video/*,.pdf,.doc,.docx,.txt,.md,.json,.csv"
+                  class="file-input-hidden"
+                  id="dashBriefFileInput"
+                />
+                <label for="dashBriefFileInput" class="file-upload-label">
+                  <div class="upload-icon-circle">
+                    <span class="material-symbols-outlined">{{
+                      createdBriefFileName() ? 'check_circle' : 'cloud_upload'
+                    }}</span>
+                  </div>
+                  <div class="upload-text-content">
+                    @if (!createdBriefFileName()) {
+                      <span class="upload-main-text">Click or drag document to attach brief</span>
+                    }
+                    @if (createdBriefFileName()) {
+                      <span class="upload-main-text text-success font-bold"></span>
+                    }
+                    <span class="upload-sub-text"
+                      >Supports PDF, DOCX, TXT, Images, Markdown & CSV</span
+                    >
+                  </div>
+                </label>
+              </div>
+            </div>
+            <!-- Row: Designer, Priority, and Due Date in 3 Medium-Width Columns -->
+            <div class="form-row form-row-3col">
+              <div class="form-group col-4">
+                <label for="dashAssignedDesigner"
+                  >Assign to Designer <span class="required-star">*</span></label
+                >
+                <div class="select-wrapper">
+                  <span class="material-symbols-outlined select-icon">person</span>
+                  <select
+                    id="dashAssignedDesigner"
+                    formControlName="assignedTo"
+                    class="form-input custom-select"
+                  >
+                    <option value="" disabled>Select Designer</option>
+                    @for (d of realDesignersList(); track d) {
+                      <option [value]="d.id">{{ d.name }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+              <div class="form-group col-4">
+                <label for="dashTaskPriority"
+                  >Task Priority <span class="required-star">*</span></label
+                >
+                <div class="select-wrapper">
+                  <span class="material-symbols-outlined select-icon">flag</span>
+                  <select
+                    id="dashTaskPriority"
+                    formControlName="priority"
+                    class="form-input custom-select"
+                  >
+                    <option value="LOW">Low Priority</option>
+                    <option value="MEDIUM">Medium Priority</option>
+                    <option value="HIGH">High Priority</option>
+                    <option value="URGENT">Urgent Priority</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group col-4">
+                <label for="dashTaskDueDate"
+                  >Target Completion Date <span class="required-star">*</span></label
+                >
+                <div class="input-with-icon">
+                  <span class="material-symbols-outlined input-icon">event</span>
+                  <input
+                    id="dashTaskDueDate"
+                    type="date"
+                    formControlName="dueDate"
+                    [min]="todayDate"
+                    class="form-input"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" (click)="closeCreateTaskModal()">
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary btn-submit-task"
+              [disabled]="createTaskForm.invalid"
+            >
+              <span class="material-symbols-outlined fs-18">add_task</span>
+              <span>Assign Task</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Modal: Document Viewer Modal -->
+  @if (isDocViewerOpen()) {
+    <div class="modal-backdrop">
+      <div class="modal-card doc-viewer-modal">
+        <div class="modal-header">
+          <div class="header-title-box">
+            <span class="material-symbols-outlined doc-header-icon">description</span>
+            <div>
+              <h3>{{ activeDocName() }}</h3>
+              <span class="doc-subhead">Document Brief & Asset Preview</span>
+            </div>
+          </div>
+          <div class="header-actions-right d-flex align-items-center gap-2">
+            @if (rawDocDownloadUrl()) {
+              <a
+                [href]="rawDocDownloadUrl()"
+                target="_blank"
+                class="btn btn-secondary btn-sm d-inline-flex align-items-center gap-1"
+                title="Open or Download in New Tab"
+              >
+                <span class="material-symbols-outlined fs-16">open_in_new</span>
+                <span>Open in New Tab</span>
+              </a>
+            }
+            <button class="close-btn" (click)="closeDocViewer()" title="Close Document">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+        </div>
+        <div class="modal-body doc-viewer-body">
+          <div class="iframe-container">
+            @if (activeIframeUrl()) {
+              <object
+                [data]="activeIframeUrl()"
+                type="application/pdf"
+                class="doc-iframe"
+                title="Document Content Preview"
+              >
+                <iframe
+                  [src]="activeIframeUrl()"
+                  class="doc-iframe"
+                  title="Document Content Preview"
+                ></iframe>
+              </object>
+            }
+            @if (!activeIframeUrl()) {
+              <iframe
+                [srcdoc]="activeIframeSrcdoc()"
+                class="doc-iframe"
+                title="Document Content Preview"
+              ></iframe>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

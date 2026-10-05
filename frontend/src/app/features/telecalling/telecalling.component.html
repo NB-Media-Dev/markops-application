@@ -1,0 +1,1113 @@
+<div class="telecalling-page" [class.embedded-view]="embedded">
+  @if (!embedded) {
+    <header class="page-header">
+      <div class="header-titles-group">
+        <div class="page-meta-track">TELECALLING PIPELINE & OUTREACH</div>
+        <h1 class="page-heading">
+          <a routerLink="/dashboard" class="title-back-btn" title="Back to Dashboard">
+            <span class="arrow-char">←</span>
+          </a>
+          <span>Telecalling Operations</span>
+        </h1>
+        <p class="page-sub">
+          Log call activity, status updates, duration tracking, and follow-up schedules
+        </p>
+      </div>
+      @if (authService.currentUser(); as user) {
+        <div class="user-profile-badge">
+          <div class="user-avatar-dot">{{ user.fullName ? user.fullName[0] : 'U' }}</div>
+          <div class="user-badge-meta">
+            <span class="user-name">{{ user.fullName }}</span>
+            <span class="user-role">{{ user.role }}</span>
+          </div>
+        </div>
+      }
+    </header>
+  }
+
+  <!-- TOP ROLE-BASED KPI CARDS (Medium-Sized Luxury Design) -->
+  @if (!embedded) {
+    <!-- 1. Telecaller Personal KPI Cards -->
+    @if (isTelecaller() && myStats(); as stats) {
+      <section class="kpi-grid">
+        <div class="kpi-card card-leads">
+          <div class="kpi-top-row">
+            <div class="kpi-squircle-icon icon-purple">
+              <span class="material-symbols-outlined">contacts</span>
+            </div>
+            <div class="kpi-pill-badge pill-purple">Assigned</div>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-title">ASSIGNED QUEUE</span>
+            <div class="kpi-value">{{ stats.assignedCount }}</div>
+          </div>
+          <div class="kpi-footer-row">
+            <span class="kpi-footer-text"
+              >Pending Calls: {{ stats.assignedCount - stats.callsCount }}</span
+            >
+            <span class="kpi-footer-pill pill-purple">Queue</span>
+          </div>
+        </div>
+        <div class="kpi-card card-conversion">
+          <div class="kpi-top-row">
+            <div class="kpi-squircle-icon icon-emerald">
+              <span class="material-symbols-outlined">call_log</span>
+            </div>
+            <div class="kpi-pill-badge pill-emerald">Activity</div>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-title">CALLS LOGGED</span>
+            <div class="kpi-value">{{ stats.callsCount }}</div>
+          </div>
+          <div class="kpi-footer-row">
+            <span class="kpi-footer-text">Attended: {{ stats.attendedCount }}</span>
+            <span class="kpi-footer-pill pill-emerald">Logged</span>
+          </div>
+        </div>
+        <div class="kpi-card card-pkg-works">
+          <div class="kpi-top-row">
+            <div class="kpi-squircle-icon icon-indigo">
+              <span class="material-symbols-outlined">verified</span>
+            </div>
+            <div class="kpi-pill-badge pill-indigo">Prospects</div>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-title">INTERESTED LEADS</span>
+            <div class="kpi-value">{{ stats.interestedCount }}</div>
+          </div>
+          <div class="kpi-footer-row">
+            <span class="kpi-footer-text">High Intent</span>
+            <span class="kpi-footer-pill pill-indigo">Ready for BDM</span>
+          </div>
+        </div>
+        <div class="kpi-card card-revenue">
+          <div class="kpi-top-row">
+            <div class="kpi-squircle-icon icon-amber">
+              <span class="material-symbols-outlined">phone_missed</span>
+            </div>
+            <div class="kpi-pill-badge pill-amber">Lost</div>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-title">NOT INTERESTED</span>
+            <div class="kpi-value">{{ stats.notInterestedCount }}</div>
+          </div>
+          <div class="kpi-footer-row">
+            <span class="kpi-footer-text">Closed / Disqualified</span>
+            <span class="kpi-footer-pill pill-amber">Archived</span>
+          </div>
+        </div>
+      </section>
+    }
+    <!-- 2. Admin & Manager Team KPI Overview Cards -->
+    @if (!isTelecaller() && teamSummaryKpis(); as team) {
+      <section class="kpi-grid">
+        <div class="kpi-card card-pkg-works">
+          <div class="kpi-top-row">
+            <div class="kpi-squircle-icon icon-indigo">
+              <span class="material-symbols-outlined">groups</span>
+            </div>
+            <div class="kpi-pill-badge pill-indigo">Team</div>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-title">ACTIVE TELECALLERS</span>
+            <div class="kpi-value">{{ team.activeTelecallers }}</div>
+          </div>
+          <div class="kpi-footer-row">
+            <span class="kpi-footer-text">Assigned Agents</span>
+            <span class="kpi-footer-pill pill-indigo">Active</span>
+          </div>
+        </div>
+        <div class="kpi-card card-conversion">
+          <div class="kpi-top-row">
+            <div class="kpi-squircle-icon icon-emerald">
+              <span class="material-symbols-outlined">call</span>
+            </div>
+            <div class="kpi-pill-badge pill-emerald">Total Calls</div>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-title">CALLS LOGGED</span>
+            <div class="kpi-value">{{ team.totalCalls }}</div>
+          </div>
+          <div class="kpi-footer-row">
+            <span class="kpi-footer-text">Across All Channels</span>
+            <span class="kpi-footer-pill pill-emerald">Success</span>
+          </div>
+        </div>
+        <div class="kpi-card card-leads">
+          <div class="kpi-top-row">
+            <div class="kpi-squircle-icon icon-purple">
+              <span class="material-symbols-outlined">verified</span>
+            </div>
+            <div class="kpi-pill-badge pill-purple">Pipeline</div>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-title">INTERESTED LEADS</span>
+            <div class="kpi-value">{{ team.interestedLeads }}</div>
+          </div>
+          <div class="kpi-footer-row">
+            <span class="kpi-footer-text">Qualified Pipeline</span>
+            <span class="kpi-footer-pill pill-purple">High Quality</span>
+          </div>
+        </div>
+        <div class="kpi-card card-revenue">
+          <div class="kpi-top-row">
+            <div class="kpi-squircle-icon icon-amber">
+              <span class="material-symbols-outlined">percent</span>
+            </div>
+            <div class="kpi-pill-badge pill-amber">Conversion</div>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-title">CONVERSION RATE</span>
+            <div class="kpi-value">{{ team.avgConversionRate }}%</div>
+          </div>
+          <div class="kpi-footer-row">
+            <span class="kpi-footer-text">Team Performance</span>
+            <span class="kpi-footer-pill pill-amber">Average Yield</span>
+          </div>
+        </div>
+      </section>
+    }
+  }
+
+  <!-- Quick Action Calling Pipeline Strip (Interactive Filter Cards) -->
+  @if (
+    viewMode === 'ALL' ||
+    viewMode === 'MEMBERS' ||
+    viewMode === 'OVERVIEW' ||
+    viewMode === 'ASSIGNED'
+  ) {
+    <div class="pipeline-strip-container">
+      <!-- Top Date Filter Toolbar (All Data, Today, Yesterday + Calendar) & Campaign Filter -->
+      <div class="pipeline-top-filter-bar">
+        <!-- Date & Calendar Filter Group -->
+        <div class="filter-cluster date-cluster">
+          <div class="cluster-label">
+            <span class="material-symbols-outlined icon-lead-filter">calendar_month</span>
+            <span>Date:</span>
+          </div>
+          <div class="date-filter-pills-group">
+            <button
+              type="button"
+              class="date-filter-btn"
+              [class.active]="dateFilter() === 'ALL'"
+              (click)="setDateFilter('ALL')"
+            >
+              <span>All Data</span>
+            </button>
+            <button
+              type="button"
+              class="date-filter-btn"
+              [class.active]="dateFilter() === 'TODAY'"
+              (click)="setDateFilter('TODAY')"
+            >
+              <span>Today</span>
+            </button>
+            <button
+              type="button"
+              class="date-filter-btn"
+              [class.active]="dateFilter() === 'YESTERDAY'"
+              (click)="setDateFilter('YESTERDAY')"
+            >
+              <span>Yesterday</span>
+            </button>
+            <!-- Calendar Custom Date Picker -->
+            <label
+              class="calendar-picker-pill"
+              [class.active]="dateFilter() === 'CUSTOM'"
+              title="Select custom date from calendar"
+            >
+              <span class="material-symbols-outlined cal-icon">event</span>
+              @if (dateFilter() !== 'CUSTOM' || !customDate()) {
+                <span class="cal-text">Calendar</span>
+              }
+              @if (dateFilter() === 'CUSTOM' && customDate()) {
+                <span class="cal-text cal-active-date">{{ customDate() }}</span>
+              }
+              <input
+                type="date"
+                class="hidden-native-date-input"
+                [max]="todayDate"
+                [ngModel]="customDate()"
+                (ngModelChange)="setCustomDate($event)"
+              />
+            </label>
+          </div>
+        </div>
+        <!-- Campaign Filter Dropdown -->
+        <div class="filter-cluster campaign-cluster">
+          <div class="cluster-label">
+            <span class="material-symbols-outlined icon-lead-filter text-amber">campaign</span>
+            <span>Campaign:</span>
+          </div>
+          <div class="campaign-select-wrap">
+            <select
+              class="campaign-styled-select"
+              [ngModel]="selectedCampaign()"
+              (ngModelChange)="selectCampaign($event)"
+              title="Filter by campaign"
+            >
+              <option value="ALL">All Campaigns ({{ assignedLeads().length }})</option>
+              @for (cmp of availableCampaigns(); track cmp) {
+                <option [value]="cmp.name">{{ cmp.name }} ({{ cmp.count }})</option>
+              }
+            </select>
+            <span class="material-symbols-outlined select-chevron">expand_more</span>
+          </div>
+        </div>
+      </div>
+      <!-- Active Filter Tags Strip (Shown when a filter is engaged) -->
+      @if (selectedCampaign() !== 'ALL' || dateFilter() !== 'ALL') {
+        <div class="active-filter-tags-strip">
+          <div class="active-tags-list">
+            <span class="tags-prefix">Filtered By:</span>
+            @if (selectedCampaign() !== 'ALL') {
+              <span class="filter-active-tag tag-campaign">
+                <span class="material-symbols-outlined fs-12">campaign</span>
+                <span
+                  >Campaign: <strong>{{ selectedCampaign() }}</strong></span
+                >
+                <button
+                  type="button"
+                  class="btn-tag-x"
+                  (click)="selectCampaign('ALL')"
+                  title="Clear campaign filter"
+                >
+                  ✕
+                </button>
+              </span>
+            }
+            @if (dateFilter() === 'CUSTOM') {
+              <span class="filter-active-tag tag-date">
+                <span class="material-symbols-outlined fs-12">event</span>
+                <span
+                  >Date: <strong>{{ customDate() }}</strong></span
+                >
+                <button
+                  type="button"
+                  class="btn-tag-x"
+                  (click)="setDateFilter('ALL')"
+                  title="Clear date filter"
+                >
+                  ✕
+                </button>
+              </span>
+            }
+            @if (dateFilter() === 'TODAY' || dateFilter() === 'YESTERDAY') {
+              <span class="filter-active-tag tag-date">
+                <span class="material-symbols-outlined fs-12">calendar_today</span>
+                <span
+                  >Date:
+                  <strong>{{ dateFilter() === 'TODAY' ? 'Today' : 'Yesterday' }}</strong></span
+                >
+                <button
+                  type="button"
+                  class="btn-tag-x"
+                  (click)="setDateFilter('ALL')"
+                  title="Clear date filter"
+                >
+                  ✕
+                </button>
+              </span>
+            }
+          </div>
+          <button type="button" class="btn-reset-filters-link" (click)="resetAllFilters()">
+            <span class="material-symbols-outlined fs-14">restart_alt</span>
+            <span>Reset Filters</span>
+          </button>
+        </div>
+      }
+      <div class="pipeline-cards-grid">
+        <!-- 1. Total Leads (Indigo Theme) -->
+        <button
+          type="button"
+          class="pipeline-card hub-kpi-card card-indigo"
+          [class.active]="pipelineStatusFilter() === 'ALL'"
+          (click)="setPipelineFilter('ALL')"
+          title="Click to view all assigned leads"
+        >
+          <div class="kpi-squircle-icon icon-indigo">
+            <span class="material-symbols-outlined">all_inbox</span>
+          </div>
+          <div class="kpi-info-cluster">
+            <div class="kpi-top-row">
+              <span class="kpi-title">Total Leads</span>
+              <span class="kpi-badge-chip chip-indigo">Queue</span>
+            </div>
+            <span class="kpi-value">{{ pipelineCounts().all }}</span>
+          </div>
+        </button>
+        <!-- 2. Never Called (Rose Theme) -->
+        <button
+          type="button"
+          class="pipeline-card hub-kpi-card card-rose"
+          [class.active]="pipelineStatusFilter() === 'NEW'"
+          (click)="setPipelineFilter('NEW')"
+          title="Click to view fresh untouched leads"
+        >
+          <div class="kpi-squircle-icon icon-rose">
+            <span class="material-symbols-outlined">mark_email_unread</span>
+          </div>
+          <div class="kpi-info-cluster">
+            <div class="kpi-top-row">
+              <span class="kpi-title">Never Called</span>
+              <span class="kpi-badge-chip chip-rose">Fresh</span>
+            </div>
+            <span class="kpi-value">{{ pipelineCounts().new }}</span>
+          </div>
+        </button>
+        <!-- 3. Follow-ups (Amber Theme) -->
+        <button
+          type="button"
+          class="pipeline-card hub-kpi-card card-amber"
+          [class.active]="pipelineStatusFilter() === 'FOLLOW_UP'"
+          (click)="setPipelineFilter('FOLLOW_UP')"
+          title="Click to view scheduled callbacks"
+        >
+          <div class="kpi-squircle-icon icon-amber">
+            <span class="material-symbols-outlined">campaign</span>
+          </div>
+          <div class="kpi-info-cluster">
+            <div class="kpi-top-row">
+              <span class="kpi-title">Follow-ups</span>
+              <span class="kpi-badge-chip chip-amber">Scheduled</span>
+            </div>
+            <span class="kpi-value">{{ pipelineCounts().followUp }}</span>
+          </div>
+        </button>
+        <!-- 4. Interested (Purple Theme) -->
+        <button
+          type="button"
+          class="pipeline-card hub-kpi-card card-purple"
+          [class.active]="pipelineStatusFilter() === 'INTERESTED'"
+          (click)="setPipelineFilter('INTERESTED')"
+          title="Click to view high-intent interested leads"
+        >
+          <div class="kpi-squircle-icon icon-purple">
+            <span class="material-symbols-outlined">local_fire_department</span>
+          </div>
+          <div class="kpi-info-cluster">
+            <div class="kpi-top-row">
+              <span class="kpi-title">Interested</span>
+              <span class="kpi-badge-chip chip-purple">Pipeline</span>
+            </div>
+            <span class="kpi-value">{{ pipelineCounts().interested }}</span>
+          </div>
+        </button>
+        <!-- 5. Qualified Leads (Emerald Theme) -->
+        <button
+          type="button"
+          class="pipeline-card hub-kpi-card card-emerald"
+          [class.active]="pipelineStatusFilter() === 'QUALIFIED'"
+          (click)="setPipelineFilter('QUALIFIED')"
+          title="Click to view verified qualified leads"
+        >
+          <div class="kpi-squircle-icon icon-emerald">
+            <span class="material-symbols-outlined">verified</span>
+          </div>
+          <div class="kpi-info-cluster">
+            <div class="kpi-top-row">
+              <span class="kpi-title">PAID</span>
+            </div>
+            <span class="kpi-value">{{ pipelineCounts().qualified }}</span>
+          </div>
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Queue Filter Tabs for Manager -->
+  @if (!isTelecaller()) {
+    <div class="toolbar-card">
+      <div class="segmented-tabs">
+        <button
+          type="button"
+          class="tab-pill-btn"
+          [class.active]="queueFilter() === 'ALL_LEADS'"
+          (click)="setQueueFilter('ALL_LEADS')"
+        >
+          <span class="material-symbols-outlined tab-icon">groups</span>
+          <span>All Team Queue ({{ leadService.leads().length }})</span>
+        </button>
+        <button
+          type="button"
+          class="tab-pill-btn"
+          [class.active]="queueFilter() === 'MY_LEADS'"
+          (click)="setQueueFilter('MY_LEADS')"
+        >
+          <span class="material-symbols-outlined tab-icon">person</span>
+          <span>My Assigned Leads ({{ myLeads().length }})</span>
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Full-Width Unified Call Queue & Lead Performance Table -->
+  <div class="table-card card-full-queue">
+    <div class="card-title-bar">
+      <div class="title-with-badge">
+        <div class="title-icon-squircle icon-indigo">
+          <span class="material-symbols-outlined">phone_in_talk</span>
+        </div>
+        <div class="title-meta-group">
+          <h3>
+            {{
+              isTelecaller()
+                ? 'My Assigned Leads Queue'
+                : queueFilter() === 'ALL_LEADS'
+                  ? 'All Team Leads Queue'
+                  : 'My Assigned Leads Queue'
+            }}
+          </h3>
+          <div class="table-sub-meta-wrap">
+            <span class="table-sub-meta"
+              >{{ filteredAssignedLeads().length }} contacts ready to call</span
+            >
+            @if (pipelineStatusFilter() !== 'ALL') {
+              <span class="active-filter-indicator">
+                • Filter: <strong>{{ getPipelineFilterLabel() }}</strong>
+                <button
+                  type="button"
+                  class="btn-clear-inline"
+                  (click)="setPipelineFilter('ALL')"
+                  title="Reset filter"
+                >
+                  ✕
+                </button>
+              </span>
+            }
+            @if (searchQuery()) {
+              <span class="active-filter-indicator">
+                • Search: <strong>"{{ searchQuery() }}"</strong>
+                <button
+                  type="button"
+                  class="btn-clear-inline"
+                  (click)="setSearchQuery('')"
+                  title="Clear search"
+                >
+                  ✕
+                </button>
+              </span>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="card-action-meta">
+        <!-- Live Search Field for Telecaller Name, Lead, Phone -->
+        <div class="queue-search-field-wrap">
+          <span class="material-symbols-outlined search-icon">search</span>
+          <input
+            type="text"
+            class="queue-search-input"
+            [placeholder]="
+              isTelecaller()
+                ? 'Search by lead name, phone...'
+                : 'Search by telecaller name, lead, phone...'
+            "
+            [ngModel]="searchQuery()"
+            (ngModelChange)="setSearchQuery($event)"
+          />
+          @if (searchQuery()) {
+            <button
+              type="button"
+              class="btn-clear-search"
+              (click)="setSearchQuery('')"
+              title="Clear search"
+            >
+              ✕
+            </button>
+          }
+        </div>
+
+        <span class="queue-count-badge">
+          <span class="pulse-indicator"></span>
+          <span>{{ filteredAssignedLeads().length }} In Queue</span>
+        </span>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="data-table unified-queue-table">
+        <colgroup>
+          <col style="width: 20%" />
+          <col style="width: 14%" />
+          <col style="width: 11%" />
+          <col style="width: 12%" />
+          <col style="width: 12%" />
+          <col style="width: 6%" />
+          <col style="width: 7%" />
+          <col style="width: 6%" />
+          <col style="width: 12%" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="col-lead">Lead Name</th>
+            <th class="col-phone">Phone Number</th>
+            <th class="col-status">Current Status</th>
+            <th class="col-creator">Created By</th>
+            <th class="col-assignee">Assigned To</th>
+            <th class="col-calls text-center">Calls Logged</th>
+            <th class="col-attended text-center">Attended / Missed</th>
+            <th class="col-duration text-center">Avg Duration</th>
+            <th class="col-action text-right">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (lead of paginatedLeads(); track lead.id) {
+            <tr class="queue-row">
+              <!-- 1. Lead Name & Source -->
+              <td class="col-lead">
+                <div class="lead-profile-cell">
+                  <div class="lead-avatar-squircle">
+                    {{ (lead.firstName?.[0] || 'L') + (lead.lastName?.[0] || '') | uppercase }}
+                  </div>
+                  <div class="lead-identity">
+                    <span class="lead-fullname">{{ lead.firstName }} {{ lead.lastName }}</span>
+                    @if (lead.source) {
+                      <span class="lead-source-chip">{{ lead.source }}</span>
+                    }
+                  </div>
+                </div>
+              </td>
+              <!-- 2. Phone Number -->
+              <td class="col-phone">
+                <a [href]="'tel:' + lead.phone" class="phone-chip" title="Click to dial">
+                  <span
+                    class="material-symbols-outlined fs-14 phone-icon"
+                    [class.phone-icon-shake]="isFollowUpDue(lead)"
+                    >call</span
+                  >
+                  <span class="phone-num-txt">{{ lead.phone }}</span>
+                </a>
+              </td>
+              <!-- 3. Current Status -->
+              <td class="col-status">
+                <span
+                  class="status-pill"
+                  [ngClass]="getStatusBadgeClass(getLeadCurrentStatus(lead))"
+                >
+                  @if (getLeadCurrentStatus(lead) === 'QUALIFIED') {
+                    <span class="material-symbols-outlined success-check-icon">verified</span>
+                  }
+                  @if (getLeadCurrentStatus(lead) !== 'QUALIFIED') {
+                    <span class="pill-glow-dot">●</span>
+                  }
+                  <span class="pill-label">{{ getLeadCurrentStatus(lead).replace('_', ' ') }}</span>
+                </span>
+                <!-- Scheduled Callback Reminder Chip -->
+                @if (hasScheduledCallback(lead) && getFollowUpTimeLabel(lead); as fTime) {
+                  <div class="scheduled-callback-chip">
+                    <span
+                      class="material-symbols-outlined fs-12 chip-alarm-icon"
+                      [class.icon-ringing-shake]="isFollowUpDue(lead)"
+                      >alarm</span
+                    >
+                    <span class="chip-time-txt">{{ fTime }}</span>
+                  </div>
+                }
+              </td>
+              <!-- 4. Created By -->
+              <td class="col-creator">
+                <div class="assignee-badge-chip creator-badge-chip">
+                  <div class="assignee-mini-avatar avatar-creator-mini">
+                    {{ getLeadCreatorName(lead)[0] | uppercase }}
+                  </div>
+                  <span class="assignee-name-txt">{{ getLeadCreatorName(lead) }}</span>
+                </div>
+              </td>
+              <!-- 5. Assigned To -->
+              <td class="col-assignee">
+                @if (lead.assigneeName) {
+                  <div class="assignee-badge-chip">
+                    <div class="assignee-mini-avatar">{{ lead.assigneeName[0] | uppercase }}</div>
+                    <span class="assignee-name-txt">{{ lead.assigneeName }}</span>
+                  </div>
+                }
+                @if (!lead.assigneeName) {
+                  <span class="unassigned-pill">Unassigned</span>
+                }
+              </td>
+              <!-- 5. Calls Logged -->
+              <td class="col-calls text-center">
+                <span
+                  class="calls-count-badge"
+                  [class.badge-has-calls]="getLeadMetrics(lead).callsCount > 0"
+                >
+                  <span class="material-symbols-outlined fs-14">call_log</span>
+                  <strong>{{ getLeadMetrics(lead).callsCount }}</strong>
+                </span>
+              </td>
+              <!-- 6. Attended / Missed -->
+              <td class="col-attended text-center">
+                <div class="ratio-chips-group">
+                  <span class="tag-attended" title="Attended / Connected Calls">
+                    <span class="material-symbols-outlined fs-12">check_circle</span>
+                    <span>{{ getLeadMetrics(lead).attended }}</span>
+                  </span>
+                  <span class="tag-sep">/</span>
+                  <span class="tag-missed" title="Missed / Busy / No Answer">
+                    <span class="material-symbols-outlined fs-12">phone_missed</span>
+                    <span>{{ getLeadMetrics(lead).missed }}</span>
+                  </span>
+                </div>
+              </td>
+              <!-- 7. Avg Duration -->
+              <td class="col-duration text-center">
+                <span class="avg-duration-pill">
+                  <span class="material-symbols-outlined fs-14">timer</span>
+                  <span>{{ getLeadMetrics(lead).avgDuration }}s</span>
+                </span>
+              </td>
+              <!-- 8. Action Buttons -->
+              <td class="col-action text-right">
+                <div class="action-buttons-wrap">
+                  @if (canLogCalls()) {
+                    <button
+                      class="btn-action-primary btn-sm"
+                      [class.call-btn-shake]="isFollowUpDue(lead)"
+                      (click)="openCallDrawer(lead)"
+                      [title]="
+                        isFollowUpDue(lead)
+                          ? 'Scheduled Call Reminder Alert!'
+                          : 'Log new call activity'
+                      "
+                    >
+                      <span
+                        class="material-symbols-outlined fs-14 icon-glow"
+                        [class.phone-icon-shake]="isFollowUpDue(lead)"
+                        >call</span
+                      >
+                      <span>Call</span>
+                    </button>
+                  }
+                  <button
+                    class="btn-action-detail btn-sm"
+                    (click)="openLeadHistory(lead)"
+                    title="View complete interaction history"
+                  >
+                    <span class="material-symbols-outlined fs-14">visibility</span>
+                    <span>Detail</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+
+          @if (filteredAssignedLeads().length === 0) {
+            <tr>
+              <td colspan="9" class="empty-state-cell">
+                <div class="empty-queue-box">
+                  <div class="empty-icon-circle">
+                    <span class="material-symbols-outlined">assignment_turned_in</span>
+                  </div>
+                  <h4>No leads found</h4>
+                  @if (searchQuery()) {
+                    <p>No contacts match telecaller name or keyword "{{ searchQuery() }}".</p>
+                  }
+                  @if (!searchQuery()) {
+                    <p>
+                      There are no assigned contacts in this queue matching your current filters.
+                    </p>
+                  }
+                  <div
+                    style="margin-top: 0.75rem; display: flex; gap: 0.5rem; justify-content: center"
+                  >
+                    @if (searchQuery()) {
+                      <button
+                        type="button"
+                        class="btn-clear-search-pill"
+                        (click)="setSearchQuery('')"
+                      >
+                        Clear Search
+                      </button>
+                    }
+                    @if (
+                      selectedCampaign() !== 'ALL' ||
+                      dateFilter() !== 'ALL' ||
+                      pipelineStatusFilter() !== 'ALL'
+                    ) {
+                      <button
+                        type="button"
+                        class="btn-reset-filters-link"
+                        (click)="resetAllFilters()"
+                      >
+                        Reset All Filters
+                      </button>
+                    }
+                  </div>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination Footer Bar (Active when filtered leads exist) -->
+    @if (filteredAssignedLeads().length > 0) {
+      <div class="table-pagination-bar">
+        <div class="pagination-info">
+          <span
+            >Showing <strong>{{ (currentPage() - 1) * pageSize() + 1 }}</strong> -
+            <strong>{{
+              mathMin(currentPage() * pageSize(), filteredAssignedLeads().length)
+            }}</strong>
+            of <strong>{{ filteredAssignedLeads().length }}</strong> leads</span
+          >
+        </div>
+        @if (totalPages() > 1) {
+          <div class="pagination-controls">
+            <button
+              type="button"
+              class="btn-page-nav"
+              [disabled]="currentPage() === 1"
+              (click)="prevPage()"
+              title="Previous Page"
+            >
+              <span class="material-symbols-outlined fs-16">chevron_left</span>
+            </button>
+            @for (p of getPageNumbers(); track p) {
+              <button
+                type="button"
+                class="btn-page-num"
+                [class.active-page]="p === currentPage()"
+                (click)="setPage(p)"
+              >
+                {{ p }}
+              </button>
+            }
+            <button
+              type="button"
+              class="btn-page-nav"
+              [disabled]="currentPage() === totalPages()"
+              (click)="nextPage()"
+              title="Next Page"
+            >
+              <span class="material-symbols-outlined fs-16">chevron_right</span>
+            </button>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- LEAD CALL HISTORY & DETAILS MODAL -->
+  @if (selectedLeadForHistory(); as lead) {
+    <div class="modal-backdrop" (click)="closeLeadHistory()">
+      <div class="modal-card lead-history-modal" (click)="$event.stopPropagation()">
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <div class="modal-squircle-icon icon-indigo">
+              <span class="material-symbols-outlined">call_log</span>
+            </div>
+            <div>
+              <div class="modal-title-row">
+                <h2>{{ lead.firstName }} {{ lead.lastName }}</h2>
+                <span class="history-count-badge"
+                  >{{ getLeadHistoryCalls(lead).length }} Calls</span
+                >
+              </div>
+              <p class="modal-sub">
+                <a [href]="'tel:' + lead.phone" class="phone-link-sub">
+                  <span class="material-symbols-outlined fs-13">call</span>
+                  <span>{{ lead.phone }}</span>
+                </a>
+                <span class="sub-dot">&bull;</span>
+                <span class="status-mini-pill" [ngClass]="getStatusBadgeClass(lead.status)">
+                  {{ (lead.status || '').replace('_', ' ') }}
+                </span>
+              </p>
+            </div>
+          </div>
+          <button class="btn-close-modal" (click)="closeLeadHistory()" aria-label="Close">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <div class="modal-body history-modal-body">
+          @if (getLeadHistoryCalls(lead).length > 0) {
+            <div class="timeline-feed-list custom-scroll">
+              @for (call of getLeadHistoryCalls(lead); track call) {
+                <div class="timeline-card-item">
+                  <div class="timeline-card-top">
+                    <div class="caller-profile">
+                      <div class="caller-avatar-squircle">
+                        {{ call.telecallerName?.[0] || 'T' | uppercase }}
+                      </div>
+                      <div class="caller-meta">
+                        <span class="caller-name">{{ call.telecallerName || 'Telecaller' }}</span>
+                        <span class="call-time-txt"
+                          >{{ call.calledAt | date: 'mediumDate' }} &bull;
+                          {{ call.calledAt | date: 'shortTime' }}</span
+                        >
+                      </div>
+                    </div>
+                    <span class="status-pill" [ngClass]="getStatusBadgeClass(call.outcome)">
+                      <span class="pill-glow-dot">●</span>
+                      <span class="pill-label">{{ (call.outcome || '').replace('_', ' ') }}</span>
+                    </span>
+                  </div>
+                  @if (call.remarks) {
+                    <p class="remarks-content">{{ call.remarks }}</p>
+                  }
+                  <div class="timeline-meta-footer">
+                    @if (call.durationSeconds) {
+                      <span class="meta-tag duration-tag">
+                        <span class="material-symbols-outlined fs-12">timer</span>
+                        <span>{{ call.durationSeconds }}s</span>
+                      </span>
+                    }
+                    @if (call.followUpDate) {
+                      <span class="meta-tag followup-tag">
+                        <span class="material-symbols-outlined fs-12">alarm</span>
+                        <span
+                          >Reminder: {{ call.followUpDate | date: 'mediumDate' }}
+                          {{ call.followUpTime || '' }}</span
+                        >
+                      </span>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+          @if (getLeadHistoryCalls(lead).length === 0) {
+            <div class="empty-timeline-box">
+              <div class="empty-icon-circle">
+                <span class="material-symbols-outlined">phone_missed</span>
+              </div>
+              <h4>No call logs found</h4>
+              <p>No call history recorded for this lead yet.</p>
+            </div>
+          }
+        </div>
+        <div class="modal-footer history-modal-footer">
+          <button class="btn-action-secondary btn-sm" (click)="closeLeadHistory()">Close</button>
+          @if (canLogCalls()) {
+            <button
+              class="btn-action-primary btn-sm"
+              (click)="closeLeadHistory(); openCallDrawer(lead)"
+            >
+              <span class="material-symbols-outlined fs-15 icon-glow">call</span>
+              <span>Log Call</span>
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- CALL LOGGING MODAL DRAWER -->
+  <!-- CALL LOGGING MODAL DRAWER -->
+  @if (selectedLeadForCall()) {
+    <div class="modal-backdrop" (click)="closeDrawer()">
+      <div class="modal-card modal-compact-card" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <div class="modal-squircle-icon">
+              <span class="material-symbols-outlined">phone_in_talk</span>
+            </div>
+            <div>
+              <h2>Log Call Activity</h2>
+              <p class="modal-sub">
+                Calling
+                <strong
+                  >{{ selectedLeadForCall()?.firstName }}
+                  {{ selectedLeadForCall()?.lastName }}</strong
+                >
+                ({{ selectedLeadForCall()?.phone }})
+              </p>
+            </div>
+          </div>
+          <button class="btn-close-modal" (click)="closeDrawer()" aria-label="Close">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <!-- 1. Outcome & Duration Row (Side-by-side for professional compact layout) -->
+          <div class="form-row outcome-duration-row">
+            <div class="form-group flex-1">
+              <label class="form-label">Call Outcome <span class="required">*</span></label>
+              <select
+                [(ngModel)]="callOutcome"
+                (change)="onCallOutcomeChange()"
+                class="form-input form-select-compact"
+              >
+                <option value="BUSY">Line Busy</option>
+                <option value="NO_ANSWER">No Answer</option>
+                <option value="WRONG_NUMBER">Wrong Number</option>
+                <option value="FOLLOW_UP">Follow Up</option>
+                <option value="INTERESTED">Interested</option>
+                <option value="NOT_INTERESTED">Not Interested</option>
+                <option value="QUALIFIED">Paid</option>
+              </select>
+            </div>
+            <!-- Duration (shown side by side when applicable) -->
+            @if (shouldShowDuration()) {
+              <div class="form-group flex-1">
+                <label class="form-label">Duration (Seconds)</label>
+                <div class="duration-input-compact">
+                  <input type="number" [(ngModel)]="callDuration" class="form-input duration-num" />
+                  <div class="duration-mini-pills">
+                    <button type="button" class="mini-pill" (click)="setDurationPreset(30)">
+                      30s
+                    </button>
+                    <button type="button" class="mini-pill" (click)="setDurationPreset(60)">
+                      1m
+                    </button>
+                    <button type="button" class="mini-pill" (click)="setDurationPreset(120)">
+                      2m
+                    </button>
+                    <button type="button" class="mini-pill" (click)="setDurationPreset(300)">
+                      5m
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+          <!-- 2. Reminder Option Toggle Button / Bar -->
+          <div
+            class="reminder-option-bar"
+            (click)="toggleReminder()"
+            [class.active-reminder]="enableReminder"
+          >
+            <div class="reminder-left">
+              <div class="reminder-icon-bubble">
+                <span class="material-symbols-outlined">{{
+                  enableReminder ? 'alarm_on' : 'add_alarm'
+                }}</span>
+              </div>
+              <div class="reminder-text">
+                <div class="reminder-title">
+                  <span>Set Follow-up Reminder</span>
+                  @if (enableReminder) {
+                    <span class="reminder-badge">Active</span>
+                  }
+                </div>
+                <div class="reminder-desc">Trigger shake alert at scheduled time</div>
+              </div>
+            </div>
+            <div class="reminder-switch-wrap">
+              <div class="toggle-pill" [class.on]="enableReminder">
+                <span class="toggle-handle"></span>
+              </div>
+            </div>
+          </div>
+          <!-- 3. Schedule Follow-up Date & Time Picker (Only shown when Reminder is enabled) -->
+          @if (enableReminder) {
+            <div
+              class="form-group follow-up-scheduler-box animated-expand"
+              [class.highlighted-box]="
+                callOutcome === 'FOLLOW_UP' ||
+                callOutcome === 'NO_ANSWER' ||
+                callOutcome === 'BUSY' ||
+                callOutcome === 'INTERESTED'
+              "
+            >
+              <div class="scheduler-label-row">
+                <label class="form-label">
+                  <span class="material-symbols-outlined fs-13 align-middle icon-timer-sub"
+                    >alarm</span
+                  >
+                  Schedule Date & Time
+                </label>
+                <span class="scheduler-hint-pill">Shakes at this time</span>
+              </div>
+              <div class="form-row datetime-input-row">
+                <div class="form-group flex-1">
+                  <label class="field-sub-label">Date</label>
+                  <input
+                    type="date"
+                    [(ngModel)]="followUpDate"
+                    [min]="todayDate"
+                    class="form-input form-input-sm"
+                  />
+                </div>
+                <div class="form-group flex-1">
+                  <label class="field-sub-label">Time</label>
+                  <input type="time" [(ngModel)]="followUpTime" class="form-input form-input-sm" />
+                </div>
+              </div>
+              <div class="quick-timer-presets">
+                <button
+                  type="button"
+                  class="preset-pill-btn"
+                  (click)="setFollowUpPresetMinutes(30)"
+                >
+                  +30m
+                </button>
+                <button
+                  type="button"
+                  class="preset-pill-btn"
+                  (click)="setFollowUpPresetMinutes(60)"
+                >
+                  +1h
+                </button>
+                <button
+                  type="button"
+                  class="preset-pill-btn"
+                  (click)="setFollowUpPresetMinutes(120)"
+                >
+                  +2h
+                </button>
+                <button
+                  type="button"
+                  class="preset-pill-btn"
+                  (click)="setFollowUpPresetTomorrow(10)"
+                >
+                  Tmr 10am
+                </button>
+                <button
+                  type="button"
+                  class="preset-pill-btn"
+                  (click)="setFollowUpPresetTomorrow(15)"
+                >
+                  Tmr 3pm
+                </button>
+              </div>
+            </div>
+          }
+          <!-- 4. Remarks with Hints -->
+          <div class="form-group remarks-form-group">
+            <div class="remarks-label-row">
+              <label class="form-label">
+                <span class="material-symbols-outlined fs-13 align-middle icon-notes">notes</span>
+                Call Remarks
+              </label>
+              <span class="remarks-hint-tag">{{ callOutcome.replace('_', ' ') }}</span>
+            </div>
+            <textarea
+              rows="2"
+              [(ngModel)]="callRemarks"
+              [placeholder]="getRemarksPlaceholder()"
+              class="form-input remarks-textarea"
+            >
+            </textarea>
+            <!-- Quick Suggestion / Hint Chips matching this status -->
+            <div class="quick-remarks-chips-row">
+              <span class="quick-chip-label">Hints:</span>
+              @for (hint of getRemarksQuickTemplates(); track hint) {
+                <button
+                  type="button"
+                  class="quick-remark-chip"
+                  (click)="insertQuickRemark(hint)"
+                  title="Click to insert into remarks"
+                >
+                  + {{ hint }}
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-action-secondary" (click)="closeDrawer()">Cancel</button>
+          <button class="btn-action-primary" (click)="submitCallLog()">
+            <span class="material-symbols-outlined icon-glow">save</span>
+            <span>Save Call Log</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

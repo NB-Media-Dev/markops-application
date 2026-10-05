@@ -1,0 +1,191 @@
+<div class="executive-dashboard">
+  <!-- 1. TOP KPI METRICS ROW -->
+  <section class="kpi-grid">
+    <!-- Card 1: Monthly Revenue -->
+    <div class="kpi-card card-revenue">
+      <div class="kpi-header-row">
+        <div class="kpi-title-cluster">
+          <div class="kpi-squircle-icon icon-amber">
+            <span class="currency-symbol">₹</span>
+          </div>
+          <span class="kpi-title">Monthly Revenue</span>
+        </div>
+        <div class="kpi-pill-badge pill-amber">{{ revenuePercentReached() }}% Reached</div>
+      </div>
+      <div class="kpi-body-row">
+        <div class="kpi-value">₹{{ displayRevenue() | number: '1.0-0' }}</div>
+        <div class="kpi-sub-target">Target: ₹{{ displayTargetRevenue | number: '1.0-0' }}</div>
+      </div>
+    </div>
+
+    <!-- Card 2: Total Leads -->
+    <div class="kpi-card card-leads">
+      <div class="kpi-header-row">
+        <div class="kpi-title-cluster">
+          <div class="kpi-squircle-icon icon-purple">
+            <span class="material-symbols-outlined">groups</span>
+          </div>
+          <span class="kpi-title">Total Leads</span>
+        </div>
+        <div class="kpi-pill-badge pill-purple">+{{ leadsTodayCount() }} Today</div>
+      </div>
+      <div class="kpi-body-row">
+        <div class="kpi-value">{{ displayLeadsCount() | number }}</div>
+        <div class="kpi-sub-target">Active Funnels</div>
+      </div>
+    </div>
+
+    <!-- Card 3: Qualification Rate -->
+    <div class="kpi-card card-conversion">
+      <div class="kpi-header-row">
+        <div class="kpi-title-cluster">
+          <div class="kpi-squircle-icon icon-emerald">
+            <span class="material-symbols-outlined">adjust</span>
+          </div>
+          <span class="kpi-title">Qualification Rate</span>
+        </div>
+        <div class="kpi-pill-badge pill-emerald">High Intent</div>
+      </div>
+      <div class="kpi-body-row">
+        <div class="kpi-value">{{ displayQualRate() }}%</div>
+        <div class="kpi-optimal-stat">
+          <span class="optimal-line"></span>
+          <span class="optimal-label">Optimal</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 4: Open Tasks -->
+    <div class="kpi-card card-tasks">
+      <div class="kpi-header-row">
+        <div class="kpi-title-cluster">
+          <div class="kpi-squircle-icon icon-rose">
+            <span class="material-symbols-outlined">fact_check</span>
+          </div>
+          <span class="kpi-title">Open Tasks</span>
+        </div>
+        <div class="kpi-pill-badge pill-rose">
+          In Review: {{ bdmReviewCount() > 0 ? bdmReviewCount() : 1 }}
+        </div>
+      </div>
+      <div class="kpi-body-row">
+        <div class="kpi-value">{{ totalOpenTasksCount() > 0 ? totalOpenTasksCount() : 0 }}</div>
+        <div class="kpi-sub-target">Queue: {{ designQueueCount() }} in production</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. OUR PRODUCTS SECTION (Exact Visual Match to Golden Ambient Banner with White Cards) -->
+  <section class="our-products-section">
+    <div class="products-container-card">
+      <!-- Ambient Multi-Tone Golden Glows -->
+      <div class="ambient-glow glow-top-right"></div>
+      <div class="ambient-glow glow-bottom-right"></div>
+      <div class="ambient-glow glow-top-left"></div>
+
+      <!-- Golden Abstract Wave Ribbon Overlays (Matching Image) -->
+      <svg
+        class="golden-bg-waves"
+        viewBox="0 0 1200 380"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <defs>
+          <linearGradient id="goldWave1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#FEF08A" stop-opacity="0.7" />
+            <stop offset="50%" stop-color="#FDE047" stop-opacity="0.45" />
+            <stop offset="100%" stop-color="#F59E0B" stop-opacity="0.85" />
+          </linearGradient>
+          <linearGradient id="goldWave2" x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#FBBF24" stop-opacity="0.4" />
+            <stop offset="60%" stop-color="#F59E0B" stop-opacity="0.6" />
+            <stop offset="100%" stop-color="#D97706" stop-opacity="0.9" />
+          </linearGradient>
+          <linearGradient id="goldWave3" x1="0%" y1="0%" x2="100%" y2="80%">
+            <stop offset="0%" stop-color="#FFFBEB" stop-opacity="0.85" />
+            <stop offset="40%" stop-color="#FEF08A" stop-opacity="0.5" />
+            <stop offset="100%" stop-color="#FBBF24" stop-opacity="0.75" />
+          </linearGradient>
+        </defs>
+        <path
+          d="M0,0 C300,50 600,20 1200,160 L1200,380 L0,380 Z"
+          fill="url(#goldWave1)"
+          opacity="0.35"
+        />
+        <path
+          d="M0,200 C400,260 800,100 1200,260 L1200,380 L0,380 Z"
+          fill="url(#goldWave2)"
+          opacity="0.45"
+        />
+        <path d="M450,0 C750,80 950,200 1200,100 L1200,0 Z" fill="url(#goldWave3)" opacity="0.5" />
+        <path
+          d="M600,0 Q850,220 1200,200 L1200,380 Q800,320 500,380 Z"
+          fill="url(#goldWave2)"
+          opacity="0.3"
+        />
+      </svg>
+
+      <h2 class="products-section-title">Our Products</h2>
+
+      <div class="products-grid">
+        @for (pkg of fixedPackages(); track pkg) {
+          <div
+            class="product-showcase-card"
+            [attr.aria-label]="'Open ' + pkg.name + ' package operations'"
+            (click)="openPackage(pkg.shortName || pkg.name)"
+          >
+            <div class="product-crest-container">
+              <div class="product-logo-circle">
+                <img [src]="pkg.image" [alt]="pkg.name" class="product-logo-image" />
+              </div>
+            </div>
+            <h3 class="product-showcase-title">{{ pkg.name }}</h3>
+            <div class="product-showcase-footer">
+              <div class="active-works-badge">
+                <span class="green-status-dot"></span>
+                <span class="works-count-text"
+                  >{{ pkg.packageCount }}
+                  {{ pkg.packageCount === 1 ? 'Package' : 'Packages' }}</span
+                >
+              </div>
+              <a
+                [routerLink]="['/package-works']"
+                [queryParams]="{ package: pkg.shortName || pkg.name }"
+                (click)="$event.stopPropagation()"
+                class="explore-action-link"
+              >
+                <span>Open</span>
+                <span class="arrow-char">→</span>
+              </a>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. ADMINISTRATION & SYSTEM OPERATIONS SECTION (4 Pastel Navigation Cards) -->
+  <!-- <section class="admin-operations-section">
+    <div class="admin-ops-card">
+      <div class="admin-ops-grid">
+      
+
+  
+        <a routerLink="/audit-logs" class="admin-op-item item-audit-logs">
+          <div class="op-left-content">
+            <div class="op-icon-squircle icon-sky-bg">
+              <span class="material-symbols-outlined">receipt_long</span>
+            </div>
+            <div class="op-text-block">
+              <h4 class="op-item-title">Audit Logs</h4>
+              <p class="op-item-desc">Operational trails & system logs</p>
+            </div>
+          </div>
+          <div class="op-arrow-circle">
+            <span class="arrow-glyph">→</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section> -->
+</div>
