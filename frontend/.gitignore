@@ -7,3 +7,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .DS_Store
+
+echo.>> .gitignore
+echo .env>> .gitignore
+echo backend/.env>> .gitignore
+echo frontend/.env>> .gitignore

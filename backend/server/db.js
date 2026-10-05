@@ -319,7 +319,7 @@ async function initDatabase() {
 
     if (dbUrl) {
       try {
-        pool = mysqlModule.createPool({ uri: dbUrl, connectTimeout: 10000, waitForConnections: true, connectionLimit: 10 });
+        pool = mysqlModule.createPool({ uri: dbUrl, ssl: { rejectUnauthorized: false }, connectTimeout: 10000, waitForConnections: true, connectionLimit: 10 });
         const conn = await pool.getConnection();
         conn.release();
         connected = true;

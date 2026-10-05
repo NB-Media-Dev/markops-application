@@ -4,7 +4,6 @@
 -- Description: Inserts system roles and 1 primary Administrator user with INT IDs.
 -- ============================================================================
 
-USE `markops`;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
