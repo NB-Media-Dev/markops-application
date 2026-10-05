@@ -167,86 +167,17 @@
 //         spend DECIMAL(12,2) DEFAULT 0.00,
 //         impressions INT DEFAULT 0,
 //         clicks INT DEFAULT 0,
-//         leads_count INT DEFAULT 0,
-//         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-//         updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-//         PRIMARY KEY (id)
-//       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-//     `);
 
-//     try { await activePool.query(`ALTER TABLE ads ADD COLUMN campaign_id INT DEFAULT NULL`); } catch (e) {}
-//     try { await activePool.query(`ALTER TABLE ads ADD COLUMN platform VARCHAR(50) DEFAULT 'Meta'`); } catch (e) {}
-//     try { await activePool.query(`ALTER TABLE ads ADD COLUMN spend DECIMAL(12,2) DEFAULT 0.00`); } catch (e) {}
-//     try { await activePool.query(`ALTER TABLE ads ADD COLUMN impressions INT DEFAULT 0`); } catch (e) {}
-//     try { await activePool.query(`ALTER TABLE ads ADD COLUMN clicks INT DEFAULT 0`); } catch (e) {}
-//     try { await activePool.query(`ALTER TABLE ads ADD COLUMN leads_count INT DEFAULT 0`); } catch (e) {}
 
-//     // Ensure leads table exists
-//     await activePool.query(`
-//       CREATE TABLE IF NOT EXISTS leads (
-//         id INT NOT NULL AUTO_INCREMENT,
-//         first_name VARCHAR(100) NOT NULL,
-//         last_name VARCHAR(100) NOT NULL,
-//         email VARCHAR(150) NOT NULL,
-//         phone VARCHAR(30) NOT NULL,
-//         source VARCHAR(100) DEFAULT 'Digital Ads Lead Form',
-//         status VARCHAR(50) NOT NULL DEFAULT 'NEW',
-//         assigned_to INT DEFAULT NULL,
-//         creator_id INT DEFAULT 1,
-//         creator_name VARCHAR(100) DEFAULT 'System Administrator',
-//         creator_email VARCHAR(150) DEFAULT 'admin@markops.io',
-//         campaign_id VARCHAR(100) DEFAULT NULL,
-//         campaign_name VARCHAR(255) DEFAULT NULL,
-//         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-//         updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-//         PRIMARY KEY (id)
-//       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-//     `);
 
-//     try { await activePool.query(`ALTER TABLE leads MODIFY COLUMN status VARCHAR(50) NOT NULL DEFAULT 'NEW'`); } catch (e) {}
-//     try { await activePool.query(`ALTER TABLE leads MODIFY COLUMN campaign_id VARCHAR(100) DEFAULT NULL`); } catch (e) {}
-//     try { await activePool.query(`ALTER TABLE leads ADD COLUMN creator_id INT DEFAULT 1`); } catch (e) {}
-//     try { await activePool.query(`ALTER TABLE leads ADD COLUMN creator_name VARCHAR(100) DEFAULT 'System Administrator'`); } catch (e) {}
-//     try { await activePool.query(`ALTER TABLE leads ADD COLUMN creator_email VARCHAR(150) DEFAULT 'admin@markops.io'`); } catch (e) {}
-//     try { await activePool.query(`ALTER TABLE leads ADD COLUMN campaign_name VARCHAR(255) DEFAULT NULL`); } catch (e) {}
 
-//     // Ensure notifications table exists
-//     await activePool.query(`
-//       CREATE TABLE IF NOT EXISTS notifications (
-//         id INT NOT NULL AUTO_INCREMENT,
-//         user_id INT NOT NULL,
-//         title VARCHAR(150) NOT NULL,
-//         message TEXT NOT NULL,
-//         type ENUM('INFO', 'SUCCESS', 'WARNING', 'ALERT') NOT NULL DEFAULT 'INFO',
-//         target_route VARCHAR(255) DEFAULT NULL,
-//         is_read TINYINT(1) NOT NULL DEFAULT 0,
-//         read_at DATETIME DEFAULT NULL,
-//         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-//         PRIMARY KEY (id),
-//         KEY idx_notif_user (user_id, is_read)
-//       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-//     `);
 
-//     try { await activePool.query(`ALTER TABLE notifications ADD COLUMN target_route VARCHAR(255) DEFAULT NULL`); } catch (e) {}
 
-//     console.log('[MySQL DB] Roles, teams, users, packages, campaigns, ads, leads, and notifications successfully initialized in MySQL.');
-//   } catch (err) {
-//     console.log('[MySQL DB Notice] MySQL unreachable, operating in high-performance memory store mode:', err?.message || err);
-//     activePool = null;
-//   }
-// }
 
-// // In-Memory Fallback Stores (Clean slate for production use)
-// const dbUsersStore = [];
-// const dbTasksStore = [];
-// const dbCampaignsStore = [];
-// const dbAdsStore = [];
-// const dbLeadsStore = [];
-// const dbCallActivitiesStore = [];
-// const dbFollowUpsStore = [];
-// const dbTransactionsStore = [];
-// const dbNotificationsStore = [];
-// const dbPackagesStore = [];
+
+
+
+
 // const dbCommonTargetStore = {
 //   dailyCallsTarget: 30,
 //   dailyInterestedTarget: 5,
@@ -319,7 +250,8 @@ async function initDatabase() {
 
     if (dbUrl) {
       try {
-        pool = mysqlModule.createPool({ uri: dbUrl, ssl: { rejectUnauthorized: false }, connectTimeout: 10000, waitForConnections: true, connectionLimit: 10 });
+        const cleanUrl = dbUrl.replace(/[?&]ssl-mode=[^&]*/i, '').replace(/\?$/, '');
+        pool = mysqlModule.createPool({ uri: cleanUrl, ssl: { rejectUnauthorized: false }, connectTimeout: 10000, waitForConnections: true, connectionLimit: 10 });
         const conn = await pool.getConnection();
         conn.release();
         connected = true;
