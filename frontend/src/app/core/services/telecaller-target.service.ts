@@ -78,31 +78,38 @@ export class TelecallerTargetService {
   async loadTargets(): Promise<void> {
     if (!this.isBrowser) return;
     try {
-      const res = await safeFetch('/api/telecaller-targets/common');
+      const res = await safeFetch('/api/telecaller-targets');
       if (res.ok) {
         const data = await res.json();
-        if (data && typeof data.dailyCallsTarget === 'number') {
-          this._commonTarget.set(data);
-          this.syncTargetsWithCommon(data.dailyCallsTarget, data.dailyInterestedTarget, data.updatedBy);
-          return;
+        if (data) {
+          if (data.common && typeof data.common.dailyCallsTarget === 'number') {
+            this._commonTarget.set(data.common);
+          }
+          if (Array.isArray(data.targets)) {
+            this._targets.set(data.targets);
+            return;
+          }
         }
       }
     } catch (err) {
       console.log('Error loading telecaller targets from backend:', err);
     }
-    this.syncTargetsWithCommon(this.DEFAULT_COMMON_TARGET.dailyCallsTarget, this.DEFAULT_COMMON_TARGET.dailyInterestedTarget);
   }
 
   getTargetForTelecaller(telecallerId: string): TelecallerTarget {
     const common = this._commonTarget();
     const list = this._targets();
-    const match = list.find((t) => t.telecallerId === telecallerId);
+    const match = list.find((t) => String(t.telecallerId) === String(telecallerId));
+
+    if (match) {
+      return match;
+    }
 
     return {
-      id: match ? match.id : `tgt_${Math.random().toString(36).substring(2, 9)}`,
+      id: `tgt_${telecallerId || Math.random().toString(36).substring(2, 9)}`,
       telecallerId,
-      telecallerName: match ? match.telecallerName : 'Telecaller',
-      telecallerEmail: match ? match.telecallerEmail : 'telecaller@markops.io',
+      telecallerName: 'Telecaller',
+      telecallerEmail: 'telecaller@markops.io',
       dailyCallsTarget: common.dailyCallsTarget,
       dailyInterestedTarget: common.dailyInterestedTarget,
       dailyDurationTargetSeconds: common.dailyCallsTarget * 120,
@@ -140,6 +147,9 @@ export class TelecallerTargetService {
     }
   }
 
+  /**
+   * Sets custom target quota for ONE specific telecaller user
+   */
   setTarget(
     telecallerId: string,
     dailyCallsTarget: number,
@@ -147,7 +157,40 @@ export class TelecallerTargetService {
     telecallerName?: string,
     telecallerEmail?: string
   ): void {
-    this.setCommonTarget(dailyCallsTarget, dailyInterestedTarget);
+    const currentUser = this.authService.currentUser();
+    const updatedBy = currentUser ? `${currentUser.fullName} (${currentUser.role})` : 'Marketing Manager';
+    const callsTarget = Math.max(1, Number(dailyCallsTarget));
+    const interestedTarget = Math.max(1, Number(dailyInterestedTarget));
+
+    const userTarget: TelecallerTarget = {
+      id: `tgt_${telecallerId}_${Date.now()}`,
+      telecallerId: String(telecallerId),
+      telecallerName: telecallerName || 'Telecaller',
+      telecallerEmail: telecallerEmail || '',
+      dailyCallsTarget: callsTarget,
+      dailyInterestedTarget: interestedTarget,
+      dailyDurationTargetSeconds: callsTarget * 120,
+      updatedBy,
+      updatedAt: new Date().toISOString(),
+    };
+
+    this._targets.update((list) => {
+      const idx = list.findIndex((t) => String(t.telecallerId) === String(telecallerId));
+      if (idx !== -1) {
+        const next = [...list];
+        next[idx] = { ...next[idx], ...userTarget };
+        return next;
+      }
+      return [...list, userTarget];
+    });
+
+    if (this.isBrowser) {
+      safeFetch(`/api/telecaller-targets/${telecallerId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userTarget),
+      }).catch((e) => console.log('Error saving individual target to backend:', e));
+    }
   }
 
   private syncTargetsWithCommon(callsTarget: number, interestedTarget: number, updatedBy?: string): void {

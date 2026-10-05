@@ -33,6 +33,59 @@ export function sanitizeNotification(item: NotificationItem): NotificationItem {
   };
 }
 
+export function isNotificationAllowedForRole(item: NotificationItem, role?: string): boolean {
+  if (!role) return true;
+  const roleUpper = role.toUpperCase().trim();
+  const t = (item.title || '').toLowerCase();
+  const m = (item.message || '').toLowerCase();
+  const target = (item.targetRoute || '').toLowerCase();
+
+  if (roleUpper === 'DESIGNER') {
+    // Designer should ONLY see tasks assigned to them and design status updates
+    if (
+      t.includes('lead') ||
+      m.includes('lead') ||
+      t.includes('telecall') ||
+      m.includes('telecall') ||
+      t.includes('call logged') ||
+      m.includes('call logged') ||
+      t.includes('interested') ||
+      m.includes('interested') ||
+      t.includes('qualified') ||
+      m.includes('qualified') ||
+      t.includes('campaign') ||
+      m.includes('campaign') ||
+      t.includes('target') ||
+      m.includes('target') ||
+      target.includes('/leads') ||
+      target.includes('/telecalling') ||
+      target.includes('/targets') ||
+      target.includes('dept=telecalling')
+    ) {
+      return false;
+    }
+  }
+
+  if (roleUpper === 'TELECALLER') {
+    if (
+      t.includes('task approved') ||
+      t.includes('design uploaded') ||
+      t.includes('redesign') ||
+      t.includes('submission') ||
+      t.includes('creative design') ||
+      t.includes('creative brief') ||
+      target.includes('/designer-tasks') ||
+      target.includes('/submissions') ||
+      target.includes('/revisions') ||
+      target.includes('dept=designer')
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 export const TELECALLING_PACKAGE_TARGET_ROUTE =
   '/package-works?package=CAREERMATE&workspace=CURRENT-AFFAIR-PACKAGE&dept=TELECALLING&tab=TELECALLER_MEMBERS';
 
@@ -73,39 +126,45 @@ export class NotificationService {
       this.socket.on('notification:created', (rawNotif: NotificationItem) => {
         const notif = sanitizeNotification(rawNotif);
         const currentUser = this.authService.currentUser();
-        const currentUserId = currentUser?.id;
-        const currentUserEmail = currentUser?.email;
-        const currentUserFullName = currentUser?.fullName;
-        const currentUserRole = currentUser?.role?.toUpperCase();
+        if (!currentUser) return;
+
+        const currentUserId = currentUser.id;
+        const currentUserEmail = currentUser.email;
+        const currentUserFullName = currentUser.fullName;
+        const currentUserRole = currentUser.role;
+
+        // Role-based authorization gate (Designer ONLY sees task notifications)
+        if (!isNotificationAllowedForRole(notif, currentUserRole)) {
+          return;
+        }
 
         const targetUserIdStr = String(notif.userId || '').trim().toLowerCase();
         const uIdStr = String(currentUserId || '').trim().toLowerCase();
         const uEmailStr = String(currentUserEmail || '').trim().toLowerCase();
         const uNameStr = String(currentUserFullName || '').trim().toLowerCase();
 
-        // Check explicit match
+        if (!targetUserIdStr) return;
+
+        // Check explicit match strictly for this user (Creator or Assignee)
         let matchesUser =
-          !notif.userId ||
-          notif.userId === 'ALL' ||
-          notif.userId === 'all' ||
           (uIdStr && targetUserIdStr === uIdStr) ||
           (uEmailStr && targetUserIdStr === uEmailStr) ||
           (uNameStr && targetUserIdStr === uNameStr);
 
-        // Check role aliases
-        if (!matchesUser && currentUserRole) {
-          if (currentUserRole === 'DESIGNER') {
-            matchesUser = ['5', 'usr_designer_01', 'designer@markops.io', 'designer'].includes(targetUserIdStr);
-          } else if (currentUserRole === 'ADMINISTRATOR') {
-            matchesUser = ['1', 'usr_admin_01', 'admin@markops.io', 'admin'].includes(targetUserIdStr);
-          } else if (currentUserRole === 'BDM') {
-            matchesUser = ['2', 'usr_bdm_01', 'bdm@markops.io', 'bdm'].includes(targetUserIdStr);
-          } else if (currentUserRole === 'MARKETING_MANAGER') {
-            matchesUser = ['3', 'usr_mktg_01', 'manager@markops.io', 'manager'].includes(targetUserIdStr);
-          } else if (currentUserRole === 'DIGITAL_MARKETING') {
-            matchesUser = ['4', 'usr_digital_01', 'digital@markops.io', 'digital'].includes(targetUserIdStr);
-          } else if (currentUserRole === 'TELECALLER') {
-            matchesUser = ['6', 'usr_telecaller_01', 'telecaller@markops.io', 'telecaller', 'raj'].includes(targetUserIdStr) || targetUserIdStr.includes('raj');
+        // Fallback for standard seed accounts
+        if (!matchesUser) {
+          if (uIdStr === '1' || uIdStr === 'usr_admin_01') {
+            matchesUser = targetUserIdStr === '1' || targetUserIdStr === 'usr_admin_01';
+          } else if (uIdStr === '2' || uIdStr === 'usr_bdm_01') {
+            matchesUser = targetUserIdStr === '2' || targetUserIdStr === 'usr_bdm_01';
+          } else if (uIdStr === '3' || uIdStr === 'usr_mktg_01') {
+            matchesUser = targetUserIdStr === '3' || targetUserIdStr === 'usr_mktg_01';
+          } else if (uIdStr === '4' || uIdStr === 'usr_digital_01') {
+            matchesUser = targetUserIdStr === '4' || targetUserIdStr === 'usr_digital_01';
+          } else if (uIdStr === '5' || uIdStr === 'usr_designer_01') {
+            matchesUser = targetUserIdStr === '5' || targetUserIdStr === 'usr_designer_01';
+          } else if (uIdStr === '6' || uIdStr === 'usr_telecaller_01') {
+            matchesUser = targetUserIdStr === '6' || targetUserIdStr === 'usr_telecaller_01';
           }
         }
 
@@ -196,6 +255,9 @@ export class NotificationService {
           const seen = new Set<string>();
           const deduped: NotificationItem[] = [];
           for (const item of cleaned.map(sanitizeNotification)) {
+            if (!isNotificationAllowedForRole(item, currentUserRole)) {
+              continue;
+            }
             const key = `${item.title?.trim()}_${item.message?.trim()}`;
             if (!seen.has(key)) {
               seen.add(key);

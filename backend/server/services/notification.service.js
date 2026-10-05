@@ -10,60 +10,54 @@ function stripEmojis(str) {
 }
 
 /**
- * Resolves all known ID aliases for a given user identifier, role, email, or name.
- * e.g., Designer can be '5', 5, 'usr_designer_01', 'designer@markops.io', 'DESIGNER'
+ * Resolves all known ID aliases strictly for a given user identifier, email, or name.
+ * Prevents cross-user notification leakage between different accounts of same role.
  */
 function resolveUserAliases(userIdentifier, role = '', email = '', name = '') {
-  const aliases = new Set(['all']);
+  const aliases = new Set();
   const strId = String(userIdentifier || '').toLowerCase().trim();
   const strRole = String(role || '').toUpperCase().trim();
   const strEmail = String(email || '').toLowerCase().trim();
   const strName = String(name || '').toLowerCase().trim();
 
-  if (strId) aliases.add(strId);
+  if (strId) {
+    aliases.add(strId);
+    // Legacy mapping for standard default seed accounts
+    if (strId === '1' || strId === 'usr_admin_01') {
+      aliases.add('1');
+      aliases.add('usr_admin_01');
+    } else if (strId === '2' || strId === 'usr_bdm_01') {
+      aliases.add('2');
+      aliases.add('usr_bdm_01');
+    } else if (strId === '3' || strId === 'usr_mktg_01') {
+      aliases.add('3');
+      aliases.add('usr_mktg_01');
+    } else if (strId === '4' || strId === 'usr_digital_01') {
+      aliases.add('4');
+      aliases.add('usr_digital_01');
+    } else if (strId === '5' || strId === 'usr_designer_01') {
+      aliases.add('5');
+      aliases.add('usr_designer_01');
+    } else if (strId === '6' || strId === 'usr_telecaller_01') {
+      aliases.add('6');
+      aliases.add('usr_telecaller_01');
+    }
+  }
+
   if (strEmail) aliases.add(strEmail);
   if (strName) aliases.add(strName);
 
-  // Role mappings to known user IDs and email addresses
-  const ROLE_ALIASES = {
-    ADMINISTRATOR: ['1', 'usr_admin_01', 'admin@markops.io', 'admin', 'administrator', 'system administrator'],
-    BDM: ['2', 'usr_bdm_01', 'bdm@markops.io', 'bdm', 'business development manager'],
-    MARKETING_MANAGER: ['3', 'usr_mktg_01', 'manager@markops.io', 'manager', 'marketing manager'],
-    DIGITAL_MARKETING: ['4', 'usr_digital_01', 'digital@markops.io', 'digital', 'digital marketing', 'digital marketing specialist'],
-    DESIGNER: ['5', 'usr_designer_01', 'designer@markops.io', 'designer', 'senior visual designer'],
-    TELECALLER: ['6', 'usr_telecaller_01', 'telecaller@markops.io', 'telecaller', 'raj', 'lead telecaller', 'gokul raj'],
-  };
-
-  // Determine role if not explicitly provided
-  let detectedRole = strRole;
-  if (!detectedRole) {
-    if (strId === '1' || strId === 'usr_admin_01' || strEmail.includes('admin')) detectedRole = 'ADMINISTRATOR';
-    else if (strId === '2' || strId === 'usr_bdm_01' || strEmail.includes('bdm')) detectedRole = 'BDM';
-    else if (strId === '3' || strId === 'usr_mktg_01' || strEmail.includes('manager')) detectedRole = 'MARKETING_MANAGER';
-    else if (strId === '4' || strId === 'usr_digital_01' || strEmail.includes('digital')) detectedRole = 'DIGITAL_MARKETING';
-    else if (strId === '5' || strId === 'usr_designer_01' || strEmail.includes('designer')) detectedRole = 'DESIGNER';
-    else if (strId === '6' || strId === 'usr_telecaller_01' || strEmail.includes('telecaller') || strName.includes('raj')) detectedRole = 'TELECALLER';
-  }
-
-  if (detectedRole && ROLE_ALIASES[detectedRole]) {
-    ROLE_ALIASES[detectedRole].forEach((a) => aliases.add(a));
-  }
-
-  // Cross-reference with in-memory users store if present
+  // Cross-reference with in-memory users store strictly for this specific user
   if (Array.isArray(dbUsersStore)) {
     const userMatch = dbUsersStore.find(
       (u) =>
         (strId && (String(u.id).toLowerCase() === strId || String(u.id) === strId)) ||
-        (strEmail && u.email && u.email.toLowerCase() === strEmail) ||
-        (detectedRole && u.role === detectedRole)
+        (strEmail && u.email && u.email.toLowerCase() === strEmail)
     );
     if (userMatch) {
       if (userMatch.id) aliases.add(String(userMatch.id).toLowerCase());
       if (userMatch.email) aliases.add(userMatch.email.toLowerCase());
       if (userMatch.fullName) aliases.add(userMatch.fullName.toLowerCase());
-      if (userMatch.role && ROLE_ALIASES[userMatch.role]) {
-        ROLE_ALIASES[userMatch.role].forEach((a) => aliases.add(a));
-      }
     }
   }
 

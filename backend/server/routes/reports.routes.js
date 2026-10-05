@@ -141,22 +141,14 @@ router.get('/notifications', async (req, res) => {
     }
   });
 
-  // Filter memory store matching this user
+  // Filter memory store matching strictly this user (Creator / Assignee)
   let memoryMatched = dedupedStore.filter((n) => {
-    if (!n.userId || n.userId === 'ALL' || n.userId === 'all') return true;
+    if (!n.userId) return false;
     const nUid = String(n.userId).toLowerCase().trim();
     return userAliases.has(nUid);
   });
 
-  if (isTelecaller) {
-    memoryMatched = memoryMatched.filter((n) => {
-      const t = (n.title || '').toLowerCase();
-      if (t.includes('task approved') || t.includes('design uploaded') || t.includes('redesign') || t.includes('submission') || t.includes('creative design')) {
-        return false;
-      }
-      return true;
-    });
-  }
+  const isDesigner = userRole === 'DESIGNER' || userAliases.has('designer') || userAliases.has('5');
 
   let finalItems = memoryMatched.map((n) => ({
     ...n,
@@ -237,6 +229,59 @@ router.get('/notifications', async (req, res) => {
         }
       } catch (innerE) {}
     }
+  }
+
+  // Role-based filtering
+  if (isDesigner) {
+    finalItems = finalItems.filter((n) => {
+      const t = (n.title || '').toLowerCase();
+      const m = (n.message || '').toLowerCase();
+      const tr = (n.targetRoute || '').toLowerCase();
+      if (
+        t.includes('lead') ||
+        m.includes('lead') ||
+        t.includes('telecall') ||
+        m.includes('telecall') ||
+        t.includes('call logged') ||
+        m.includes('call logged') ||
+        t.includes('interested') ||
+        m.includes('interested') ||
+        t.includes('qualified') ||
+        m.includes('qualified') ||
+        t.includes('campaign') ||
+        m.includes('campaign') ||
+        t.includes('target') ||
+        m.includes('target') ||
+        tr.includes('/leads') ||
+        tr.includes('/telecalling') ||
+        tr.includes('/targets') ||
+        tr.includes('dept=telecalling')
+      ) {
+        return false;
+      }
+      return true;
+    });
+  } else if (isTelecaller) {
+    finalItems = finalItems.filter((n) => {
+      const t = (n.title || '').toLowerCase();
+      const m = (n.message || '').toLowerCase();
+      const tr = (n.targetRoute || '').toLowerCase();
+      if (
+        t.includes('task approved') ||
+        t.includes('design uploaded') ||
+        t.includes('redesign') ||
+        t.includes('submission') ||
+        t.includes('creative design') ||
+        t.includes('creative brief') ||
+        tr.includes('/designer-tasks') ||
+        tr.includes('/submissions') ||
+        tr.includes('/revisions') ||
+        tr.includes('dept=designer')
+      ) {
+        return false;
+      }
+      return true;
+    });
   }
 
   // Sort descending by creation date

@@ -39,7 +39,7 @@ export class UsersRolesComponent {
   readonly createUserForm: FormGroup = this.fb.group({
     fullName: ['', [Validators.required, Validators.minLength(2)]],
     email: ['', [Validators.required, Validators.email]],
-    role: ['MARKETING_MANAGER' as UserRole, [Validators.required]],
+    role: ['BDM' as UserRole, [Validators.required]],
     department: ['General Operations'],
     password: ['', [Validators.required, Validators.minLength(6)]],
     isActive: [true],
@@ -54,7 +54,7 @@ export class UsersRolesComponent {
   readonly editUserForm: FormGroup = this.fb.group({
     fullName: ['', [Validators.required, Validators.minLength(2)]],
     email: ['', [Validators.required, Validators.email]],
-    role: ['MARKETING_MANAGER' as UserRole, [Validators.required]],
+    role: ['BDM' as UserRole, [Validators.required]],
     department: ['General Operations'],
     password: ['', [Validators.minLength(6)]],
     isActive: [true],
@@ -82,7 +82,7 @@ export class UsersRolesComponent {
     this.createUserForm.reset({
       fullName: '',
       email: '',
-      role: 'MARKETING_MANAGER',
+      role: 'BDM',
       department: 'Growth Operations',
       password: '',
       isActive: true,

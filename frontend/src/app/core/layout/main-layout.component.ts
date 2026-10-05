@@ -13,7 +13,7 @@ export interface NavMenuItem {
   badgeType?: string;
 }
 
-export const ROLE_SIDEBAR_MENU: Record<UserRole, NavMenuItem[]> = {
+export const ROLE_SIDEBAR_MENU: Record<string, NavMenuItem[]> = {
   ADMINISTRATOR: [
     { label: 'Dashboard', route: '/dashboard', icon: 'dashboard' },
     { label: 'Targets', route: '/targets', icon: 'track_changes' },
@@ -31,7 +31,7 @@ export const ROLE_SIDEBAR_MENU: Record<UserRole, NavMenuItem[]> = {
     { label: 'Notifications', route: '/notifications', icon: 'notifications' },
     { label: 'Settings', route: '/settings', icon: 'settings' },
   ],
-  MARKETING_MANAGER: [
+  /* MARKETING_MANAGER: [
     { label: 'Dashboard', route: '/dashboard', icon: 'dashboard' },
     { label: 'Targets', route: '/targets', icon: 'track_changes' },
     { label: 'Campaigns', route: '/campaigns', icon: 'campaign' },
@@ -40,7 +40,7 @@ export const ROLE_SIDEBAR_MENU: Record<UserRole, NavMenuItem[]> = {
     { label: 'Reports', route: '/reports', icon: 'bar_chart' },
     { label: 'Performance', route: '/performance', icon: 'trending_up' },
     { label: 'Downloads', route: '/downloads', icon: 'download' },
-  ],
+  ], */
   DIGITAL_MARKETING: [
     { label: 'Dashboard', route: '/dashboard', icon: 'dashboard' },
     { label: 'Package Works', route: '/package-works', icon: 'inventory_2' },
@@ -68,7 +68,8 @@ export const ROLE_SIDEBAR_MENU: Record<UserRole, NavMenuItem[]> = {
   BDM: [
     { label: 'Package Works', route: '/package-works', icon: 'inventory_2' },
     { label: 'Tasks', route: '/tasks', icon: 'task_alt' },
-    { label: 'Designers', route: '/designers', icon: 'palette' },
+    { label: 'Analysis', route: '/performance', icon: 'analytics' },
+    { label: 'Audit Logs', route: '/audit-logs', icon: 'history' },
     { label: 'Notifications', route: '/notifications', icon: 'notifications' },
   ],
 };
@@ -101,7 +102,7 @@ export class MainLayoutComponent {
 
   readonly menuItems = computed<NavMenuItem[]>(() => {
     const role = this.activeRole();
-    return ROLE_SIDEBAR_MENU[role] || ROLE_SIDEBAR_MENU.ADMINISTRATOR;
+    return ROLE_SIDEBAR_MENU[role] || ROLE_SIDEBAR_MENU['ADMINISTRATOR'] || [];
   });
 
   readonly userInitials = computed<string>(() => {

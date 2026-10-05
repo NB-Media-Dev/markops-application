@@ -262,8 +262,6 @@ export class DesignerDashboardComponent implements OnInit {
 
     const currentId = String(currentUser.id !== undefined && currentUser.id !== null ? currentUser.id : '').trim().toLowerCase();
     const currentEmail = String(currentUser.email || '').toLowerCase().trim();
-    const currentName = String(currentUser.fullName || '').toLowerCase().trim();
-    const currentRole = String(currentUser.role || '').toUpperCase();
 
     const tCreatorId = String(
       task.createdBy !== undefined && task.createdBy !== null
@@ -271,15 +269,11 @@ export class DesignerDashboardComponent implements OnInit {
         : ((task as any).created_by !== undefined && (task as any).created_by !== null ? (task as any).created_by : '')
     ).trim().toLowerCase();
     const tCreatorEmail = String(task.creatorEmail || (task as any).creator_email || '').toLowerCase().trim();
-    const tCreatorName = String(task.creatorName || (task as any).creator_name || '').toLowerCase().trim();
-    const tCreatorRole = String(task.creatorRole || (task as any).creator_role || '').toUpperCase();
 
-    const matchesId = Boolean(currentId && tCreatorId && (currentId === tCreatorId || (currentRole === 'ADMINISTRATOR' && (tCreatorId === '1' || tCreatorId === 'usr_admin_01'))));
+    const matchesId = Boolean(currentId && tCreatorId && currentId === tCreatorId);
     const matchesEmail = Boolean(currentEmail && tCreatorEmail && currentEmail === tCreatorEmail);
-    const matchesName = Boolean(currentName && tCreatorName && (currentName === tCreatorName || tCreatorName.includes(currentName)));
-    const matchesAdmin = currentRole === 'ADMINISTRATOR' && (tCreatorRole === 'ADMINISTRATOR' || tCreatorName.includes('admin') || tCreatorId === '1' || tCreatorId === 'usr_admin_01');
 
-    return matchesId || matchesEmail || matchesName || matchesAdmin;
+    return matchesId || matchesEmail;
   }
 
   canStartWork(task: Task | null): boolean {
@@ -299,7 +293,7 @@ export class DesignerDashboardComponent implements OnInit {
 
   canReview(task: Task | null): boolean {
     if (!task) return false;
-    return task.status === 'SUBMITTED' && this.isTaskCreator(task);
+    return (task.status === 'SUBMITTED' || task.status === 'RESUBMITTED' || task.status === 'UNDER_REVIEW') && this.isTaskCreator(task);
   }
 
   getTaskProgress(task: Task | null | undefined): number {
@@ -477,11 +471,11 @@ export class DesignerDashboardComponent implements OnInit {
       }
     }
 
-    return '< 1m';
+    return '1 min';
   }
 
   formatDurationMs(diffMs: number): string {
-    if (diffMs <= 0) return '< 1m';
+    if (diffMs <= 0) return '1 min';
     if (diffMs < 60000) {
       const seconds = Math.max(1, Math.round(diffMs / 1000));
       return `${seconds}s`;
@@ -490,9 +484,9 @@ export class DesignerDashboardComponent implements OnInit {
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
     if (hours > 0) {
-      return `${hours}h ${minutes}m`;
+      return minutes > 0 ? `${hours}h ${minutes} min` : `${hours}h`;
     }
-    return `${minutes}m`;
+    return `${minutes} min`;
   }
 
   getInitials(name: string): string {
@@ -1354,7 +1348,7 @@ export class DesignerDashboardComponent implements OnInit {
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
       this.createdBriefFile.set(file);
-      this.createdBriefFileName.set('');
+      this.createdBriefFileName.set(file.name);
 
       const reader = new FileReader();
       reader.onload = (e: ProgressEvent<FileReader>) => {
@@ -1381,6 +1375,19 @@ export class DesignerDashboardComponent implements OnInit {
         this.createdBriefContent.set(`Document File: ${file.name}\nFile Size: ${(file.size / 1024).toFixed(1)} KB\nFile Type: ${file.type || 'Binary'}`);
       }
     }
+  }
+
+  clearTaskBriefFile(event?: Event): void {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    this.createdBriefFile.set(null);
+    this.createdBriefFileName.set('');
+    this.createdBriefDataUrl.set('');
+    this.createdBriefContent.set('');
+    const input = document.getElementById('dashBriefFileInput') as HTMLInputElement;
+    if (input) input.value = '';
   }
 
   openCreateTaskModal(preselectedDesignerId?: string): void {

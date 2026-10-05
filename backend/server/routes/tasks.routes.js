@@ -844,6 +844,23 @@ async function handleStatusTransition(req, res) {
     });
   }
 
+  // Only the user who created the task can Approve or Request Redesign
+  if (newStatus === 'APPROVED' || newStatus === 'REDESIGN_REQUIRED' || newStatus === 'REVISION_REQUIRED') {
+    const userId = req.user?.id ? String(req.user.id).trim() : (req.headers['x-user-id'] ? String(req.headers['x-user-id']).trim() : null);
+    const userEmail = req.user?.email ? String(req.user.email).toLowerCase().trim() : null;
+    const taskCreatorId = String(task.createdBy || task.created_by || '').trim();
+    const taskCreatorEmail = String(task.creatorEmail || task.creator_email || '').toLowerCase().trim();
+
+    const isCreator = (userId && taskCreatorId && userId === taskCreatorId) ||
+                      (userEmail && taskCreatorEmail && userEmail === taskCreatorEmail);
+
+    if (!isCreator) {
+      return res.status(403).json({
+        error: `Permission Denied: Only the user who created this task can ${newStatus === 'APPROVED' ? 'approve' : 'request redesign for'} it.`,
+      });
+    }
+  }
+
   const now = new Date().toISOString();
   task.status = newStatus;
   task.updatedAt = now;
@@ -868,8 +885,17 @@ async function handleStatusTransition(req, res) {
     createdAt: now,
   };
 
-  if (!task.statusHistory) task.statusHistory = [];
-  task.statusHistory.unshift(historyEntry);
+  const lastHistory = task.statusHistory && task.statusHistory.length > 0 ? task.statusHistory[0] : null;
+  const isDuplicateHistory = Boolean(
+    lastHistory &&
+    lastHistory.newStatus === newStatus &&
+    (new Date(now).getTime() - new Date(lastHistory.createdAt).getTime() < 15000)
+  );
+
+  if (!isDuplicateHistory) {
+    if (!task.statusHistory) task.statusHistory = [];
+    task.statusHistory.unshift(historyEntry);
+  }
 
   emitRealtimeEvent('task:status_changed', task);
   emitRealtimeEvent(`task:${newStatus.toLowerCase()}`, task);
@@ -1005,11 +1031,13 @@ async function handleStatusTransition(req, res) {
           `UPDATE tasks SET status = ?, reviewer_feedback = ?, updated_at = NOW() WHERE id = ?`,
           [newStatus, remark || null, numericTaskId]
         );
-        await dbPool.query(
-          `INSERT INTO task_status_history (task_id, actor_id, previous_status, new_status, remark, created_at)
-           VALUES (?, ?, ?, ?, ?, NOW())`,
-          [numericTaskId, numericActorId, previousStatus, newStatus, remark || null]
-        );
+        if (!isDuplicateHistory) {
+          await dbPool.query(
+            `INSERT INTO task_status_history (task_id, actor_id, previous_status, new_status, remark, created_at)
+             VALUES (?, ?, ?, ?, ?, NOW())`,
+            [numericTaskId, numericActorId, previousStatus, newStatus, remark || null]
+          );
+        }
         try {
           await dbPool.query(
             `INSERT INTO task_progress_history (task_id, actor_id, progress_percent, notes, created_at)

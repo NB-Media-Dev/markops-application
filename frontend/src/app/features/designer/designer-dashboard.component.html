@@ -1088,7 +1088,7 @@
                   id="dashBriefFileInput"
                 />
                 <label for="dashBriefFileInput" class="file-upload-label">
-                  <div class="upload-icon-circle">
+                  <div class="upload-icon-circle" [class.icon-attached]="createdBriefFileName()">
                     <span class="material-symbols-outlined">{{
                       createdBriefFileName() ? 'check_circle' : 'cloud_upload'
                     }}</span>
@@ -1096,14 +1096,29 @@
                   <div class="upload-text-content">
                     @if (!createdBriefFileName()) {
                       <span class="upload-main-text">Click or drag document to attach brief</span>
+                      <span class="upload-sub-text"
+                        >Supports PDF, DOCX, TXT, Images, Markdown & CSV</span
+                      >
                     }
                     @if (createdBriefFileName()) {
-                      <span class="upload-main-text text-success font-bold"></span>
+                      <div class="file-attached-info">
+                        <span class="upload-main-text text-success font-bold"
+                          >Attached: {{ createdBriefFileName() }}</span
+                        >
+                        <span class="upload-sub-text">File ready &bull; Click to change file</span>
+                      </div>
                     }
-                    <span class="upload-sub-text"
-                      >Supports PDF, DOCX, TXT, Images, Markdown & CSV</span
-                    >
                   </div>
+                  @if (createdBriefFileName()) {
+                    <button
+                      type="button"
+                      class="btn-clear-attached"
+                      (click)="clearTaskBriefFile($event)"
+                      title="Remove attached file"
+                    >
+                      <span class="material-symbols-outlined">close</span>
+                    </button>
+                  }
                 </label>
               </div>
             </div>

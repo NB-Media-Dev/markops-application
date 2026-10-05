@@ -183,6 +183,8 @@ export class TargetsComponent implements OnInit {
     this.searchQuery.set((event.target as HTMLInputElement).value);
   }
 
+  readonly editingItem = signal<TargetProgressStatus | null>(null);
+
   setFilter(filter: string): void {
     this.statusFilter.set(filter);
   }
@@ -193,6 +195,7 @@ export class TargetsComponent implements OnInit {
   }
 
   openCommonModal(): void {
+    this.editingItem.set(null);
     const common = this.targetService.commonTarget();
     this.targetInputCalls = common.dailyCallsTarget;
     this.targetInputInterested = common.dailyInterestedTarget;
@@ -200,18 +203,37 @@ export class TargetsComponent implements OnInit {
   }
 
   openEditModal(item?: TargetProgressStatus): void {
-    this.openCommonModal();
+    if (item) {
+      this.editingItem.set(item);
+      this.targetInputCalls = item.dailyCallsTarget;
+      this.targetInputInterested = item.dailyInterestedTarget;
+      this.isEditModalOpen.set(true);
+    } else {
+      this.openCommonModal();
+    }
   }
 
   closeEditModal(): void {
     this.isEditModalOpen.set(false);
+    this.editingItem.set(null);
   }
 
   saveTarget(): void {
-    this.targetService.setCommonTarget(
-      this.targetInputCalls,
-      this.targetInputInterested
-    );
+    const item = this.editingItem();
+    if (item && item.telecallerId) {
+      this.targetService.setTarget(
+        item.telecallerId,
+        this.targetInputCalls,
+        this.targetInputInterested,
+        item.telecallerName,
+        item.telecallerEmail
+      );
+    } else {
+      this.targetService.setCommonTarget(
+        this.targetInputCalls,
+        this.targetInputInterested
+      );
+    }
     this.closeEditModal();
   }
 

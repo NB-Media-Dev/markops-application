@@ -412,36 +412,44 @@ export class TaskDetailComponent implements OnInit {
     ];
   }
 
-  // Git Commit History Nodes
-  getGitCommitTimeline(task: Task | null) {
+  getGitCommitTimeline(task: Task | null): {
+    id: string;
+    hash: string;
+    authorLabel: string;
+    authorRole: string;
+    authorRoleClass: string;
+    message: string;
+    bulletPoints?: string[];
+    type: 'INIT' | 'STATUS' | 'VERSION' | 'COMMENT' | 'REVISION' | 'APPROVED';
+    badge: string;
+    badgeClass: string;
+    nodeClass: string;
+    createdAt: string;
+    relativeTime: string;
+    fileUrl?: string;
+    fileName?: string;
+    fileContent?: string;
+    versionNumber?: number;
+    duration?: string;
+  }[] {
     if (!task) return [];
-    const nodes: {
-      id: string;
-      hash: string;
-      authorLabel: string;
-      authorRole: string;
-      authorRoleClass: string;
-      message: string;
-      bulletPoints?: string[];
-      type: 'INIT' | 'STATUS' | 'VERSION' | 'COMMENT' | 'REVISION' | 'APPROVED';
-      badge: string;
-      badgeClass: string;
-      nodeClass: string;
-      createdAt: string;
-      relativeTime: string;
-      fileUrl?: string;
-      fileName?: string;
-      fileContent?: string;
-      versionNumber?: number;
-    }[] = [];
+
+    const nodes: any[] = [];
+    const seenNodeKeys = new Set<string>();
 
     const creatorName = this.getCreatorName(task);
     const creatorRole = task.creatorRole || 'ADMINISTRATOR';
     const assigneeName = this.getAssigneeName(task);
 
-    const hasInitialHistory = task.statusHistory && task.statusHistory.some((h) => !h.previousStatus || h.newStatus === 'ASSIGNED' || String(h.remark).toLowerCase().includes('task created'));
+    const hasInitialHistory =
+      task.statusHistory &&
+      task.statusHistory.some(
+        (h) => !h.previousStatus || h.newStatus === 'ASSIGNED' || String(h.remark).toLowerCase().includes('task created')
+      );
 
     if (!hasInitialHistory) {
+      const initKey = `INIT_${task.createdAt || ''}`;
+      seenNodeKeys.add(initKey);
       nodes.push({
         id: `init_${task.id}`,
         hash: this.generateShortHash(`init_${task.id}_${task.createdAt}`),
@@ -464,18 +472,48 @@ export class TaskDetailComponent implements OnInit {
     }
 
     if (task.statusHistory && task.statusHistory.length > 0) {
-      for (const h of task.statusHistory) {
+      const sortedHistory = [...task.statusHistory].sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+
+      let lastSeenStatus: string | null = null;
+
+      for (const h of sortedHistory) {
         if (!h.newStatus) continue;
         const remarkStr = String(h.remark || '').toLowerCase();
-        if (remarkStr.includes('uploaded creative version') && task.versions && task.versions.length > 0) {
+        if (
+          (h.newStatus === 'SUBMITTED' || remarkStr.includes('uploaded creative version') || remarkStr.includes('uploaded design asset')) &&
+          task.versions &&
+          task.versions.length > 0
+        ) {
           continue;
         }
+
+        // Deduplication: prevent consecutive identical status transitions or duplicate entries within 2 minutes
+        const timeMinuteBucket = h.createdAt ? Math.floor(new Date(h.createdAt).getTime() / 120000) : 0;
+        const dedupKey = `STATUS_${h.newStatus}_${timeMinuteBucket}`;
+        if (seenNodeKeys.has(dedupKey) || h.newStatus === lastSeenStatus) {
+          continue;
+        }
+        seenNodeKeys.add(dedupKey);
+        lastSeenStatus = h.newStatus;
 
         let actorName = h.actorName;
         let actorRole = (h.actorRole || '').toUpperCase();
 
-        const isDesignerAction = h.newStatus === 'IN_PROGRESS' || h.newStatus === 'ACCEPTED' || h.newStatus === 'SUBMITTED' || h.newStatus === 'RESUBMITTED' || remarkStr.includes('accepted') || remarkStr.includes('started');
-        const isCreatorAction = h.newStatus === 'REVISION_REQUIRED' || h.newStatus === 'APPROVED' || h.newStatus === 'ASSIGNED' || !h.previousStatus || remarkStr.includes('task created');
+        const isDesignerAction =
+          h.newStatus === 'IN_PROGRESS' ||
+          h.newStatus === 'ACCEPTED' ||
+          h.newStatus === 'SUBMITTED' ||
+          h.newStatus === 'RESUBMITTED' ||
+          remarkStr.includes('accepted') ||
+          remarkStr.includes('started');
+        const isCreatorAction =
+          h.newStatus === 'REVISION_REQUIRED' ||
+          h.newStatus === 'APPROVED' ||
+          h.newStatus === 'ASSIGNED' ||
+          !h.previousStatus ||
+          remarkStr.includes('task created');
 
         if (isDesignerAction) {
           actorRole = 'DESIGNER';
@@ -523,9 +561,10 @@ export class TaskDetailComponent implements OnInit {
           badgeLabel = 'UNDER REVIEW';
         }
 
-        const fallbackRemark = h.newStatus === 'REVISION_REQUIRED'
-          ? `Requested Redesign / Revision: "${task.reviewerFeedback || h.remark || 'Please update design as per specifications'}"`
-          : (h.remark || `Updated status to ${badgeLabel}`);
+        const fallbackRemark =
+          h.newStatus === 'REVISION_REQUIRED'
+            ? `Requested Redesign / Revision: "${task.reviewerFeedback || h.remark || 'Please update design as per specifications'}"`
+            : h.remark || `Updated status to ${badgeLabel}`;
 
         const rawRemark = h.remark || fallbackRemark;
         let messageText = rawRemark;
@@ -566,19 +605,26 @@ export class TaskDetailComponent implements OnInit {
 
     if (task.versions && task.versions.length > 0) {
       for (const v of task.versions) {
+        const verKey = `VERSION_${v.versionNumber}_${v.fileName || ''}`;
+        if (seenNodeKeys.has(verKey)) continue;
+        seenNodeKeys.add(verKey);
+
         const authorName = assigneeName || v.submittedByName || 'Designer';
         const authorRole = 'DESIGNER';
         const rolePrefix = 'Designer';
 
         const verBullets = this.parseBulletPoints(v.changelog);
-        const verMessage = verBullets.length > 0
-          ? `Uploaded version v${v.versionNumber}.0 (${v.fileName}):`
-          : `Uploaded design asset v${v.versionNumber}.0 (${v.fileName})`;
+        const verMessage =
+          verBullets.length > 0
+            ? `Uploaded version v${v.versionNumber}.0 (${v.fileName}):`
+            : `Uploaded design asset v${v.versionNumber}.0 (${v.fileName})`;
+
+        const duration = this.getVersionDuration(v, task);
 
         nodes.push({
           id: v.id || `ver_${v.versionNumber}`,
           hash: this.generateShortHash(`ver_${v.id || v.versionNumber}_${v.createdAt}`),
-          authorLabel: `${rolePrefix}(${authorName})`,
+          authorLabel: `${rolePrefix} (${authorName})`,
           authorRole,
           authorRoleClass: this.getRoleClass(authorRole),
           message: verMessage,
@@ -593,11 +639,94 @@ export class TaskDetailComponent implements OnInit {
           fileName: v.fileName,
           fileContent: v.fileContent,
           versionNumber: v.versionNumber,
+          duration,
         });
       }
     }
 
     return nodes.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  }
+
+  getVersionDuration(ver: any, task?: Task | null): string {
+    if (!ver || !ver.createdAt) return '';
+    const uploadTime = new Date(ver.createdAt).getTime();
+    if (isNaN(uploadTime)) return '';
+
+    let startTime: number | null = null;
+
+    if (task?.statusHistory && task.statusHistory.length > 0) {
+      const sortedHistory = [...task.statusHistory].sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+
+      // 1. Prioritize closest IN_PROGRESS or REVISION_REQUIRED before upload
+      for (const h of sortedHistory) {
+        const hTime = new Date(h.createdAt).getTime();
+        if (hTime <= uploadTime) {
+          const s = (h.newStatus || '').toUpperCase();
+          if (s === 'IN_PROGRESS' || s === 'REVISION_REQUIRED') {
+            startTime = hTime;
+          }
+        }
+      }
+
+      // 2. Fallback to ACCEPTED / ASSIGNED in statusHistory if no IN_PROGRESS was recorded
+      if (!startTime) {
+        for (const h of sortedHistory) {
+          const hTime = new Date(h.createdAt).getTime();
+          if (hTime <= uploadTime) {
+            const s = (h.newStatus || '').toUpperCase();
+            if (s === 'ACCEPTED' || s === 'ASSIGNED') {
+              startTime = hTime;
+            }
+          }
+        }
+      }
+    }
+
+    // 3. Fallback to previous version upload time
+    if (!startTime && task?.versions && task.versions.length > 1) {
+      const sortedVers = [...task.versions].sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+      const currIdx = sortedVers.findIndex(
+        (v) => (v.id && v.id === ver.id) || v.versionNumber === ver.versionNumber
+      );
+      if (currIdx > 0) {
+        startTime = new Date(sortedVers[currIdx - 1].createdAt).getTime();
+      }
+    }
+
+    // 4. Fallback to task.createdAt
+    if (!startTime && task?.createdAt) {
+      startTime = new Date(task.createdAt).getTime();
+    }
+
+    if (!startTime || isNaN(startTime) || uploadTime < startTime) {
+      return '1 min';
+    }
+
+    const diffMs = Math.max(0, uploadTime - startTime);
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMinutes = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMinutes / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffDays > 0) {
+      const remHours = diffHours % 24;
+      return remHours > 0 ? `${diffDays}d ${remHours}h` : `${diffDays}d`;
+    }
+    if (diffHours > 0) {
+      const remMins = diffMinutes % 60;
+      return remMins > 0 ? `${diffHours}h ${remMins} min` : `${diffHours}h`;
+    }
+    if (diffMinutes > 0) {
+      return `${diffMinutes} min`;
+    }
+    if (diffSec > 0) {
+      return `${diffSec}s`;
+    }
+    return '1 min';
   }
 
   // Permissions
@@ -617,19 +746,36 @@ export class TaskDetailComponent implements OnInit {
     return isAssignee && (t.status === 'IN_PROGRESS' || t.status === 'REVISION_REQUIRED');
   }
 
+  isTaskCreator(t: Task | null): boolean {
+    if (!t) return false;
+    const currentUser = this.authService.currentUser();
+    if (!currentUser) return false;
+
+    const currentId = String(currentUser.id !== undefined && currentUser.id !== null ? currentUser.id : '').trim().toLowerCase();
+    const currentEmail = String(currentUser.email || '').toLowerCase().trim();
+
+    const tCreatorId = String(
+      t.createdBy !== undefined && t.createdBy !== null
+        ? t.createdBy
+        : ((t as any).created_by !== undefined && (t as any).created_by !== null ? (t as any).created_by : '')
+    ).trim().toLowerCase();
+    const tCreatorEmail = String(t.creatorEmail || (t as any).creator_email || '').toLowerCase().trim();
+
+    const matchesId = Boolean(currentId && tCreatorId && currentId === tCreatorId);
+    const matchesEmail = Boolean(currentEmail && tCreatorEmail && currentEmail === tCreatorEmail);
+
+    return matchesId || matchesEmail;
+  }
+
   canReview(t: Task | null): boolean {
     if (!t) return false;
-    const user = this.authService.currentUser();
-    if (!user) return false;
-    const isCreatorOrAdmin = user.role === 'ADMINISTRATOR' || user.role === 'MARKETING_MANAGER' || user.role === 'BDM' || user.id === t.createdBy;
-    return isCreatorOrAdmin && (t.status === 'SUBMITTED' || t.status === 'RESUBMITTED' || t.status === 'UNDER_REVIEW');
+    const isCreator = this.isTaskCreator(t);
+    return isCreator && (t.status === 'SUBMITTED' || t.status === 'RESUBMITTED' || t.status === 'UNDER_REVIEW');
   }
 
   canDeleteTask(t: Task | null): boolean {
     if (!t) return false;
-    const user = this.authService.currentUser();
-    if (!user) return false;
-    return user.role === 'ADMINISTRATOR' || user.id === t.createdBy;
+    return this.isTaskCreator(t);
   }
 
   // Actions

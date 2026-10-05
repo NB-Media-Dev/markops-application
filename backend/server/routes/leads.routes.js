@@ -378,6 +378,27 @@ router.post('/leads/:id/assign', async (req, res) => {
 
   if (!lead) return res.status(404).json({ error: `Lead #${leadId} not found.` });
 
+  // Strict Creator Authorization: only the user who created this lead (or Administrator) can reassign it
+  const currentRole = String(req.user?.role || req.headers['x-user-role'] || '').toUpperCase();
+  const currentUserId = req.user?.id ? String(req.user.id) : (req.headers['x-user-id'] ? String(req.headers['x-user-id']) : null);
+  const currentUserEmail = (req.user?.email || req.headers['x-user-email'] || '').toLowerCase().trim();
+  const currentUserName = (req.user?.fullName || req.headers['x-user-name'] || '').toLowerCase().trim();
+
+  const leadCreatorId = lead.creator_id !== undefined ? String(lead.creator_id) : (lead.creatorId !== undefined ? String(lead.creatorId) : '');
+  const leadCreatorEmail = (lead.creator_user_email || lead.creator_email || lead.creatorEmail || '').toLowerCase().trim();
+  const leadCreatorName = (lead.creator_full_name || lead.creator_name || lead.creatorName || '').toLowerCase().trim();
+
+  const isCreator = Boolean(
+    (currentUserId && leadCreatorId && String(currentUserId) === String(leadCreatorId)) ||
+    (currentUserEmail && leadCreatorEmail && currentUserEmail === leadCreatorEmail) ||
+    (currentUserName && leadCreatorName && currentUserName === leadCreatorName) ||
+    (currentRole === 'ADMINISTRATOR')
+  );
+
+  if (!isCreator) {
+    return res.status(403).json({ error: 'Access Denied: Only the creator who created this lead can reassign it.' });
+  }
+
   let cleanAssignedTo = null;
   let effectiveName = assigneeName;
 
@@ -1531,9 +1552,47 @@ router.post('/telecaller-targets/common', (req, res) => {
 router.get('/telecaller-targets', (req, res) => {
   return res.json({
     common: dbCommonTargetStore,
-    targets: dbTelecallerTargetsStore,
+    targets: dbTelecallerTargetsStore || [],
   });
 });
 
+// POST /api/telecaller-targets/:telecallerId (Set target for single specific telecaller)
+router.post('/telecaller-targets/:telecallerId', (req, res) => {
+  const { telecallerId } = req.params;
+  const { dailyCallsTarget, dailyInterestedTarget, dailyDurationTargetSeconds, updatedBy, telecallerName, telecallerEmail } = req.body;
+
+  if (!Array.isArray(dbTelecallerTargetsStore)) {
+    dbTelecallerTargetsStore = [];
+  }
+
+  let target = dbTelecallerTargetsStore.find((t) => String(t.telecallerId) === String(telecallerId));
+  if (!target) {
+    target = {
+      id: `tgt_${telecallerId}_${Date.now()}`,
+      telecallerId: String(telecallerId),
+      telecallerName: telecallerName || 'Telecaller',
+      telecallerEmail: telecallerEmail || '',
+      dailyCallsTarget: Number(dailyCallsTarget) || 30,
+      dailyInterestedTarget: Number(dailyInterestedTarget) || 5,
+      dailyDurationTargetSeconds: (Number(dailyCallsTarget) || 30) * 120,
+      updatedBy: updatedBy || 'Marketing Manager',
+      updatedAt: new Date().toISOString(),
+    };
+    dbTelecallerTargetsStore.push(target);
+  } else {
+    if (dailyCallsTarget !== undefined) target.dailyCallsTarget = Number(dailyCallsTarget) || 30;
+    if (dailyInterestedTarget !== undefined) target.dailyInterestedTarget = Number(dailyInterestedTarget) || 5;
+    if (dailyDurationTargetSeconds !== undefined) target.dailyDurationTargetSeconds = Number(dailyDurationTargetSeconds) || (target.dailyCallsTarget * 120);
+    if (telecallerName) target.telecallerName = telecallerName;
+    if (telecallerEmail) target.telecallerEmail = telecallerEmail;
+    target.updatedBy = updatedBy || 'Marketing Manager';
+    target.updatedAt = new Date().toISOString();
+  }
+
+  emitRealtimeEvent('telecaller_target:user_updated', target);
+  return res.json(target);
+});
+
 module.exports = router;
+
 

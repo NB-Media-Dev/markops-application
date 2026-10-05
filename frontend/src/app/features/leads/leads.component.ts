@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal, computed, Input } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { LeadTelecallingService, LeadItem } from '../../core/services/lead-telecalling.service';
+import { LeadTelecallingService, LeadItem, CallActivityItem } from '../../core/services/lead-telecalling.service';
 import { UserManagementService } from '../../core/services/user-management.service';
 import { AuthService } from '../../core/services/auth.service';
 import { CampaignService } from '../../core/services/campaign.service';
@@ -596,6 +596,10 @@ export class LeadsComponent implements OnInit {
   }
 
   assignLead(lead: LeadItem) {
+    if (!this.canReassignLead(lead)) {
+      alert('Access Denied: Only the creator who created this lead can reassign it.');
+      return;
+    }
     this.selectedLeadForAssign = lead;
     const users = this.realUsersList();
     const currentAssigneeId = String(lead.assignedTo || (lead as any).assigned_to || '').trim();
@@ -936,27 +940,67 @@ export class LeadsComponent implements OnInit {
     }
   }
 
-  // Permission Check: Lead can be edited and deleted by the creator only (or Administrator)
-  canEditOrDeleteLead(lead: LeadItem): boolean {
+  // Permission Check: Reassign, Edit, and Delete are strictly restricted to the lead's creator only
+  isLeadCreator(lead: LeadItem): boolean {
+    if (!lead) return false;
     const user = this.authService.currentUser();
     if (!user) return false;
-    const userId = String(user.id || '');
-    const userEmail = (user.email || '').toLowerCase().trim();
-    const userName = (user.fullName || '').toLowerCase().trim();
+    const userId = String(user.id !== undefined && user.id !== null ? user.id : '').trim().toLowerCase();
+    const userEmail = String(user.email || '').toLowerCase().trim();
+    const userName = String(user.fullName || '').toLowerCase().trim();
 
     const rawLead = lead as any;
-    const leadCreatorId = rawLead.creatorId !== undefined ? String(rawLead.creatorId) : (rawLead.creator_id !== undefined ? String(rawLead.creator_id) : '');
-    const leadCreatorEmail = (rawLead.creatorEmail || rawLead.creator_email || '').toLowerCase().trim();
-    const leadCreatorName = (rawLead.creatorName || rawLead.creator_name || '').toLowerCase().trim();
+    const leadCreatorId = String(
+      rawLead.creatorId !== undefined && rawLead.creatorId !== null
+        ? rawLead.creatorId
+        : (rawLead.creator_id !== undefined && rawLead.creator_id !== null ? rawLead.creator_id : '')
+    ).trim().toLowerCase();
+    const leadCreatorEmail = String(rawLead.creatorEmail || rawLead.creator_email || '').toLowerCase().trim();
+    const leadCreatorName = String(rawLead.creatorName || rawLead.creator_name || '').toLowerCase().trim();
 
-    const isCreator = Boolean(
-      (userId && leadCreatorId && userId === leadCreatorId) ||
-      (userEmail && leadCreatorEmail && userEmail === leadCreatorEmail) ||
-      (userName && leadCreatorName && userName === leadCreatorName) ||
-      (user.role === 'ADMINISTRATOR')
-    );
+    const matchesId = Boolean(userId && leadCreatorId && userId === leadCreatorId);
+    const matchesEmail = Boolean(userEmail && leadCreatorEmail && userEmail === leadCreatorEmail);
+    const matchesName = Boolean(userName && leadCreatorName && userName === leadCreatorName);
+    const isAdmin = Boolean(user.role === 'ADMINISTRATOR');
 
-    return isCreator;
+    return matchesId || matchesEmail || matchesName || isAdmin;
+  }
+
+  canReassignLead(lead: LeadItem): boolean {
+    return this.isLeadCreator(lead);
+  }
+
+  canEditOrDeleteLead(lead: LeadItem): boolean {
+    return this.isLeadCreator(lead);
+  }
+
+  // Lead Details & Call History Modal State
+  readonly selectedLeadForDetails = signal<LeadItem | null>(null);
+
+  openLeadDetails(lead: LeadItem) {
+    this.selectedLeadForDetails.set(lead);
+  }
+
+  closeLeadDetails() {
+    this.selectedLeadForDetails.set(null);
+  }
+
+  getLeadHistoryCalls(lead: LeadItem | null): CallActivityItem[] {
+    if (!lead) return [];
+    const allCalls = this.leadService.calls();
+    const lId = String(lead.id || '').trim().toLowerCase();
+    const lPhone = String(lead.phone || '').replace(/\D/g, '');
+    const lName = `${lead.firstName || ''} ${lead.lastName || ''}`.trim().toLowerCase();
+
+    return allCalls.filter((c) => {
+      const cLeadId = String(c.leadId || '').trim().toLowerCase();
+      const cPhone = String(c.leadPhone || c.phone || '').replace(/\D/g, '');
+      const cLeadName = String(c.leadName || '').trim().toLowerCase();
+      if (cLeadId && lId && cLeadId === lId) return true;
+      if (lPhone && cPhone && lPhone === cPhone) return true;
+      if (cLeadName && lName && (cLeadName === lName || cLeadName.includes(lName) || lName.includes(cLeadName))) return true;
+      return false;
+    });
   }
 
   // Edit Lead Modal State

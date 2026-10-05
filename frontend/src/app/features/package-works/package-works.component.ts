@@ -140,19 +140,27 @@ export class PackageWorksComponent implements OnInit {
     return role === 'ADMINISTRATOR' || role === 'MARKETING_MANAGER' || role === 'BDM';
   });
 
-  canDeleteTask(task?: Task | null): boolean {
+  isTaskCreator(task?: Task | null): boolean {
     if (!task) return false;
     const currentUser = this.authService.currentUser();
-    if (!currentUser || !currentUser.id) return false;
-    const currentUserId = String(currentUser.id).trim();
-    const taskCreatorId = String(task.createdBy || (task as any).created_by || '').trim();
-    return currentUserId === taskCreatorId;
+    if (!currentUser) return false;
+    const currentUserId = String(currentUser.id ?? '').trim().toLowerCase();
+    const currentUserEmail = String(currentUser.email ?? '').trim().toLowerCase();
+    const taskCreatorId = String(task.createdBy ?? (task as any).created_by ?? '').trim().toLowerCase();
+    const taskCreatorEmail = String(task.creatorEmail ?? (task as any).creator_email ?? '').trim().toLowerCase();
+
+    return (!!currentUserId && !!taskCreatorId && currentUserId === taskCreatorId) ||
+           (!!currentUserEmail && !!taskCreatorEmail && currentUserEmail === taskCreatorEmail);
   }
 
-  readonly canReviewOrApprove = computed<boolean>(() => {
-    const role = this.currentRole();
-    return role === 'ADMINISTRATOR' || role === 'MARKETING_MANAGER' || role === 'BDM';
-  });
+  canDeleteTask(task?: Task | null): boolean {
+    return this.isTaskCreator(task);
+  }
+
+  canReview(task?: Task | null): boolean {
+    if (!task) return false;
+    return (task.status === 'SUBMITTED' || task.status === 'RESUBMITTED' || task.status === 'UNDER_REVIEW') && this.isTaskCreator(task);
+  }
 
 
   readonly uploadForm: FormGroup = this.fb.group({
@@ -381,10 +389,10 @@ export class PackageWorksComponent implements OnInit {
       });
     }
 
-    // 3. Telecalling Content / Operations (Telecalling Member Details, Targets) - Only for Admin, Marketing Manager, Telecaller, and BDM
-    if (role === 'ADMINISTRATOR' || role === 'MARKETING_MANAGER' || role === 'TELECALLER' || role === 'BDM') {
+    // 3. Telecalling Content / Operations (Telecalling Member Details, Targets) - Only for Admin, Telecaller
+    if (role === 'ADMINISTRATOR' || role === 'MARKETING_MANAGER' || role === 'TELECALLER') {
       const tcTabs: RoleOperationTab[] = [];
-      if (role === 'ADMINISTRATOR' || role === 'MARKETING_MANAGER' || role === 'BDM') {
+      if (role === 'ADMINISTRATOR' || role === 'MARKETING_MANAGER') {
         tcTabs.push({ id: 'TELECALLER_MEMBERS', label: 'Telecalling Member Details', icon: 'badge' });
       } else {
         tcTabs.push({ id: 'TELECALLING', label: 'Telecalling', icon: 'phone_in_talk' });
@@ -846,7 +854,7 @@ export class PackageWorksComponent implements OnInit {
         this.selectOperationTab(requestedTab);
       } else if (this.activeDepartment() === 'TELECALLING') {
         const role = this.currentRole();
-        if (role === 'ADMINISTRATOR' || role === 'MARKETING_MANAGER' || role === 'BDM') {
+        if (role === 'ADMINISTRATOR' || role === 'MARKETING_MANAGER') {
           this.selectOperationTab('TELECALLER_MEMBERS');
         } else {
           this.selectOperationTab('TELECALLING');
@@ -1211,7 +1219,7 @@ export class PackageWorksComponent implements OnInit {
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
       this.createdBriefFile.set(file);
-      this.createdBriefFileName.set('');
+      this.createdBriefFileName.set(file.name);
 
       const reader = new FileReader();
       reader.onload = (e: ProgressEvent<FileReader>) => {
@@ -1238,6 +1246,19 @@ export class PackageWorksComponent implements OnInit {
         this.createdBriefContent.set(`Document File: ${file.name}\nFile Size: ${(file.size / 1024).toFixed(1)} KB\nFile Type: ${file.type || 'Binary'}`);
       }
     }
+  }
+
+  clearTaskBriefFile(event?: Event): void {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    this.createdBriefFile.set(null);
+    this.createdBriefFileName.set('');
+    this.createdBriefDataUrl.set('');
+    this.createdBriefContent.set('');
+    const input = document.getElementById('briefFileInput') as HTMLInputElement;
+    if (input) input.value = '';
   }
 
   openDocViewer(event: Event, url?: string, name?: string, content?: string): void {
@@ -1944,11 +1965,11 @@ export class PackageWorksComponent implements OnInit {
       }
     }
 
-    return '< 1m';
+    return '1 min';
   }
 
   formatDurationMs(diffMs: number): string {
-    if (diffMs <= 0) return '< 1m';
+    if (diffMs <= 0) return '1 min';
     if (diffMs < 60000) {
       const seconds = Math.max(1, Math.round(diffMs / 1000));
       return `${seconds}s`;
@@ -1957,9 +1978,9 @@ export class PackageWorksComponent implements OnInit {
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
     if (hours > 0) {
-      return `${hours}h ${minutes}m`;
+      return minutes > 0 ? `${hours}h ${minutes} min` : `${hours}h`;
     }
-    return `${minutes}m`;
+    return `${minutes} min`;
   }
 
   appendRevisionRemark(snippet: string): void {

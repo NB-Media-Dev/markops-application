@@ -34,14 +34,14 @@ export const routes: Routes = [
       {
         path: 'tasks',
         canActivate: [roleGuard],
-        data: { title: 'Tasks', icon: 'task_alt', roles: ['ADMINISTRATOR', 'MARKETING_MANAGER', 'BDM'] },
+        data: { title: 'Tasks', icon: 'task_alt', roles: ['ADMINISTRATOR', 'BDM'] },
         loadComponent: () =>
           import('./features/designer/designer-dashboard.component').then((m) => m.DesignerDashboardComponent),
       },
       {
         path: 'tasks/:id',
         canActivate: [roleGuard],
-        data: { title: 'Task Details', icon: 'task_alt' },
+        data: { title: 'Task Details', icon: 'task_alt', roles: ['ADMINISTRATOR', 'BDM', 'DESIGNER'] },
         loadComponent: () =>
           import('./features/designer/task-detail/task-detail.component').then((m) => m.TaskDetailComponent),
       },
@@ -54,78 +54,86 @@ export const routes: Routes = [
       {
         path: 'campaigns',
         canActivate: [roleGuard],
-        data: { title: 'Campaigns', icon: 'campaign', roles: ['ADMINISTRATOR', 'MARKETING_MANAGER', 'DIGITAL_MARKETING'] },
+        data: { title: 'Campaigns', icon: 'campaign', roles: ['ADMINISTRATOR', 'DIGITAL_MARKETING'] },
         loadComponent: () =>
           import('./features/campaigns/campaigns.component').then((m) => m.CampaignsComponent),
       },
       {
         path: 'targets',
         canActivate: [roleGuard],
-        data: { title: 'Targets', icon: 'track_changes', roles: ['ADMINISTRATOR', 'MARKETING_MANAGER'] },
+        data: { title: 'Targets', icon: 'track_changes', roles: ['ADMINISTRATOR'] },
         loadComponent: () =>
           import('./features/targets/targets.component').then((m) => m.TargetsComponent),
       },
       {
         path: 'ads',
         canActivate: [roleGuard],
-        data: { title: 'Ads', icon: 'ads_click', roles: ['ADMINISTRATOR', 'MARKETING_MANAGER', 'DIGITAL_MARKETING'] },
+        data: { title: 'Ads', icon: 'ads_click', roles: ['ADMINISTRATOR', 'DIGITAL_MARKETING'] },
         loadComponent: () =>
           import('./features/ads/ads.component').then((m) => m.AdsComponent),
       },
       {
         path: 'ad-metrics',
         canActivate: [roleGuard],
-        data: { title: 'Ad Metrics', icon: 'query_stats', roles: ['ADMINISTRATOR', 'MARKETING_MANAGER', 'DIGITAL_MARKETING'] },
+        data: { title: 'Ad Metrics', icon: 'query_stats', roles: ['ADMINISTRATOR', 'DIGITAL_MARKETING'] },
         loadComponent: () =>
           import('./features/ads/ads.component').then((m) => m.AdsComponent),
       },
       {
         path: 'leads',
+        canActivate: [roleGuard],
+        data: { title: 'Leads', icon: 'contacts', roles: ['ADMINISTRATOR', 'DIGITAL_MARKETING', 'TELECALLER'] },
         loadComponent: () =>
           import('./features/leads/leads.component').then((m) => m.LeadsComponent),
-        data: { title: 'Leads', icon: 'contacts' },
       },
       {
         path: 'lead-source',
+        canActivate: [roleGuard],
+        data: { title: 'Lead Source', icon: 'share', roles: ['ADMINISTRATOR', 'DIGITAL_MARKETING'] },
         loadComponent: () =>
           import('./features/leads/leads.component').then((m) => m.LeadsComponent),
-        data: { title: 'Lead Source', icon: 'share' },
       },
       {
         path: 'assigned-leads',
+        canActivate: [roleGuard],
+        data: { title: 'Assigned Leads', icon: 'assignment_ind', roles: ['ADMINISTRATOR', 'TELECALLER'] },
         loadComponent: () =>
           import('./features/leads/leads.component').then((m) => m.LeadsComponent),
-        data: { title: 'Assigned Leads', icon: 'assignment_ind' },
       },
       {
         path: 'telecalling',
+        canActivate: [roleGuard],
+        data: { title: 'Telecalling', icon: 'phone_in_talk', roles: ['ADMINISTRATOR', 'TELECALLER'] },
         loadComponent: () =>
           import('./features/telecalling/telecalling.component').then((m) => m.TelecallingComponent),
-        data: { title: 'Telecalling', icon: 'phone_in_talk' },
       },
       {
         path: 'calls',
+        canActivate: [roleGuard],
+        data: { title: 'Calls', icon: 'phone_in_talk', roles: ['ADMINISTRATOR', 'TELECALLER'] },
         loadComponent: () =>
           import('./features/telecalling/telecalling.component').then((m) => m.TelecallingComponent),
-        data: { title: 'Calls', icon: 'phone_in_talk' },
       },
       {
         path: 'follow-ups',
+        canActivate: [roleGuard],
+        data: { title: 'Follow-ups', icon: 'event_repeat', roles: ['ADMINISTRATOR', 'TELECALLER'] },
         loadComponent: () =>
           import('./features/telecalling/telecalling.component').then((m) => m.TelecallingComponent),
-        data: { title: 'Follow-ups', icon: 'event_repeat' },
       },
       {
         path: 'qualification',
+        canActivate: [roleGuard],
+        data: { title: 'Qualification', icon: 'verified', roles: ['ADMINISTRATOR', 'TELECALLER'] },
         loadComponent: () =>
           import('./features/telecalling/telecalling.component').then((m) => m.TelecallingComponent),
-        data: { title: 'Qualification', icon: 'verified' },
       },
       {
         path: 'outcomes',
+        canActivate: [roleGuard],
+        data: { title: 'Outcomes', icon: 'done_all', roles: ['ADMINISTRATOR', 'TELECALLER'] },
         loadComponent: () =>
           import('./features/telecalling/telecalling.component').then((m) => m.TelecallingComponent),
-        data: { title: 'Outcomes', icon: 'done_all' },
       },
 
       {
@@ -142,15 +150,17 @@ export const routes: Routes = [
       },
       {
         path: 'reports',
+        canActivate: [roleGuard],
+        data: { title: 'Reports', icon: 'bar_chart', roles: ['ADMINISTRATOR', 'BDM'] },
         loadComponent: () =>
           import('./features/reports/reports.component').then((m) => m.ReportsComponent),
-        data: { title: 'Reports', icon: 'bar_chart' },
       },
       {
         path: 'performance',
+        canActivate: [roleGuard],
+        data: { title: 'Performance & Analysis', icon: 'trending_up', roles: ['ADMINISTRATOR', 'BDM', 'DESIGNER'] },
         loadComponent: () =>
           import('./features/performance/performance.component').then((m) => m.PerformanceComponent),
-        data: { title: 'Performance', icon: 'trending_up' },
       },
       {
         path: 'achievements',
@@ -168,7 +178,7 @@ export const routes: Routes = [
       {
         path: 'audit-logs',
         canActivate: [roleGuard],
-        data: { title: 'Audit Logs', icon: 'history', roles: ['ADMINISTRATOR', 'MARKETING_MANAGER', 'BDM'] },
+        data: { title: 'Audit Logs', icon: 'history', roles: ['ADMINISTRATOR', 'BDM'] },
         loadComponent: () =>
           import('./features/audit-logs/audit-logs.component').then((m) => m.AuditLogsComponent),
       },

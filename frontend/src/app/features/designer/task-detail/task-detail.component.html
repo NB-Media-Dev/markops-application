@@ -448,6 +448,12 @@
                     <div class="ver-header-left">
                       <span class="ver-chip">v{{ ver.versionNumber }}.0</span>
                       <span class="status-badge status-review">SUBMITTED</span>
+                      @if (getVersionDuration(ver, t)) {
+                        <span class="ver-duration-badge" title="Turnaround duration from In Progress to Upload">
+                          <span class="material-symbols-outlined icon-timer">schedule</span>
+                          <span>Duration: {{ getVersionDuration(ver, t) }}</span>
+                        </span>
+                      }
                       <span class="ver-date">{{ formatCommitDate(ver.createdAt) }}</span>
                     </div>
                     <div class="ver-header-right">
@@ -577,6 +583,12 @@
                         <span class="status-badge" [ngClass]="node.badgeClass">{{
                           node.badge
                         }}</span>
+                        @if (node.duration) {
+                          <span class="ver-duration-badge" title="Turnaround duration from In Progress to Upload">
+                            <span class="material-symbols-outlined icon-timer">schedule</span>
+                            <span>Duration: {{ node.duration }}</span>
+                          </span>
+                        }
                       </div>
                       <span class="tl-timestamp">{{ node.relativeTime }}</span>
                     </div>
