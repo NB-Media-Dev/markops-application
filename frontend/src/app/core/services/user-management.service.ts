@@ -37,9 +37,7 @@ export class UserManagementService {
     }
   }
 
-  /**
-   * Loads users directly from backend REST API (/api/users)
-   */
+ 
   async loadUsersFromDatabase(): Promise<void> {
     try {
       const res = await safeFetch('/api/users');
@@ -55,9 +53,7 @@ export class UserManagementService {
     }
   }
 
-  /**
-   * Creates a new user record in the database store
-   */
+
   async createUser(req: CreateUserRequest): Promise<ManagedUser> {
     const payload = {
       email: req.email.toLowerCase().trim(),
@@ -114,9 +110,7 @@ export class UserManagementService {
     return createdUser;
   }
 
-  /**
-   * Toggles active status in database store
-   */
+ 
   async toggleUserStatus(userId: string): Promise<void> {
     this._users.update((list) =>
       list.map((u) => (u.id === userId ? { ...u, isActive: !u.isActive } : u))
@@ -132,18 +126,14 @@ export class UserManagementService {
     }
   }
 
-  /**
-   * Updates user role in database store
-   */
+  
   updateUserRole(userId: string, newRole: UserRole): void {
     this._users.update((list) =>
       list.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
     );
   }
 
-  /**
-   * Updates an existing user record in the database store
-   */
+ 
   async updateUser(userId: string, updatedData: Partial<CreateUserRequest>): Promise<ManagedUser | null> {
     let updatedUser: ManagedUser | null = null;
 
@@ -180,9 +170,7 @@ export class UserManagementService {
     return updatedUser;
   }
 
-  /**
-   * Deletes a user record from the database store
-   */
+ 
   async deleteUser(userId: string): Promise<void> {
     if (userId === 'usr_admin_01' || userId === '1') {
       alert('System Administrator account is protected and cannot be deleted.');

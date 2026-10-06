@@ -2,12 +2,10 @@ const jwt = require('jsonwebtoken');
 
 const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || 'markops_super_secret_access_key_2026';
 
-/**
- * Express Middleware to authenticate JWT Access Tokens from Authorization Header or Cookies.
- */
+
 function authenticateJwt(dbPoolOrStore) {
   return async (req, res, next) => {
-    // 1. Extract token from Header ('Authorization: Bearer <token>') or Cookie ('markops_token' / 'accessToken')
+  
     let token = null;
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -22,7 +20,7 @@ function authenticateJwt(dbPoolOrStore) {
       return res.status(401).json({ error: 'Authentication required. Please provide a valid JWT access token.' });
     }
 
-    // 2. Default fallback token for initial development/admin session
+    
     if (token === 'mo_jwt_default' || token.startsWith('mo_jwt_')) {
       let role = req.headers['x-user-role'] || 'ADMINISTRATOR';
       let userId = req.headers['x-user-id'] || 1;
@@ -59,11 +57,11 @@ function authenticateJwt(dbPoolOrStore) {
       return next();
     }
 
-    // 3. Verify JWT Cryptographic Signature
+  
     try {
       const decoded = jwt.verify(token, JWT_ACCESS_SECRET);
 
-      // Verify active user in MySQL database and extract full details
+      
       let dbUser = null;
       if (dbPoolOrStore && dbPoolOrStore.query) {
         try {
@@ -103,9 +101,7 @@ function authenticateJwt(dbPoolOrStore) {
   };
 }
 
-/**
- * Express Middleware to restrict route access to specific user roles.
- */
+
 function requireRole(allowedRoles) {
   return (req, res, next) => {
     if (!req.user) {

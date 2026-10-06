@@ -9,10 +9,7 @@ function stripEmojis(str) {
     .trim();
 }
 
-/**
- * Resolves all known ID aliases strictly for a given user identifier, email, or name.
- * Prevents cross-user notification leakage between different accounts of same role.
- */
+
 function resolveUserAliases(userIdentifier, role = '', email = '', name = '') {
   const aliases = new Set();
   const strId = String(userIdentifier || '').toLowerCase().trim();
@@ -22,7 +19,7 @@ function resolveUserAliases(userIdentifier, role = '', email = '', name = '') {
 
   if (strId) {
     aliases.add(strId);
-    // Legacy mapping for standard default seed accounts
+  
     if (strId === '1' || strId === 'usr_admin_01') {
       aliases.add('1');
       aliases.add('usr_admin_01');
@@ -47,7 +44,7 @@ function resolveUserAliases(userIdentifier, role = '', email = '', name = '') {
   if (strEmail) aliases.add(strEmail);
   if (strName) aliases.add(strName);
 
-  // Cross-reference with in-memory users store strictly for this specific user
+
   if (Array.isArray(dbUsersStore)) {
     const userMatch = dbUsersStore.find(
       (u) =>
@@ -64,10 +61,7 @@ function resolveUserAliases(userIdentifier, role = '', email = '', name = '') {
   return aliases;
 }
 
-/**
- * Dispatches a notification to one or more user IDs.
- * Persists to MySQL if available, caches in dbNotificationsStore, and broadcasts via Socket.IO.
- */
+
 async function dispatchNotification({ userIds = [], title, message, type = 'INFO', targetRoute = null }) {
   const recipients = new Set();
   const arr = Array.isArray(userIds) ? userIds : [userIds];
@@ -94,7 +88,7 @@ async function dispatchNotification({ userIds = [], title, message, type = 'INFO
       targetRoute: targetRoute || null,
     };
 
-    // Deduplicate against the most recent 10 notifications for this user with same title & message within 5 seconds
+
     const isDuplicate = dbNotificationsStore.slice(0, 10).some(
       (n) =>
         String(n.userId).toLowerCase() === String(notifObj.userId).toLowerCase() &&
@@ -118,7 +112,7 @@ async function dispatchNotification({ userIds = [], title, message, type = 'INFO
           notifObj.id = String(res.insertId);
         }
       } catch (err) {
-        // Fallback if target_route column doesn't exist yet
+   
         try {
           const [res2] = await dbPool.query(
             `INSERT INTO notifications (user_id, title, message, type, is_read, created_at)
@@ -129,7 +123,7 @@ async function dispatchNotification({ userIds = [], title, message, type = 'INFO
             notifObj.id = String(res2.insertId);
           }
         } catch (innerErr) {
-          // MySQL table notice logged
+      
         }
       }
     }

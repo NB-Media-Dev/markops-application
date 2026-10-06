@@ -1,28 +1,22 @@
-/* ==========================================================================
-   MARKOPS ENTERPRISE DESIGN SYSTEM
-   Visual Direction: Warm Editorial Luxury & Modern Operations
-   Theme Tokens: Warm Cream (#F7F5EE / #FAF8F3), Deep Forest Green (#1B4332),
-                Sand Neutral (#F3EFE8), Pure White (#FFFFFF)
-   ========================================================================== */
 
 :root {
-  /* Editorial Palette - Forest & Pine Greens */
+
   --mo-forest-950: #0C1E16;
   --mo-forest-900: #122B20;
-  --mo-forest-800: #1B4332; /* Primary Brand Green */
+  --mo-forest-800: #1B4332; 
   --mo-forest-700: #245943;
   --mo-forest-600: #2D6A4F;
   --mo-forest-500: #40916C;
   --mo-forest-200: #B7E4C7;
-  --mo-forest-100: #D8EFE4; /* Mint pill / square badge */
+  --mo-forest-100: #D8EFE4;
   --mo-forest-50:  #EBF6F0;
 
-  /* Warm Cream & Sand Neutrals */
-  --mo-bg-body:    #F3F6FB; /* Soft modern light backdrop */
-  --mo-bg-card:    #FFFFFF; /* Pure crisp white cards */
+  
+  --mo-bg-body:    #F3F6FB; 
+  --mo-bg-card:    #FFFFFF; 
   --mo-sand-50:    #F8FAFC;
-  --mo-sand-100:   #E2E8F0; /* Table header & neutral pills */
-  --mo-sand-200:   #CBD5E1; /* Clean borders */
+  --mo-sand-100:   #E2E8F0; 
+  --mo-sand-200:   #CBD5E1; 
   --mo-sand-300:   #CBD5E1;
   --mo-sand-400:   #94A3B8;
   --mo-sand-500:   #64748B;
@@ -31,13 +25,12 @@
   --mo-sand-800:   #1E293B;
   --mo-sand-900:   #0F172A;
 
-  /* Text Colors */
+
   --mo-text-main:   #0F172A;
   --mo-text-muted:  #64748B;
   --mo-text-subtle: #94A3B8;
   --mo-text-label:  #475569;
 
-  /* Status Colors */
   --mo-status-green-bg: #E1F4EB;
   --mo-status-green-text: #1B4332;
   --mo-status-green-border: #C2E8D4;
@@ -58,12 +51,12 @@
   --mo-status-purple-text: #5D29A1;
   --mo-status-purple-border: #DDCFF8;
 
-  /* Typography */
+ 
   --mo-font-serif: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --mo-font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --mo-font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
 
-  /* Borders & Radii */
+ 
   --mo-radius-sm: 6px;
   --mo-radius-md: 10px;
   --mo-radius-lg: 14px;
@@ -73,7 +66,7 @@
   --mo-border-color: #CBD5E1;
   --mo-border-light: #E2E8F0;
 
-  /* Shadows */
+ 
   --mo-shadow-xs: 0 1px 3px rgba(15, 23, 42, 0.06);
   --mo-shadow-sm: 0 2px 6px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
   --mo-shadow-md: 0 4px 12px rgba(27, 67, 50, 0.06), 0 1px 3px rgba(0, 0, 0, 0.02);
@@ -100,7 +93,6 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Material Symbols Icon Helper */
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
   vertical-align: middle;
@@ -124,9 +116,7 @@ html, body {
   to { transform: rotate(360deg); }
 }
 
-/* ==========================================================================
-   PAGE HEADER & EDITORIAL TYPOGRAPHY
-   ========================================================================== */
+
 .page-header, .mo-top-header {
   display: flex;
   justify-content: space-between;
@@ -226,9 +216,7 @@ html, body {
   .bc-active { font-weight: 600; color: var(--mo-text-main); }
 }
 
-/* ==========================================================================
-   BUTTONS (Pill Styled per Reference)
-   ========================================================================== */
+
 .btn, .btn-primary, .btn-secondary, .btn-outline {
   display: inline-flex;
   align-items: center;
@@ -309,7 +297,7 @@ html, body {
   border-radius: var(--mo-radius-pill);
 }
 
-/* Pill Tabs Group Container */
+
 .pill-tabs-nav, .works-tabs {
   display: flex;
   align-items: center;
@@ -345,9 +333,7 @@ html, body {
   }
 }
 
-/* ==========================================================================
-   FORM CONTROLS & PILL INPUTS
-   ========================================================================== */
+
 input[type="text"],
 input[type="email"],
 input[type="password"],
@@ -413,9 +399,7 @@ label {
   gap: 1rem;
 }
 
-/* ==========================================================================
-   CARDS & CONTAINERS (Soft Ivory / Crisp White Surfaces)
-   ========================================================================== */
+
 .card, .table-card, .mo-widget-card, .mo-toolbar-card, .status-card, .shortcuts-card, .perf-card, .dl-card, .notif-card, .settings-card, .works-container-card {
   background-color: #FFFFFF;
   border: 1px solid var(--mo-border-color);
@@ -424,7 +408,7 @@ label {
   padding: 1.5rem;
 }
 
-/* Reference Metric KPI Card Grid */
+
 .kpi-grid, .reference-kpi-grid, .designers-kpi-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -543,9 +527,7 @@ label {
   }
 }
 
-/* ==========================================================================
-   DATA TABLES (Sand Header per Reference)
-   ========================================================================== */
+
 .table-responsive, .table-responsive-wrapper {
   width: 100%;
   overflow-x: auto;
@@ -602,9 +584,6 @@ label {
 .text-center { text-align: center; }
 .text-right { text-align: right; }
 
-/* ==========================================================================
-   BADGES, PILLS & COUNTERS
-   ========================================================================== */
 .badge, .platform-badge, .source-badge, .method-chip, .entity-tag, .stat-pill {
   display: inline-flex;
   align-items: center;
@@ -653,7 +632,7 @@ label {
   }
 }
 
-/* User Avatar Initial Circle */
+
 .user-avatar-circle, .avatar-circle, .designer-avatar-circle {
   width: 36px;
   height: 36px;
@@ -669,9 +648,7 @@ label {
   flex-shrink: 0;
 }
 
-/* ==========================================================================
-   MODALS & DRAWERS
-   ========================================================================== */
+
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -764,9 +741,7 @@ label {
   }
 }
 
-/* ==========================================================================
-   UNIVERSAL CLOSE BUTTON DESIGN
-   ========================================================================== */
+
 .close-btn, .btn-close, .toast-close, .modal-close {
   display: inline-flex !important;
   align-items: center !important;
@@ -809,9 +784,7 @@ label {
   }
 }
 
-/* ==========================================================================
-   FILTER BARS & CONTROLS
-   ========================================================================== */
+
 .filter-bar, .controls-bar, .mo-toolbar-card {
   background-color: #FFFFFF;
   border: 1px solid var(--mo-border-color);
@@ -849,9 +822,7 @@ label {
   }
 }
 
-/* ==========================================================================
-   SEARCH BARS & TOOLBARS
-   ========================================================================== */
+
 .search-box, .search-input-box {
   position: relative;
   display: flex;
@@ -881,9 +852,7 @@ label {
   }
 }
 
-/* ==========================================================================
-   ALERTS & TOASTS
-   ========================================================================== */
+
 .alert, .mo-alert {
   display: flex;
   align-items: center;
@@ -907,9 +876,7 @@ label {
   }
 }
 
-/* ==========================================================================
-   GLOBAL REALTIME NOTIFICATION TOAST
-   ========================================================================== */
+
 .global-realtime-toast, .realtime-toast {
   position: fixed;
   top: 1.5rem;
@@ -1007,9 +974,7 @@ label {
   }
 }
 
-/* ==========================================================================
-   GLOBAL TABLE CARDS & EMBEDDED HEADERS
-   ========================================================================== */
+
 .table-card {
   background: #FFFFFF;
   border-radius: 16px;
@@ -1299,7 +1264,7 @@ label {
   }
 }
 
-/* Universal Heading Inline Back Button (<- Title) */
+
 .page-heading {
   display: inline-flex;
   align-items: center;
@@ -1342,11 +1307,6 @@ label {
   }
 }
 
-/* ==========================================================================
-   COMPREHENSIVE RESPONSIVE DESIGN SYSTEM (Desktop, Tablet & Mobile)
-   ========================================================================== */
-
-/* 1. Global Viewport & Container Responsiveness */
 html, body {
   overflow-x: hidden;
   width: 100%;
@@ -1377,7 +1337,7 @@ html, body {
   }
 }
 
-/* 2. Universal Table Responsiveness */
+
 .table-responsive {
   width: 100%;
   overflow-x: auto;
@@ -1413,7 +1373,7 @@ html, body {
   }
 }
 
-/* 3. Top Heading & Header Toolbar Responsiveness */
+
 .page-header,
 .mo-top-header {
   @media (max-width: 768px) {
@@ -1453,7 +1413,7 @@ html, body {
   }
 }
 
-/* 4. Touch-Scrollable Tabs & Switcher Bars */
+
 .segmented-tabs-scroll,
 .package-pill-switcher,
 .quick-date-pills,
@@ -1480,7 +1440,7 @@ html, body {
   }
 }
 
-/* 5. Responsive Universal Card Headers */
+
 .card-title-bar {
   @media (max-width: 768px) {
     flex-direction: column;
@@ -1498,7 +1458,7 @@ html, body {
   }
 }
 
-/* 6. Universal Responsive Modals (Phones & Tablets) */
+
 @media (max-width: 768px) {
   .modal-backdrop,
   .doc-viewer-backdrop,
@@ -1567,7 +1527,7 @@ html, body {
     }
   }
 
-  /* Responsive Form Columns */
+
   .form-row,
   .form-row-3col {
     flex-direction: column !important;

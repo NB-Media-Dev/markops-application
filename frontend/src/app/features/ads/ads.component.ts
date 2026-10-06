@@ -342,7 +342,7 @@ export class AdsComponent implements OnInit {
           return false;
         });
       } else {
-        // Specific package filtering: MUST STRICTLY MATCH THIS PACKAGE ONLY!
+  
         list = list.filter((a) => {
           const aPkg = ((a as any).packageName || (a as any).package || '').toLowerCase().trim();
           const name = (a.name || '').toLowerCase();

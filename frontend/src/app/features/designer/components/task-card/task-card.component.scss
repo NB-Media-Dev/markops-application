@@ -27,7 +27,7 @@
     box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25), 0 8px 22px rgba(16, 185, 129, 0.12);
   }
 
-  /* Header Top Bar */
+
   .task-card-header {
     display: flex;
     align-items: center;
@@ -156,7 +156,7 @@
     }
   }
 
-  /* Title & Creator Flow Section */
+ 
   .task-title-section {
     display: flex;
     flex-direction: column;
@@ -216,7 +216,7 @@
     }
   }
 
-  /* Description */
+
   .task-desc {
     font-size: 0.82rem;
     color: #475569;
@@ -228,7 +228,7 @@
     overflow: hidden;
   }
 
-  /* Requirement Chip */
+
   .requirement-chip {
     display: inline-flex;
     align-items: center;
@@ -277,7 +277,7 @@
     }
   }
 
-  /* Revision Feedback Alert */
+ 
   .revision-feedback-alert {
     display: flex;
     align-items: center;
@@ -304,7 +304,7 @@
     }
   }
 
-  /* Progress Bar */
+ 
   .progress-container {
     display: flex;
     align-items: center;
@@ -335,7 +335,7 @@
     }
   }
 
-  /* Card Footer */
+ 
   .task-card-footer {
     display: flex;
     justify-content: space-between;

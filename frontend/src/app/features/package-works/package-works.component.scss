@@ -5,9 +5,7 @@
   padding-bottom: 2.5rem;
 }
 
-/* ==========================================================================
-   PAGE HEADER
-   ========================================================================== */
+
 .page-header {
   display: flex;
   align-items: flex-end;
@@ -401,9 +399,7 @@
   }
 }
 
-/* ==========================================================================
-   PACKAGE PILL SWITCHER
-   ========================================================================== */
+
 .package-pill-switcher {
   background-color: #FFFFFF;
   border: 1.5px solid #E2E8F0;
@@ -508,9 +504,7 @@
   }
 }
 
-/* ==========================================================================
-   KPI GRIDS & CONTAINERS
-   ========================================================================== */
+
 .kpi-grid,
 .kpi-grid-reports,
 .catalog-top-kpi-grid,
@@ -558,9 +552,7 @@
   }
 }
 
-/* ==========================================================================
-   UNIVERSAL KPI CARD (Compact, Low-Profile, Zero Wasted Space)
-   ========================================================================== */
+
 .kpi-card {
   border-radius: 12px;
   padding: 0.55rem 0.85rem;
@@ -578,7 +570,7 @@
     transform: translateY(-2px);
   }
 
-  /* Compact Horizontal Layout: Squircle Icon */
+
   .kpi-squircle-icon {
     width: 36px;
     height: 36px;
@@ -602,7 +594,6 @@
     }
   }
 
-  /* Compact Horizontal Layout: Title & Bold Number Cluster */
   .kpi-info-cluster {
     display: flex;
     flex-direction: column;
@@ -630,7 +621,7 @@
     }
   }
 
-  /* Support for header-row and body-row if used */
+
   .kpi-header-row {
     display: flex;
     align-items: center;
@@ -688,7 +679,7 @@
     }
   }
 
-  /* Legacy Grid Fallback Support (For Reports tab or other usages) */
+
   .kpi-top-row {
     display: flex;
     align-items: center;
@@ -770,7 +761,6 @@
     }
   }
 
-  /* Universal Squircle Icon Colors */
   .kpi-squircle-icon {
     &.icon-amber {
       background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
@@ -815,7 +805,7 @@
     }
   }
 
-  /* Universal Pill Badge Colors */
+
   .kpi-pill-badge,
   .kpi-footer-pill {
     &.pill-amber {
@@ -861,7 +851,7 @@
     }
   }
 
-  /* 1. Monthly Revenue / Amber Theme - Warm Sunset Amber */
+
   &.card-revenue,
   &.card-amber {
     background: linear-gradient(145deg, #FFFDF5 0%, #FEF3C7 100%);
@@ -897,7 +887,7 @@
     }
   }
 
-  /* 2. Total Leads / Purple Theme - Royal Indigo & Purple */
+ 
   &.card-leads,
   &.card-purple {
     background: linear-gradient(145deg, #FAF8FF 0%, #EDE9FE 100%);
@@ -933,7 +923,7 @@
     }
   }
 
-  /* 3. Conversion / Emerald Theme - Vibrant Mint Emerald */
+
   &.card-conversion,
   &.card-emerald {
     background: linear-gradient(145deg, #F4FDF8 0%, #D1FAE5 100%);
@@ -969,7 +959,7 @@
     }
   }
 
-  /* 4. Open Tasks / Rose Theme - Radiant Rose Coral */
+  
   &.card-tasks,
   &.card-rose {
     background: linear-gradient(145deg, #FFF5F7 0%, #FFE4E6 100%);
@@ -1005,7 +995,7 @@
     }
   }
 
-  /* 5. Indigo Theme */
+
   &.card-pkg-works,
   &.card-indigo {
     background: linear-gradient(145deg, #F5F3FF 0%, #EDE9FE 100%);
@@ -1041,7 +1031,7 @@
     }
   }
 
-  /* 6. Blue Theme */
+  
   &.card-blue,
   &.card-roi {
     background: linear-gradient(145deg, #F0F9FF 0%, #E0F2FE 100%);
@@ -1077,7 +1067,7 @@
     }
   }
 
-  /* 7. Teal Theme */
+ 
   &.card-teal,
   &.card-speed {
     background: linear-gradient(145deg, #F0FDFA 0%, #CCFBF1 100%);
@@ -1114,9 +1104,7 @@
   }
 }
 
-/* ==========================================================================
-   PACKAGE HUB OVERVIEW - COMPACT SLEEK KPI CARDS
-   ========================================================================== */
+
 .package-hub-kpi-grid {
   display: grid !important;
   grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
@@ -1225,7 +1213,7 @@
   }
 }
 
-/* Hub Section Title Header */
+
 .hub-section-header {
   display: flex;
   align-items: center;
@@ -1305,7 +1293,7 @@
   }
 }
 
-/* Hub 4 Department Showcase Grid (Medium 4-Column Row Layout) */
+
 .hub-departments-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -1452,7 +1440,7 @@
       }
     }
 
-    /* THEME 1: DESIGNER (Radiant Rose / Coral Pink) */
+    
     &.dept-card-designer {
       background: linear-gradient(145deg, #FFF1F2 0%, #FFE4E6 50%, #FECDD3 100%);
       border-color: #FDA4AF;
@@ -1501,7 +1489,7 @@
       }
     }
 
-    /* THEME 2: DIGITAL MARKETING (Warm Amber / Gold) */
+   
     &.dept-card-digital_marketing {
       background: linear-gradient(145deg, #FFFBEB 0%, #FEF3C7 50%, #FDE68A 100%);
       border-color: #FCD34D;
@@ -1550,7 +1538,7 @@
       }
     }
 
-    /* THEME 3: TELECALLING (Royal Lavender / Purple) */
+    
     &.dept-card-telecalling {
       background: linear-gradient(145deg, #F5F3FF 0%, #EDE9FE 50%, #DDD6FE 100%);
       border-color: #C4B5FD;
@@ -1599,7 +1587,6 @@
       }
     }
 
-    /* THEME 4: ANALYTICS & MANAGEMENT (Fresh Mint / Emerald) */
     &.dept-card-analytics {
       background: linear-gradient(145deg, #ECFDF5 0%, #D1FAE5 50%, #A7F3D0 100%);
       border-color: #6EE7B7;
@@ -1650,7 +1637,7 @@
   }
 }
 
-/* Hub Workspace Footer Card */
+
 .hub-workspace-footer-card {
   background: #FFFFFF;
   border: 1.5px solid #E2E8F0;
@@ -1729,9 +1716,7 @@
   }
 }
 
-/* ==========================================================================
-   EXECUTIVE UNIFIED OPERATIONS HUB (Modern Premium Redesign)
-   ========================================================================== */
+
 .executive-hub-card {
   background: #FFFFFF;
   border: 1.5px solid #E2E8F0;
@@ -1745,7 +1730,7 @@
   width: 100%;
   position: relative;
 
-  /* Tier 1: Department Cards Grid */
+ 
   .hub-departments-row {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -1839,7 +1824,7 @@
         }
       }
 
-      /* Active State Themes */
+   
       &.active {
         box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
 
@@ -1847,7 +1832,7 @@
           color: #FFFFFF;
         }
 
-        /* 1. Designer Theme (Rose) */
+    
         &.dept-designer {
           background: linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 100%);
           border-color: #FDA4AF;
@@ -1866,7 +1851,7 @@
           }
         }
 
-        /* 2. Digital Marketing Theme (Amber) */
+ 
         &.dept-digital_marketing {
           background: linear-gradient(135deg, #FFFDF5 0%, #FEF3C7 100%);
           border-color: #FCD34D;
@@ -1885,7 +1870,7 @@
           }
         }
 
-        /* 3. Telecalling Theme (Purple) */
+    
         &.dept-telecalling {
           background: linear-gradient(135deg, #FAF8FF 0%, #EDE9FE 100%);
           border-color: #C4B5FD;
@@ -1904,7 +1889,7 @@
           }
         }
 
-        /* 4. Analytics Theme (Emerald) */
+   
         &.dept-analytics {
           background: linear-gradient(135deg, #F4FDF8 0%, #D1FAE5 100%);
           border-color: #6EE7B7;
@@ -1926,7 +1911,7 @@
     }
   }
 
-  /* Connecting Divider */
+
   .hub-divider {
     display: flex;
     align-items: center;
@@ -1952,7 +1937,6 @@
     }
   }
 
-  /* Tier 2: Sub-tabs Pills Track */
   .hub-subtabs-row {
     display: flex;
     align-items: center;
@@ -2016,9 +2000,7 @@
   }
 }
 
-/* ==========================================================================
-   DEDICATED DEPARTMENT HEADER & NAVIGATION
-   ========================================================================== */
+
 .dept-dedicated-header {
   display: flex;
   align-items: center;
@@ -2168,9 +2150,7 @@
   }
 }
 
-/* ==========================================================================
-   TIER 2: DEPARTMENT NAVIGATION TABS BAR
-   ========================================================================== */
+
 .dept-nav-tabs-bar {
   display: inline-flex;
   align-items: center;
@@ -2296,15 +2276,13 @@
   }
 }
 
-/* ==========================================================================
-   MAIN WORKS CARD & EMBEDDED WRAPPER
-   ========================================================================== */
+
 .works-content-wrapper {
   background-color: transparent;
   border-radius: 20px;
 }
 
-/* Works Container Card */
+
 .works-container-card {
   background: #ffffff;
   border-radius: 16px;
@@ -2463,7 +2441,7 @@
   }
 }
 
-/* Modal Dialog Styles */
+
 .modal-backdrop {
   position: fixed;
   top: 0;
@@ -2678,7 +2656,7 @@
   }
 }
 
-/* File Upload Zone */
+
 .file-upload-zone {
   border: 2px dashed #cbd5e1;
   border-radius: 12px;
@@ -2781,7 +2759,7 @@
   }
 }
 
-/* Clickable Task Row & Actions */
+
 .task-row-clickable {
   cursor: pointer;
   transition: background-color 0.15s ease;
@@ -2824,7 +2802,7 @@
   }
 }
 
-/* Task Detail Drawer Modal */
+
 .task-detail-modal-box {
   max-width: 800px;
   width: 95%;
@@ -2842,7 +2820,7 @@
   }
 }
 
-/* Detail Navigation Tabs */
+
 .task-detail-tabs {
   display: flex;
   background: #f8fafc;
@@ -2878,7 +2856,7 @@
   }
 }
 
-/* Embedded Iframe Container */
+
 .iframe-preview-container {
   border: 1px solid #cbd5e1;
   border-radius: 12px;
@@ -2903,7 +2881,7 @@
   }
 }
 
-/* Version Cards List */
+
 .version-card {
   transition: border-color 0.15s ease;
 
@@ -2912,7 +2890,7 @@
   }
 }
 
-/* Timeline Progression */
+
 .timeline-container {
   position: relative;
   padding-left: 1.25rem;
@@ -2950,7 +2928,7 @@
   border-color: #fde68a !important;
 }
 
-/* Embedded Reports & Audit Panels */
+
 .package-reports-panel,
 .package-audits-panel {
   padding: 0.5rem;
@@ -3272,11 +3250,7 @@
   }
 }
 
-/* ==========================================================================
-   TASK AUDIT LINK & COMPREHENSIVE AUDIT LIFECYCLE MODAL
-   ========================================================================== */
 
-/* Master Audit Table Styling */
 .audit-master-table {
   width: 100%;
 
@@ -3325,7 +3299,7 @@
   }
 }
 
-/* Target Reference Clickable Task Button */
+
 .task-audit-link-cell {
   display: inline-flex;
   align-items: center;
@@ -3395,7 +3369,7 @@
   }
 }
 
-/* Document & Image Viewer Modal - Highest Z-Index so it appears in front of all drawers & modals */
+
 .doc-viewer-backdrop {
   z-index: 2200 !important;
   background: rgba(15, 23, 42, 0.8) !important;
@@ -3489,7 +3463,6 @@
   }
 }
 
-/* Task Audit Modal Container */
 .task-audit-modal-backdrop {
   z-index: 1060;
   background: rgba(15, 23, 42, 0.65);
@@ -3508,7 +3481,7 @@
   overflow: hidden;
 }
 
-/* Modal Header */
+
 .task-audit-header {
   padding: 1rem 1.25rem;
   background: #ffffff;
@@ -3582,7 +3555,7 @@
   }
 }
 
-/* Modal Body */
+
 .task-audit-body {
   padding: 1.15rem 1.25rem;
   overflow-y: auto;
@@ -3590,7 +3563,6 @@
   background: #f8fafc;
 }
 
-/* Section 1: Clean 2-Column Personnel Overview Grid */
 .audit-meta-grid-2col {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -3711,7 +3683,7 @@
   }
 }
 
-/* Requirement Specs Box */
+
 .audit-spec-box {
   background: #ffffff;
   border: 1px solid #e2e8f0;
@@ -3739,7 +3711,7 @@
   }
 }
 
-/* Audit Section Containers */
+
 .audit-section {
   background: #ffffff;
   border: 1px solid #e2e8f0;
@@ -3764,7 +3736,7 @@
   }
 }
 
-/* Status Journey Stepper */
+
 .journey-stepper-wrap {
   display: flex;
   align-items: center;
@@ -3838,7 +3810,7 @@
   }
 }
 
-/* Status Lifecycle Journey Table */
+
 .audit-journey-table-container {
   overflow-x: auto;
   border: 1px solid #e2e8f0;
@@ -3890,7 +3862,7 @@
   }
 }
 
-/* Deliverables & Attachments Cards */
+
 .deliverables-list {
   display: flex;
   flex-direction: column;
@@ -4033,9 +4005,6 @@
   }
 }
 
-/* ==========================================================================
-   REDESIGNED UPLOAD DESIGN & REQUEST REDESIGN MODALS (Editorial Luxury)
-   ========================================================================== */
 
 .upload-modal-backdrop,
 .redesign-modal-backdrop {
@@ -4278,7 +4247,7 @@
     }
   }
 
-  /* Interactive File Dropzone */
+
   .creative-upload-dropzone {
     border: 2px dashed #818CF8;
     background: #F8FAFC;
@@ -4349,7 +4318,7 @@
     }
   }
 
-  /* Selected Asset Preview Card */
+  
   .selected-asset-preview-card {
     display: flex;
     align-items: center;
@@ -4480,7 +4449,7 @@
     }
   }
 
-  /* Quick Preset Snippet Chips */
+
   .quick-preset-chips-box {
     margin-top: 0.25rem;
 
@@ -4520,7 +4489,7 @@
     }
   }
 
-  /* Compact Designer Bar & Context Card for Redesign */
+ 
   .designer-compact-bar {
     display: inline-flex;
     align-items: center;
@@ -4604,7 +4573,7 @@
     }
   }
 
-  /* Redesign Preset Chips */
+ 
   .redesign-chips-wrap {
     display: flex;
     flex-wrap: wrap;
@@ -4639,7 +4608,7 @@
     }
   }
 
-  /* Modal Footer */
+
   .modal-footer {
     padding: 0.75rem 1.25rem;
     border-top: 1px solid #E2E8F0;
@@ -4675,9 +4644,6 @@
   }
 }
 
-/* ==========================================================================
-   HEADER CREATE PACKAGE BUTTON
-   ========================================================================== */
 .header-create-pkg-btn {
   display: inline-flex;
   align-items: center;
@@ -4708,9 +4674,7 @@
   }
 }
 
-/* ==========================================================================
-   PRODUCT PACKAGES CATALOG & CARDS (MATCHING USER SCREENSHOT)
-   ========================================================================== */
+
 .packages-catalog-container {
   display: flex;
   flex-direction: column;
@@ -4816,14 +4780,13 @@
   }
 }
 
-/* Custom Packages Grid */
+
 .custom-packages-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   gap: 1.5rem;
 }
 
-/* Package Display Card (Matching Screenshot) */
 .package-display-card {
   background: #FFFFFF;
   border: 1.5px solid #E2E8F0;
@@ -4842,8 +4805,7 @@
     box-shadow: 0 16px 36px rgba(37, 99, 235, 0.14), 0 4px 12px rgba(15, 23, 42, 0.04);
     border-color: #3B82F6;
   }
-
-  /* Banner Image Area */
+ 
   .package-display-banner {
     position: relative;
     width: 100%;
@@ -4972,7 +4934,7 @@
     }
   }
 
-  /* Bottom Card Info */
+ 
   .package-display-info {
     padding-top: 14px;
     display: flex;
@@ -5094,7 +5056,6 @@
   }
 }
 
-/* Empty State Card */
 .packages-empty-state-card {
   background: #FFFFFF;
   border: 1.5px dashed #CBD5E1;
@@ -5163,9 +5124,7 @@
   }
 }
 
-/* ==========================================================================
-   CUSTOM MODALS (PACKAGE FORM & DETAILS)
-   ========================================================================== */
+
 .custom-modal-overlay {
   position: fixed;
   inset: 0;
@@ -5340,7 +5299,6 @@
       }
     }
 
-    /* Uploader Area */
     .pkg-image-uploader-area {
       .pkg-file-hidden-input {
         display: none;
@@ -5382,7 +5340,7 @@
       }
     }
 
-    /* Active Image Preview */
+  
     .pkg-active-image-preview {
       .preview-img-container {
         position: relative;
@@ -5429,7 +5387,6 @@
       }
     }
 
-    /* Detail Modal Specifics */
     .detail-banner-card {
       border-radius: 14px;
       overflow: hidden;
@@ -5567,9 +5524,6 @@
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* ==========================================================================
-   4K UHD & ULTRA-WIDE RESPONSIVE SYSTEM (2560px & 3840px+)
-   ========================================================================== */
 
 @media (min-width: 2560px) {
   .header-breadcrumb {
@@ -5710,4 +5664,4 @@
     }
   }
 }
-
+

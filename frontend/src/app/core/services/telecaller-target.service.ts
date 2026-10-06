@@ -118,9 +118,7 @@ export class TelecallerTargetService {
     };
   }
 
-  /**
-   * Sets common target quota applicable for ALL telecallers across the system
-   */
+  
   setCommonTarget(dailyCallsTarget: number, dailyInterestedTarget = 5): void {
     const currentUser = this.authService.currentUser();
     const updatedBy = currentUser ? `${currentUser.fullName} (${currentUser.role})` : 'Marketing Manager';
@@ -147,9 +145,7 @@ export class TelecallerTargetService {
     }
   }
 
-  /**
-   * Sets custom target quota for ONE specific telecaller user
-   */
+  
   setTarget(
     telecallerId: string,
     dailyCallsTarget: number,
@@ -210,9 +206,7 @@ export class TelecallerTargetService {
     });
   }
 
-  /**
-   * Scans today's logged calls and evaluates all telecallers against the common daily target quota.
-   */
+
   async evaluateTargetsAndBroadcastNotifications(
     callsList: any[],
     usersList: any[]
@@ -234,7 +228,7 @@ export class TelecallerTargetService {
         return isCaller && isToday;
       });
 
-      // 1 per 1 lead: count UNIQUE leads called today
+   
       const uniqueLeadIds = new Set(
         todayCalls
           .map((c) => String(c.leadId || c.leadPhone || c.leadName || '').trim().toLowerCase())
@@ -270,9 +264,9 @@ export class TelecallerTargetService {
           }
         }
       } else {
-        // Target Achieved
+       
         try {
-          // Notify Telecaller
+        
           await safeFetch('/api/notifications', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -285,7 +279,7 @@ export class TelecallerTargetService {
             }),
           });
 
-          // Notify Admin & Marketing Manager
+      
           const targetsToNotify = Array.from(new Set([adminUser.id, mktgManager.id]));
           for (const recipientId of targetsToNotify) {
             await safeFetch('/api/notifications', {

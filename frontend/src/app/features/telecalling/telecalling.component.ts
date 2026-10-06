@@ -23,19 +23,18 @@ export function isLeadAssignedToUser(l: any, user: any): boolean {
   const lAssignedTo = String(l.assignedTo || l.assigned_to || '').trim();
   const lAssigneeName = String(l.assigneeName || l.assignee_name || '').toLowerCase().trim();
 
-  // 1. Direct ID match (numerical or string)
+
   if (uId && lAssignedTo && (lAssignedTo === uId || lAssignedTo.toLowerCase() === uId.toLowerCase())) return true;
 
-  // 2. Direct Email match
+
   if (uEmail && lAssignedTo && lAssignedTo.toLowerCase() === uEmail) return true;
 
-  // 3. Exact full name match
+ 
   if (uName && (lAssigneeName === uName || lAssignedTo.toLowerCase() === uName)) return true;
 
-  // 4. Partial full name / first name match
+
   if (uName && lAssigneeName && (lAssigneeName.includes(uName) || uName.includes(lAssigneeName))) return true;
 
-  // 5. Common fallback names
   if ((uName.includes('priya') || uEmail.includes('priya') || uId.includes('priya')) &&
       (lAssigneeName.includes('priya') || lAssignedTo.toLowerCase().includes('priya'))) {
     return true;
@@ -77,13 +76,11 @@ export function isLeadInCampaign(lead: any, campaign: any): boolean {
 export function isLeadBelongsToUser(l: any, user: any): boolean {
   if (!l || !user) return false;
 
-  // 1. Direct assignment to this user
+ 
   if (isLeadAssignedToUser(l, user)) return true;
 
-  // Telecallers must strictly only see leads assigned to them
   if (user.role === 'TELECALLER') return false;
 
-  // 2. Created / uploaded from this user's login (for managers/uploaders)
   const uId = String(user.id || '').toLowerCase().trim();
   const uEmail = String(user.email || '').toLowerCase().trim();
   const uName = String(user.fullName || '').toLowerCase().trim();
@@ -130,7 +127,7 @@ export function parseFollowUpDateTime(dateStr?: string, timeStr?: string): Date 
   let d = String(dateStr).trim();
   let t = String(timeStr || '').trim();
 
-  // 1. Handle ISO or strings with 'T' e.g. "2026-09-30T23:30:00"
+
   if (d.includes('T')) {
     const parts = d.split('T');
     d = parts[0];
@@ -571,7 +568,7 @@ export class TelecallingComponent implements OnInit, OnDestroy {
     return list.slice(start, start + size);
   });
 
-  // Bound function properties to pass directly to child components
+ 
   readonly getStatusBadgeClassFn = (status?: string) => this.getStatusBadgeClass(status);
   readonly getLeadCurrentStatusFn = (lead: LeadItem) => this.getLeadCurrentStatus(lead);
   readonly hasScheduledCallbackFn = (lead: LeadItem) => this.hasScheduledCallback(lead);

@@ -210,7 +210,6 @@
   }
 }
 
-/* Reports KPI Grid (3x2) */
 .kpi-grid-reports {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -331,7 +330,6 @@
   }
 }
 
-/* Audit table actions */
 .task-audit-link-cell {
   .btn-task-audit-link {
     all: unset;

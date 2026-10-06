@@ -7,6 +7,7 @@ import { CampaignService } from '../../core/services/campaign.service';
 import { LeadTelecallingService } from '../../core/services/lead-telecalling.service';
 import { ConversionTransactionService } from '../../core/services/conversion-transaction.service';
 import { PackageService } from '../../core/services/package.service';
+import { TelecallerTargetService } from '../../core/services/telecaller-target.service';
 import { isTaskForPackage } from '../../core/models/package.model';
 
 @Component({
@@ -24,6 +25,7 @@ export class DashboardComponent implements OnInit {
   readonly leadService = inject(LeadTelecallingService);
   readonly txnService = inject(ConversionTransactionService);
   readonly packageService = inject(PackageService);
+  readonly targetService = inject(TelecallerTargetService);
 
   openPackage(pkgName: string): void {
     if (!pkgName) return;
@@ -114,7 +116,11 @@ export class DashboardComponent implements OnInit {
   );
 
   readonly designerRevisionCount = computed(() =>
-    this.designerAssignedTasks().filter((t) => t.status === 'REVISION_REQUIRED').length
+    this.designerAssignedTasks().filter((t) => t.status === 'REVISION_REQUIRED' || t.status === 'REDESIGN_REQUIRED').length
+  );
+
+  readonly designerInReviewCount = computed(() =>
+    this.designerAssignedTasks().filter((t) => t.status === 'SUBMITTED' || t.status === 'RESUBMITTED' || t.status === 'UNDER_REVIEW').length
   );
 
   readonly designerApprovedCount = computed(() =>
@@ -123,27 +129,160 @@ export class DashboardComponent implements OnInit {
 
  
   readonly telecallerAssignedLeads = computed(() => {
-    const leads = this.leadService.leads();
+    const all = this.leadService.leads();
     const user = this.authService.currentUser();
-    const userId = String(user?.id || '');
-    const userName = String(user?.fullName || '').toLowerCase().trim();
+    if (!user) return [];
+    const uId = String(user.id || '').trim();
+    const uEmail = String(user.email || '').toLowerCase().trim();
+    const uName = String(user.fullName || '').toLowerCase().trim();
 
-    return leads.filter((l) =>
-      (l.assignedTo && String(l.assignedTo) === userId) ||
-      (l.assigneeName && userName && String(l.assigneeName).toLowerCase().includes(userName))
-    );
+    return all.filter((l) => {
+      const aTo = String(l.assignedTo || (l as any).assigned_to || '').trim();
+      const aName = String(l.assigneeName || (l as any).assignee_name || '').toLowerCase().trim();
+      return (uId && aTo === uId) ||
+             (uEmail && aTo.toLowerCase() === uEmail) ||
+             (uName && (aName === uName || aTo.toLowerCase() === uName || aName.includes(uName)));
+    });
   });
 
-  readonly telecallerPendingCallsCount = computed(() =>
-    this.telecallerAssignedLeads().filter((l) => (l.status as string) === 'NEW' || (l.status as string) === 'CONTACTED' || (l.status as string) === 'INTERESTED' || !l.status).length
-  );
+  readonly myLeadsCount = computed(() => this.telecallerAssignedLeads().length);
+
+  readonly myLeadsTodayCount = computed(() => {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    return this.telecallerAssignedLeads().filter((l) => (l.createdAt || '').startsWith(todayStr)).length;
+  });
+
+  readonly myPendingQueueCount = computed(() => {
+    return this.telecallerAssignedLeads().filter(
+      (l) => !l.status || l.status === 'NEW' || l.status === 'CONTACTED' || l.status === 'LINE_BUSY'
+    ).length;
+  });
+
+  readonly myCallsToday = computed(() => {
+    const allCalls = this.leadService.calls();
+    const user = this.authService.currentUser();
+    if (!user) return [];
+    const uId = String(user.id || '').trim();
+    const uEmail = String(user.email || '').toLowerCase().trim();
+    const uName = String(user.fullName || '').toLowerCase().trim();
+    const todayStr = new Date().toISOString().slice(0, 10);
+
+    return allCalls.filter((c) => {
+      const cId = String(c.telecallerId || '').trim();
+      const cEmail = String(c.telecallerEmail || '').toLowerCase().trim();
+      const cName = String(c.telecallerName || '').toLowerCase().trim();
+      const isCaller = (uId && cId === uId) ||
+                       (uEmail && cEmail === uEmail) ||
+                       (uName && (cName === uName || cName.includes(uName)));
+      const isToday = c.calledAt && c.calledAt.startsWith(todayStr);
+      return isCaller && isToday;
+    });
+  });
+
+  readonly myUniqueCallsTodayCount = computed(() => {
+    const set = new Set(
+      this.myCallsToday()
+        .map((c) => String(c.leadId || c.leadPhone || c.leadName || '').trim().toLowerCase())
+        .filter(Boolean)
+    );
+    return set.size;
+  });
+
+  readonly myTargetQuota = computed(() => {
+    const user = this.authService.currentUser();
+    if (!user) return 30;
+    const t = this.targetService.getTargetForTelecaller(user.id);
+    return t.dailyCallsTarget || 30;
+  });
+
+  readonly myCallsTargetPct = computed(() => {
+    const quota = this.myTargetQuota();
+    const completed = this.myUniqueCallsTodayCount();
+    return quota > 0 ? Math.min(100, Math.round((completed / quota) * 100)) : 0;
+  });
+
+  readonly myInterestedCount = computed(() => {
+    return this.telecallerAssignedLeads().filter(
+      (l) => String(l.status || '').toUpperCase() === 'INTERESTED'
+    ).length;
+  });
+
+  readonly myTargetInterestedQuota = computed(() => {
+    const user = this.authService.currentUser();
+    if (!user) return 5;
+    const t = this.targetService.getTargetForTelecaller(user.id);
+    return t.dailyInterestedTarget || 5;
+  });
+
+  readonly myInterestedTodayCount = computed(() => {
+    const todayCalls = this.myCallsToday();
+    const set = new Set(
+      todayCalls
+        .filter((c) => String(c.outcome || '').toUpperCase() === 'INTERESTED')
+        .map((c) => String(c.leadId || c.leadPhone || c.leadName || '').trim().toLowerCase())
+        .filter(Boolean)
+    );
+    return set.size;
+  });
+
+  readonly myInterestedTargetPct = computed(() => {
+    const quota = this.myTargetInterestedQuota();
+    const completed = this.myInterestedTodayCount();
+    return quota > 0 ? Math.min(100, Math.round((completed / quota) * 100)) : 0;
+  });
+
+  readonly myPaidConversionsCount = computed(() => {
+    const leads = this.telecallerAssignedLeads();
+    const leadPaidCount = leads.filter((l) => {
+      const s = String(l.status || '').toUpperCase();
+      return s === 'PAID' || s === 'QUALIFIED' || s === 'CONVERTED' || (l as any).paid === true;
+    }).length;
+
+    const txns = this.txnService.transactions();
+    const user = this.authService.currentUser();
+    const uId = String(user?.id || '').trim();
+    const uName = String(user?.fullName || '').toLowerCase().trim();
+    const userTxnsCount = txns.filter((t) => {
+      const rec = String(t.recordedBy || '').trim();
+      const recName = String(t.recorderName || '').toLowerCase().trim();
+      return (uId && rec === uId) || (uName && (recName === uName || recName.includes(uName)));
+    }).length;
+
+    return Math.max(leadPaidCount, userTxnsCount);
+  });
+
+  readonly myPaidTodayCount = computed(() => {
+    const todayCalls = this.myCallsToday();
+    const set = new Set(
+      todayCalls
+        .filter((c) => {
+          const out = String(c.outcome || '').toUpperCase();
+          return out === 'PAID' || out === 'QUALIFIED' || out === 'CONVERTED';
+        })
+        .map((c) => String(c.leadId || c.leadPhone || c.leadName || '').trim().toLowerCase())
+        .filter(Boolean)
+    );
+    return set.size;
+  });
+
+  readonly myFollowUpsCount = computed(() => {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    return this.telecallerAssignedLeads().filter((l) => {
+      if (l.status === 'FOLLOW_UP' || l.status === 'CALLBACK_REQUESTED' || (l as any).followUpDate) {
+        const d = (l as any).followUpDate || '';
+        return !d || d.startsWith(todayStr) || d <= todayStr;
+      }
+      return false;
+    }).length;
+  });
+
+  readonly telecallerPendingCallsCount = computed(() => this.myPendingQueueCount());
 
   readonly telecallerQualifiedCount = computed(() =>
     this.telecallerAssignedLeads().filter((l) => l.status === 'QUALIFIED').length
   );
 
   readonly totalCallsLoggedCount = computed(() => this.leadService.calls().length);
-
 
   readonly bdmCreatedTasks = computed(() => {
     const tasks = this.taskService.tasks();
@@ -306,6 +445,8 @@ export class DashboardComponent implements OnInit {
       this.packageService.loadSummary().subscribe();
       this.campaignService.loadCampaigns().subscribe();
       this.leadService.loadLeads().subscribe();
+      this.leadService.loadCalls().subscribe();
+      this.targetService.loadTargets();
       this.txnService.loadTransactions().subscribe();
     }
   }

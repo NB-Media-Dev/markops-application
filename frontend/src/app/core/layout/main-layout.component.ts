@@ -160,7 +160,7 @@ export class MainLayoutComponent {
     if (role === 'TELECALLER' || uName.includes('raj') || uId.includes('raj')) {
       list = list.filter((n) => {
         const titleLower = (n.title || '').toLowerCase();
-        // Do not show designer task approvals, uploads, redesigns to telecallers
+     
         if (
           titleLower.includes('task approved') ||
           titleLower.includes('design uploaded') ||

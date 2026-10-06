@@ -1,8 +1,6 @@
 const memoryAuditLogs = [];
 
-/**
- * Creates an audit log entry in MySQL database or fallback memory store.
- */
+
 async function recordAuditLog(dbPool, params) {
   const logId = `audit_${Math.random().toString(36).substring(2, 11)}`;
   const now = new Date().toISOString();
@@ -49,9 +47,7 @@ async function recordAuditLog(dbPool, params) {
   return auditItem;
 }
 
-/**
- * Returns audit log entries from MySQL or memory fallback.
- */
+
 async function getAuditLogs(dbPool) {
   const combined = [];
   const seen = new Set();

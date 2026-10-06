@@ -276,7 +276,7 @@ async function populateTaskRelations(tasksList) {
   return tasksList;
 }
 
-// GET /api/tasks - Retrieve task list from MySQL database with status/assignee/creator filters
+
 router.get('/tasks', async (req, res) => {
   const { status, assignedTo, createdBy, view } = req.query;
   const currentUserId = req.user?.id ? String(req.user.id) : null;
@@ -370,7 +370,7 @@ router.get('/tasks', async (req, res) => {
     }
   }
 
-  // In-Memory Fallback if DB is not connected
+ 
   let filtered = [...dbTasksStore];
   if (status && status !== 'ALL') {
     filtered = filtered.filter((t) => t.status === status);
@@ -385,9 +385,7 @@ router.get('/tasks', async (req, res) => {
   return res.json(filtered);
 });
 
-// GET /api/tasks/my - Retrieve tasks relevant to current user
-// For DESIGNER: tasks assigned to them (WHERE t.assigned_to = ?)
-// For ADMIN, BDM, MARKETING: tasks created by them (WHERE t.created_by = ?)
+
 router.get('/tasks/my', async (req, res) => {
   const currentUserId = req.user?.id;
   if (!currentUserId) {
@@ -485,7 +483,7 @@ router.get('/tasks/my', async (req, res) => {
     }
   }
 
-  // In-Memory Fallback
+
   let filtered = dbTasksStore.filter((t) => {
     if (isDesigner) {
       const aId = String(t.assignedTo || t.assigned_to || '').toLowerCase().trim();
@@ -512,7 +510,7 @@ router.get('/tasks/my', async (req, res) => {
   return res.json(filtered);
 });
 
-// DELETE /api/tasks/:id - Delete a task; strictly authorized ONLY if task.created_by === req.user.id
+
 router.delete('/tasks/:id', async (req, res) => {
   const currentUserId = req.user?.id;
   if (!currentUserId) {
@@ -524,7 +522,6 @@ router.delete('/tasks/:id', async (req, res) => {
     return res.status(400).json({ error: 'Task ID parameter is required.' });
   }
 
-  // 1. Get task by ID (from database or in-memory store)
   let task = null;
   if (dbPool) {
     try {
@@ -555,18 +552,18 @@ router.delete('/tasks/:id', async (req, res) => {
     return res.status(404).json({ error: 'Task record not found.' });
   }
 
-  // 2. Compare: task.created_by === req.user.id
+
   const taskCreatorId = String(task.created_by !== undefined ? task.created_by : task.createdBy).trim();
   const authUserId = String(currentUserId).trim();
 
-  // 3. If they don't match, return HTTP 403 Forbidden with exact message
+ 
   if (taskCreatorId !== authUserId) {
     return res.status(403).json({
       message: 'You can only delete tasks created by you.',
     });
   }
 
-  // 4. If they match: allow DELETE
+ 
   if (dbPool) {
     try {
       await dbPool.query('DELETE FROM task_status_history WHERE task_id = ?', [taskId]);
@@ -601,7 +598,7 @@ router.delete('/tasks/:id', async (req, res) => {
   return res.json({ success: true, message: 'Task deleted successfully.' });
 });
 
-// GET /api/tasks/:id - Retrieve single task detail with versions, history, and comments
+
 router.get('/tasks/:id', async (req, res) => {
   const task = await findTask(req.params.id);
   if (!task) {
@@ -610,7 +607,7 @@ router.get('/tasks/:id', async (req, res) => {
   return res.json(task);
 });
 
-// POST /api/tasks - Manager, Admin & BDM Task Creation flow (Only assignable to Designers)
+
 router.post('/tasks', async (req, res) => {
   const userRole = String(req.headers['x-user-role'] || req.user?.role || req.body.creatorRole || '').toUpperCase();
   if (userRole && !['ADMINISTRATOR', 'MARKETING_MANAGER', 'BDM'].includes(userRole)) {
@@ -628,7 +625,7 @@ router.post('/tasks', async (req, res) => {
 
   if (dbPool) {
     try {
-      // Look up creator & assignee names from users table
+     
       let creatorFullName = creatorName || req.user?.fullName || req.headers['x-user-name'] || 'Manager';
       let creatorUserEmail = creatorEmail || req.user?.email || '';
       let assigneeFullName = req.body.assigneeName || 'Designer';
@@ -648,7 +645,7 @@ router.post('/tasks', async (req, res) => {
           }
           if (aUser) {
             assigneeFullName = aUser.full_name;
-            // role_id 4 is DESIGNER
+         
             if (aUser.role_id !== 4) {
               return res.status(400).json({ error: 'Tasks can only be assigned to users with the DESIGNER role.' });
             }
@@ -681,7 +678,7 @@ router.post('/tasks', async (req, res) => {
       if (result && result.insertId) {
         const newTaskId = result.insertId;
 
-        // Record initial status history in MySQL
+      
         await dbPool.query(
           `INSERT INTO task_status_history (task_id, actor_id, previous_status, new_status, remark, created_at)
            VALUES (?, ?, NULL, ?, ?, NOW())`,
@@ -746,7 +743,7 @@ router.post('/tasks', async (req, res) => {
     }
   }
 
-  // Fallback in-memory task
+ 
   const taskId = `task_${Math.random().toString(36).substring(2, 11)}`;
   const now = new Date().toISOString();
   const targetUser = dbUsersStore.find((u) => String(u.id) === String(assignedTo));
@@ -815,7 +812,7 @@ router.post('/tasks', async (req, res) => {
   return res.status(201).json(newTask);
 });
 
-// Status Transition Handler with Validation & Activity History Recording
+
 async function handleStatusTransition(req, res) {
   const { status, remark, actorId, actorName, actorEmail } = req.body;
   const taskId = req.params.id;
@@ -828,14 +825,14 @@ async function handleStatusTransition(req, res) {
   const previousStatus = task.status;
   const newStatus = String(status);
 
-  // Status transition validation matrix (Enforces Section 12 & 21)
+ 
   const validTransitions = {
     ASSIGNED: ['IN_PROGRESS'],
     IN_PROGRESS: ['SUBMITTED'],
     SUBMITTED: ['APPROVED', 'REDESIGN_REQUIRED', 'REVISION_REQUIRED'],
     REDESIGN_REQUIRED: ['IN_PROGRESS'],
     REVISION_REQUIRED: ['IN_PROGRESS'],
-    APPROVED: [], // Terminal workflow status
+    APPROVED: [], 
   };
 
   if (validTransitions[previousStatus] && !validTransitions[previousStatus].includes(newStatus)) {
@@ -844,7 +841,7 @@ async function handleStatusTransition(req, res) {
     });
   }
 
-  // Only the user who created the task can Approve or Request Redesign
+
   if (newStatus === 'APPROVED' || newStatus === 'REDESIGN_REQUIRED' || newStatus === 'REVISION_REQUIRED') {
     const userId = req.user?.id ? String(req.user.id).trim() : (req.headers['x-user-id'] ? String(req.headers['x-user-id']).trim() : null);
     const userEmail = req.user?.email ? String(req.user.email).toLowerCase().trim() : null;
@@ -902,8 +899,7 @@ async function handleStatusTransition(req, res) {
   emitRealtimeEvent('task:updated', task);
   emitRealtimeEvent('task:progress_updated', { taskId, progressPercent: task.progressPercent });
 
-  // NOTIFICATION DISPATCH MATRIX FOR TASK STATUS UPDATES:
-  // 1. START WORK (IN_PROGRESS)
+  
   if (newStatus === 'IN_PROGRESS') {
     const isRedesign = previousStatus === 'REDESIGN_REQUIRED' || previousStatus === 'REVISION_REQUIRED';
     const creatorId = task.createdBy || task.created_by;
@@ -931,7 +927,7 @@ async function handleStatusTransition(req, res) {
       });
     }
   }
-  // 2. RE-DESIGN (REDESIGN_REQUIRED / REVISION_REQUIRED)
+ 
   else if (newStatus === 'REDESIGN_REQUIRED' || newStatus === 'REVISION_REQUIRED') {
     const assignedId = task.assignedTo || task.assigned_to;
     const creatorId = task.createdBy || task.created_by || effectiveActorId;
@@ -956,7 +952,7 @@ async function handleStatusTransition(req, res) {
       });
     }
   }
-  // 3. APPROVED
+
   else if (newStatus === 'APPROVED') {
     const assignedId = task.assignedTo || task.assigned_to;
     const creatorId = task.createdBy || task.created_by || effectiveActorId;
@@ -981,7 +977,7 @@ async function handleStatusTransition(req, res) {
       });
     }
   }
-  // 4. TASK ASSIGNED (if transitioning back to ASSIGNED)
+
   else if (newStatus === 'ASSIGNED') {
     const assignedId = task.assignedTo || task.assigned_to;
     if (assignedId) {
@@ -994,7 +990,7 @@ async function handleStatusTransition(req, res) {
       });
     }
   }
-  // 5. SUBMITTED / UNDER_REVIEW / RESUBMITTED (Designer submits work -> notifies Creator)
+ 
   else if (newStatus === 'SUBMITTED' || newStatus === 'RESUBMITTED' || newStatus === 'UNDER_REVIEW') {
     const creatorId = task.createdBy || task.created_by;
     const assignedId = task.assignedTo || task.assigned_to;
@@ -1051,7 +1047,7 @@ async function handleStatusTransition(req, res) {
     }
   }
 
-  // Update in-memory cache if task exists there
+
   const memIndex = dbTasksStore.findIndex((t) => String(t.id) === String(taskId));
   if (memIndex !== -1) {
     dbTasksStore[memIndex] = { ...dbTasksStore[memIndex], ...task };
@@ -1072,7 +1068,6 @@ async function handleStatusTransition(req, res) {
   return res.json(task);
 }
 
-// Creative Version Submission Handler (Increments V1, V2, stores file, transitions to SUBMITTED)
 async function handleVersionSubmission(req, res, targetTask) {
   const { fileName, changelog, fileSize, filePath, fileContent, submittedBy, submittedByName, submittedByEmail } = req.body;
   const taskId = req.params.id;
@@ -1130,7 +1125,7 @@ async function handleVersionSubmission(req, res, targetTask) {
   const creatorId = task.createdBy || task.created_by;
   const assignedId = task.assignedTo || task.assigned_to || effectiveUser;
 
-  // Notify creator / manager that design was uploaded
+
   if (creatorId) {
     await dispatchNotification({
       userIds: [creatorId],
@@ -1141,7 +1136,7 @@ async function handleVersionSubmission(req, res, targetTask) {
     });
   }
 
-  // Notify designer confirmation
+
   if (assignedId) {
     await dispatchNotification({
       userIds: [assignedId],
@@ -1219,7 +1214,7 @@ async function handleVersionSubmission(req, res, targetTask) {
     }
   }
 
-  // Update in-memory cache if task exists there
+
   const memIndex = dbTasksStore.findIndex((t) => String(t.id) === String(taskId));
   if (memIndex !== -1) {
     dbTasksStore[memIndex] = { ...dbTasksStore[memIndex], ...task };
@@ -1243,11 +1238,7 @@ async function handleVersionSubmission(req, res, targetTask) {
   return res.status(201).json({ task, version: newVersion });
 }
 
-// ============================================================================
-// DEDICATED WORKFLOW ACTION APIS (Enforcing JWT Role Permissions & Status Validation)
-// ============================================================================
 
-// 1. POST /api/tasks/:id/start - Designer clicks START WORK (ASSIGNED -> IN_PROGRESS)
 router.post('/tasks/:id/start', async (req, res) => {
   const taskId = req.params.id;
   const task = await findTask(taskId);
@@ -1269,7 +1260,6 @@ router.post('/tasks/:id/start', async (req, res) => {
   return handleStatusTransition(req, res);
 });
 
-// 2. POST /api/tasks/:id/submit - Designer uploads design (IN_PROGRESS -> SUBMITTED)
 router.post('/tasks/:id/submit', async (req, res) => {
   const taskId = req.params.id;
   const task = await findTask(taskId);
@@ -1293,7 +1283,7 @@ router.post('/tasks/:id/submit', async (req, res) => {
   return handleVersionSubmission(req, res, task);
 });
 
-// 3. POST /api/tasks/:id/approve - Strictly authorized ONLY for task creator
+
 router.post('/tasks/:id/approve', async (req, res) => {
   const taskId = req.params.id;
   const task = await findTask(taskId);
@@ -1323,7 +1313,7 @@ router.post('/tasks/:id/approve', async (req, res) => {
   return handleStatusTransition(req, res);
 });
 
-// 4. POST /api/tasks/:id/redesign - Strictly authorized ONLY for task creator
+
 router.post('/tasks/:id/redesign', async (req, res) => {
   const taskId = req.params.id;
   const task = await findTask(taskId);
@@ -1359,7 +1349,7 @@ router.post('/tasks/:id/redesign', async (req, res) => {
   return handleStatusTransition(req, res);
 });
 
-// 5. POST /api/tasks/:id/start-redesign - Designer clicks START REDESIGN (REDESIGN_REQUIRED -> IN_PROGRESS)
+
 router.post('/tasks/:id/start-redesign', async (req, res) => {
   const taskId = req.params.id;
   const task = await findTask(taskId);
@@ -1381,15 +1371,15 @@ router.post('/tasks/:id/start-redesign', async (req, res) => {
   return handleStatusTransition(req, res);
 });
 
-// Generic Status Transition Endpoints (with full transition validation)
+
 router.post('/tasks/:id/status', handleStatusTransition);
 router.put('/tasks/:id/status', handleStatusTransition);
 router.patch('/tasks/:id/status', handleStatusTransition);
 
-// Creative Version Submission Endpoint
+
 router.post('/tasks/:id/versions', handleVersionSubmission);
 
-// POST /api/tasks/:id/comments - Add Comment / Reviewer Remark
+
 router.post('/tasks/:id/comments', async (req, res) => {
   const { comment, userId, userName, userRole } = req.body;
   const taskId = req.params.id;
@@ -1440,13 +1430,13 @@ router.post('/tasks/:id/comments', async (req, res) => {
     }
   }
 
-  // Update in-memory cache if task exists there
+
   const memIndex = dbTasksStore.findIndex((t) => String(t.id) === String(taskId));
   if (memIndex !== -1) {
     dbTasksStore[memIndex] = { ...dbTasksStore[memIndex], ...task };
   }
 
-  // Dispatch comment notifications between Creator and Designer
+ 
   const taskCreatorId = task.createdBy || task.created_by;
   const taskAssigneeId = task.assignedTo || task.assigned_to;
   const commenterId = String(detectedUserId);
@@ -1474,28 +1464,28 @@ router.post('/tasks/:id/comments', async (req, res) => {
   return res.status(201).json(newComment);
 });
 
-// GET /api/tasks/:id/history - Retrieve task status history and work tracking entries
+
 router.get('/tasks/:id/history', async (req, res) => {
   const task = await findTask(req.params.id);
   if (!task) return res.status(404).json({ error: 'Task not found.' });
   return res.json(task.statusHistory || []);
 });
 
-// GET /api/tasks/:id/submissions - Retrieve task deliverables & version history
+ory
 router.get('/tasks/:id/submissions', async (req, res) => {
   const task = await findTask(req.params.id);
   if (!task) return res.status(404).json({ error: 'Task not found.' });
   return res.json(task.versions || []);
 });
 
-// GET /api/tasks/:id/messages - Retrieve task discussion & activity messages
+
 router.get('/tasks/:id/messages', async (req, res) => {
   const task = await findTask(req.params.id);
   if (!task) return res.status(404).json({ error: 'Task not found.' });
   return res.json(task.comments || []);
 });
 
-// POST /api/tasks/:id/messages - Add communication message / redesign remarks
+
 router.post('/tasks/:id/messages', async (req, res) => {
   const { message, comment, userId, userName, userRole } = req.body;
   req.body.comment = message || comment;
@@ -1540,7 +1530,7 @@ router.post('/tasks/:id/messages', async (req, res) => {
 });
 
 
-// GET /api/designer/dashboard-metrics - Designer Dashboard Real-time Analytics
+
 router.get('/designer/dashboard-metrics', async (req, res) => {
   const targetUserId = req.query.userId || req.headers['x-user-id'];
   let designerTasks = [];

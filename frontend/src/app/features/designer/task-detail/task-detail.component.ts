@@ -35,7 +35,7 @@ export class TaskDetailComponent implements OnInit {
   readonly activeTab = signal<'DETAIL' | 'VERSIONS' | 'HISTORY'>('DETAIL');
   readonly returnUrl = signal<string>('/package-works');
 
-  // Modals & Viewers
+
   readonly isUploadModalOpen = signal<boolean>(false);
   readonly uploadForm: FormGroup = this.fb.group({
     fileName: ['', Validators.required],
@@ -113,7 +113,7 @@ export class TaskDetailComponent implements OnInit {
       if (sel) {
         this.task.set(sel);
       } else {
-        // Direct fetch fallback
+      
         const res = await fetch(getApiUrl(`/api/tasks/${taskId}`));
         if (res.ok) {
           const data: Task = await res.json();
@@ -348,7 +348,7 @@ export class TaskDetailComponent implements OnInit {
     return `${mb} MB`;
   }
 
-  // Workflow Pipeline Stepper
+ 
   getWorkflowSteps(t: Task | null) {
     if (!t) return [];
     const status = t.status;
@@ -489,7 +489,7 @@ export class TaskDetailComponent implements OnInit {
           continue;
         }
 
-        // Deduplication: prevent consecutive identical status transitions or duplicate entries within 2 minutes
+  
         const timeMinuteBucket = h.createdAt ? Math.floor(new Date(h.createdAt).getTime() / 120000) : 0;
         const dedupKey = `STATUS_${h.newStatus}_${timeMinuteBucket}`;
         if (seenNodeKeys.has(dedupKey) || h.newStatus === lastSeenStatus) {
@@ -659,7 +659,6 @@ export class TaskDetailComponent implements OnInit {
         (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       );
 
-      // 1. Prioritize closest IN_PROGRESS or REVISION_REQUIRED before upload
       for (const h of sortedHistory) {
         const hTime = new Date(h.createdAt).getTime();
         if (hTime <= uploadTime) {
@@ -670,7 +669,6 @@ export class TaskDetailComponent implements OnInit {
         }
       }
 
-      // 2. Fallback to ACCEPTED / ASSIGNED in statusHistory if no IN_PROGRESS was recorded
       if (!startTime) {
         for (const h of sortedHistory) {
           const hTime = new Date(h.createdAt).getTime();
@@ -684,7 +682,6 @@ export class TaskDetailComponent implements OnInit {
       }
     }
 
-    // 3. Fallback to previous version upload time
     if (!startTime && task?.versions && task.versions.length > 1) {
       const sortedVers = [...task.versions].sort(
         (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
@@ -697,7 +694,7 @@ export class TaskDetailComponent implements OnInit {
       }
     }
 
-    // 4. Fallback to task.createdAt
+   
     if (!startTime && task?.createdAt) {
       startTime = new Date(task.createdAt).getTime();
     }
@@ -729,7 +726,7 @@ export class TaskDetailComponent implements OnInit {
     return '1 min';
   }
 
-  // Permissions
+
   canStartWork(t: Task | null): boolean {
     if (!t) return false;
     const user = this.authService.currentUser();
@@ -778,7 +775,7 @@ export class TaskDetailComponent implements OnInit {
     return this.isTaskCreator(t);
   }
 
-  // Actions
+
   async onStartWork(): Promise<void> {
     const t = this.task();
     if (!t) return;
@@ -990,7 +987,7 @@ export class TaskDetailComponent implements OnInit {
     }
   }
 
-  // Lightbox / Doc Viewer
+  
   openImageViewer(url?: string, title?: string): void {
     if (!url) return;
     const resolvedUrl = url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')
@@ -1020,7 +1017,7 @@ export class TaskDetailComponent implements OnInit {
     this.docViewerTitle.set(resolvedTitle);
     this.docViewerContent.set(content || '');
 
-    // If it's an image, directly open the high-quality interactive image lightbox viewer
+   
     if (resolvedUrl && (this.isImage(resolvedUrl) || this.isImage(resolvedTitle))) {
       this.openImageViewer(resolvedUrl, resolvedTitle);
       return;
@@ -1051,7 +1048,7 @@ export class TaskDetailComponent implements OnInit {
       }
     }
 
-    // 1. Data URLs
+  
     if (fileUrl.startsWith('data:')) {
       const a = document.createElement('a');
       a.href = fileUrl;
@@ -1062,7 +1059,7 @@ export class TaskDetailComponent implements OnInit {
       return;
     }
 
-    // 2. Blob URLs
+  
     if (fileUrl.startsWith('blob:')) {
       const a = document.createElement('a');
       a.href = fileUrl;
@@ -1073,7 +1070,7 @@ export class TaskDetailComponent implements OnInit {
       return;
     }
 
-    // 3. Relative or Remote URLs: fetch as Blob to trigger native browser download
+    
     try {
       const resolvedUrl = fileUrl.startsWith('http') || fileUrl.startsWith('/')
         ? fileUrl

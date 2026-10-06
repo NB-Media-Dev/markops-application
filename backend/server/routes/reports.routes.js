@@ -114,7 +114,7 @@ router.get('/notifications', async (req, res) => {
   const userAliases = resolveUserAliases(userId, userRole, userEmail, userName);
   const isTelecaller = userRole === 'TELECALLER' || userAliases.has('telecaller') || userAliases.has('6') || userAliases.has('raj');
 
-  // Filter out any stale mock/batch test notifications
+ 
   if (Array.isArray(dbNotificationsStore)) {
     for (let i = dbNotificationsStore.length - 1; i >= 0; i--) {
       const item = dbNotificationsStore[i];
@@ -130,7 +130,7 @@ router.get('/notifications', async (req, res) => {
     }
   }
 
-  // Deduplicate memory notifications by userId + title + message
+ 
   const seenKeys = new Set();
   const dedupedStore = [];
   dbNotificationsStore.forEach((n) => {
@@ -141,7 +141,7 @@ router.get('/notifications', async (req, res) => {
     }
   });
 
-  // Filter memory store matching strictly this user (Creator / Assignee)
+ 
   let memoryMatched = dedupedStore.filter((n) => {
     if (!n.userId) return false;
     const nUid = String(n.userId).toLowerCase().trim();
@@ -157,7 +157,7 @@ router.get('/notifications', async (req, res) => {
     targetRoute: n.targetRoute || null,
   }));
 
-  // Fetch from MySQL if pool available
+ 
   if (dbPool) {
     try {
       const numericIds = [];
@@ -196,7 +196,7 @@ router.get('/notifications', async (req, res) => {
         }
       }
     } catch (e) {
-      // Fallback if target_route column not queryable or table differs
+
       try {
         const numericIds = [];
         userAliases.forEach((alias) => {
@@ -231,7 +231,7 @@ router.get('/notifications', async (req, res) => {
     }
   }
 
-  // Role-based filtering
+
   if (isDesigner) {
     finalItems = finalItems.filter((n) => {
       const t = (n.title || '').toLowerCase();
@@ -284,13 +284,13 @@ router.get('/notifications', async (req, res) => {
     });
   }
 
-  // Sort descending by creation date
+ 
   finalItems.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   return res.json(finalItems);
 });
 
-// POST /api/notifications - Send notification
+
 router.post('/notifications', async (req, res) => {
   const { userId, title, message, type, targetRoute } = req.body;
   if (!title || !message) {

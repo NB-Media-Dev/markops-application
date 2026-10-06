@@ -5,9 +5,6 @@ const { emitRealtimeEvent } = require('../events');
 
 const router = express.Router();
 
-// ==========================================
-// CAMPAIGNS CRUD
-// ==========================================
 
 function mapCampaignRow(row) {
   const numericSpend = Number(row.spend) || 0;
@@ -53,7 +50,7 @@ function mapCampaignRow(row) {
   };
 }
 
-// GET /api/campaigns
+
 router.get('/campaigns', async (req, res) => {
   if (dbPool) {
     try {
@@ -72,7 +69,7 @@ router.get('/campaigns', async (req, res) => {
   return res.json(dbCampaignsStore);
 });
 
-// POST /api/campaigns - Create Campaign
+
 router.post('/campaigns', async (req, res) => {
   const effectiveRole = String(req.body.creatorRole || req.user?.role || req.headers['x-user-role'] || '').toUpperCase();
   const allowedRoles = ['ADMINISTRATOR', 'MARKETING_MANAGER', 'DIGITAL_MARKETING'];
@@ -112,7 +109,7 @@ router.post('/campaigns', async (req, res) => {
     return res.status(400).json({ error: 'Campaign Name is required.' });
   }
 
-  // 💡 Explicitly named "id" here
+ 
   const id = `cmp_${Math.random().toString(36).substring(2, 10)}`;
   const effectiveOwnerIdNumeric = parseInt(String(ownerId || req.headers['x-user-id'] || '').replace(/\D/g, ''), 10) || 1;
   const effectiveOwnerName = ownerName || req.headers['x-user-name'] || 'Digital Marketer';
@@ -124,7 +121,7 @@ router.post('/campaigns', async (req, res) => {
   const computedConvRate = convRate !== undefined && convRate !== null ? Number(convRate) : (numericLeads > 0 ? Number(((numericConversions / numericLeads) * 100).toFixed(1)) : 0);
 
   const newCmp = {
-    id, // 👈 Uses "id" safely
+    id, 
     name: String(name).trim(),
     objective: String(objective || 'LEAD_GENERATION'),
     productId: productId || null,
@@ -172,13 +169,13 @@ router.post('/campaigns', async (req, res) => {
     }
   }
 
-  // 💡 Fixed: Changed entityId value to "id" to remove the ReferenceError crash
+
   await recordAuditLog(dbPool, {
     actorId: String(effectiveOwnerIdNumeric),
     actorEmail: ownerEmail || 'admin@markops.io',
     action: 'CAMPAIGN_CREATED',
     entityType: 'Campaign',
-    entityId: id, // 👈 Fixed here
+    entityId: id, 
     newState: { name: newCmp.name, status: newCmp.status, budget: newCmp.budget },
     ipAddress: req.ip || req.socket.remoteAddress,
     userAgent: req.headers['user-agent'],
@@ -190,7 +187,6 @@ router.post('/campaigns', async (req, res) => {
 
 
 
-// PUT /api/campaigns/:id - Update Campaign
 router.put('/campaigns/:id', async (req, res) => {
   const effectiveRole = String(req.body.userRole || req.user?.role || req.headers['x-user-role'] || '').toUpperCase();
   const allowedRoles = ['ADMINISTRATOR', 'MARKETING_MANAGER', 'DIGITAL_MARKETING'];
@@ -274,7 +270,7 @@ router.put('/campaigns/:id', async (req, res) => {
     }
   }
 
-  // Also update associated ads' campaignName if campaign name changed
+ 
   if (name && (!existing || name !== existing.name)) {
     dbAdsStore.forEach((ad) => {
       if (String(ad.campaignId) === String(id)) {
@@ -298,7 +294,7 @@ router.put('/campaigns/:id', async (req, res) => {
   return res.json(updatedCmp);
 });
 
-// DELETE /api/campaigns/:id - Delete Campaign
+
 router.delete('/campaigns/:id', async (req, res) => {
   const effectiveRole = String(req.user?.role || req.headers['x-user-role'] || '').toUpperCase();
   const allowedRoles = ['ADMINISTRATOR', 'MARKETING_MANAGER', 'DIGITAL_MARKETING'];
@@ -341,11 +337,7 @@ router.delete('/campaigns/:id', async (req, res) => {
   return res.json({ success: true, message: `Campaign "${deletedName}" deleted successfully.`, id });
 });
 
-// ==========================================
-// ADS & AD METRICS CRUD
-// ==========================================
 
-// GET /api/ads
 router.get('/ads', async (req, res) => {
   if (dbPool) {
     try {
@@ -402,7 +394,7 @@ router.get('/ads', async (req, res) => {
   return res.json(dbAdsStore);
 });
 
-// POST /api/ads - Create Ad / Metric
+
 router.post('/ads', async (req, res) => {
   const effectiveRole = String(req.body.creatorRole || req.user?.role || req.headers['x-user-role'] || '').toUpperCase();
   const allowedRoles = ['ADMINISTRATOR', 'DIGITAL_MARKETING'];
@@ -445,10 +437,10 @@ router.post('/ads', async (req, res) => {
   let matchedCampaignName = campaignName;
   let mysqlCampaignId = null;
 
-  // 💡 Step 1: Look up the real database integer ID using the memory tracking string
+ 
   if (dbPool && campaignId) {
     try {
-      // Find campaign by name or string mapping tracking reference if stored in MySQL
+
       const [campaigns] = await dbPool.query(
         `SELECT id, name FROM campaigns WHERE name = ? LIMIT 1`, 
         [matchedCampaignName || '']
@@ -458,7 +450,6 @@ router.post('/ads', async (req, res) => {
         mysqlCampaignId = campaigns[0].id;
         matchedCampaignName = campaigns[0].name;
       } else {
-        // Fallback: Get the very first available active campaign if no name matches
         const [firstCmp] = await dbPool.query(`SELECT id, name FROM campaigns LIMIT 1`);
         if (firstCmp && firstCmp.length > 0) {
           mysqlCampaignId = firstCmp[0].id;
@@ -470,7 +461,7 @@ router.post('/ads', async (req, res) => {
     }
   }
 
-  // Final emergency fallback if the campaigns table is completely empty
+
   if (!mysqlCampaignId) {
     mysqlCampaignId = 1; 
   }
@@ -500,12 +491,12 @@ router.post('/ads', async (req, res) => {
   
   if (dbPool) {
     try {
-      // 💡 Step 2: Write cleanly using the resolved integer database key
+    
       await dbPool.query(
         `INSERT INTO ads (campaign_id, name, platform, status, spend, impressions, clicks, leads_count, platform_ad_id)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-          mysqlCampaignId,       // 🟢 Real integer column key mapping
+          mysqlCampaignId,     
           newAd.name,              
           newAd.platform,          
           newAd.status,            
@@ -537,7 +528,7 @@ router.post('/ads', async (req, res) => {
 });
 
 
-// PUT /api/ads/:id - Update Ad / Metric
+
 router.put('/ads/:id', async (req, res) => {
   const effectiveRole = String(req.body.userRole || req.user?.role || req.headers['x-user-role'] || '').toUpperCase();
   const allowedRoles = ['ADMINISTRATOR', 'DIGITAL_MARKETING'];
@@ -635,7 +626,7 @@ router.put('/ads/:id', async (req, res) => {
   return res.json(updatedAd);
 });
 
-// DELETE /api/ads/:id - Delete Ad
+
 router.delete('/ads/:id', async (req, res) => {
   const effectiveRole = String(req.user?.role || req.headers['x-user-role'] || '').toUpperCase();
   const allowedRoles = ['ADMINISTRATOR', 'DIGITAL_MARKETING'];
@@ -678,7 +669,7 @@ router.delete('/ads/:id', async (req, res) => {
   return res.json({ success: true, message: `Ad "${deleted.name}" deleted successfully.`, id });
 });
 
-// POST /api/ads/sync - Sync Metrics
+
 router.post('/ads/sync', async (req, res) => {
   const effectiveRole = String(req.user?.role || req.headers['x-user-role'] || '').toUpperCase();
   const allowedRoles = ['ADMINISTRATOR', 'DIGITAL_MARKETING'];

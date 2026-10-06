@@ -166,11 +166,10 @@ app.use('/uploads', (req, res) => {
 const { authenticateJwt } = require('./middleware/auth.middleware');
 const { dbPool } = require('./db');
 
-// Public Authentication & Health Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/health', (req, res) => res.json({ status: 'UP', timestamp: new Date().toISOString() }));
 
-// Protected API Routes - Authenticated via JWT (Header or Cookie)
+
 app.use('/api', authenticateJwt(dbPool), tasksRoutes);
 app.use('/api', authenticateJwt(dbPool), usersRoutes);
 app.use('/api', authenticateJwt(dbPool), campaignsRoutes);
@@ -179,10 +178,10 @@ app.use('/api', authenticateJwt(dbPool), conversionsRoutes);
 app.use('/api', authenticateJwt(dbPool), reportsRoutes);
 app.use('/api', authenticateJwt(dbPool), packagesRoutes);
 
-// Initialize DB seeding asynchronously
+
 initDatabase();
 
-// Global Express Error Handler to prevent process crashes on bad payloads
+
 app.use((err, req, res, next) => {
   if (err) {
     console.error('[Server Error Handler]:', err?.message || err);

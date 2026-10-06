@@ -14,14 +14,14 @@ const { emitRealtimeEvent } = require('../events');
 const { dispatchNotification } = require('../services/notification.service');
 const router = express.Router();
 
-function createNotificationForTelecaller(targetUserId, title, message, targetRoute = '/package-works?package=CAREERMATE&workspace=CURRENT-AFFAIR-PACKAGE&dept=TELECALLING&tab=TELECALLER_MEMBERS') {
+function createNotificationForTelecaller(targetUserId, title, message, targetRoute = '') {
   if (!targetUserId) return;
   dispatchNotification({
     userIds: [targetUserId],
     title,
     message,
     type: 'INFO',
-    targetRoute,
+    targetRoute: targetRoute || '/package-works?dept=TELECALLING&tab=TELECALLING',
   }).catch(() => {});
 }
 
@@ -123,7 +123,7 @@ router.get('/leads', async (req, res) => {
     }
   }
 
-  // Fallback to in-memory dbLeadsStore
+  
   let leads = [...dbLeadsStore];
   if (isTelecallerRole) {
     leads = leads.filter((l) => {
@@ -211,7 +211,7 @@ router.post('/leads', async (req, res) => {
     }
   }
 
-  // 💡 Step 1: Resolve the dynamic integer campaign_id from the database using the campaign name
+
   let mysqlCampaignId = null;
   if (dbPool) {
     try {
@@ -222,7 +222,7 @@ router.post('/leads', async (req, res) => {
       if (campaigns && campaigns.length > 0) {
         mysqlCampaignId = campaigns[0].id;
       } else {
-        // Fallback: Use the first active campaign in the table if naming variants exist
+
         const [firstCmp] = await dbPool.query(`SELECT id FROM campaigns LIMIT 1`);
         if (firstCmp && firstCmp.length > 0) {
           mysqlCampaignId = firstCmp[0].id;
@@ -233,12 +233,12 @@ router.post('/leads', async (req, res) => {
     }
   }
 
-  // Final fallback if the database has no matching records
+
   if (!mysqlCampaignId) {
     mysqlCampaignId = parseInt(campId.replace(/\D/g, ''), 10) || 1;
   }
 
-  // 💡 Step 2: Clean integer constraints for user mappings (e.g. 'usr_1' -> 1)
+  
   const numericCreatorId = parseInt(String(effectiveUserId || '1').replace(/\D/g, ''), 10) || 1;
   const numericAssignedTo = targetAssignedTo ? (parseInt(targetAssignedTo.replace(/\D/g, ''), 10) || null) : null;
 
@@ -249,7 +249,7 @@ router.post('/leads', async (req, res) => {
     email: em,
     phone: ph,
     source: src,
-    campaignId: campId, // Retain string identifier for UI memory tracking consistency
+    campaignId: campId, 
     campaignName: campName,
     adId: '',
     status: targetAssignedTo ? 'ASSIGNED' : 'NEW',
@@ -266,7 +266,7 @@ router.post('/leads', async (req, res) => {
 
   if (dbPool) {
     try {
-      // 💡 Step 3: Insert cleanly using safe numerical columns instead of string tags
+   
       await dbPool.query(
         `INSERT INTO leads (first_name, last_name, email, phone, source, status, assigned_to, creator_id, creator_name, creator_email, campaign_id, campaign_name, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
@@ -277,11 +277,11 @@ router.post('/leads', async (req, res) => {
           newLead.phone, 
           newLead.source, 
           newLead.status, 
-          numericAssignedTo,    // 🟢 Clean integer/null reference
-          numericCreatorId,     // 🟢 Clean integer user reference
+          numericAssignedTo,    
+          numericCreatorId,     
           newLead.creatorName, 
           newLead.creatorEmail, 
-          mysqlCampaignId,      // 🟢 Clean verified campaign integer reference
+          mysqlCampaignId,      
           newLead.campaignName
         ]
       );
@@ -297,7 +297,8 @@ router.post('/leads', async (req, res) => {
     const prod = productName || 'Careermate';
     const pkg = packageName || campName || 'CURRENT AFFAIRS AUGUST -2026';
     const msg = `Assigned by: ${creator} -> Product: ${prod} -> Package: ${pkg} -> Total Leads: 1`;
-    createNotificationForTelecaller(targetAssignedTo, 'New Lead Assigned', msg);
+    const targetRoute = `/package-works?package=${encodeURIComponent(prod)}&workspace=${encodeURIComponent(pkg)}&dept=TELECALLING&tab=TELECALLING`;
+    createNotificationForTelecaller(targetAssignedTo, 'New Lead Assigned', msg, targetRoute);
 
     if (newLead.creatorId && String(newLead.creatorId) !== String(targetAssignedTo)) {
       dispatchNotification({
@@ -378,7 +379,7 @@ router.post('/leads/:id/assign', async (req, res) => {
 
   if (!lead) return res.status(404).json({ error: `Lead #${leadId} not found.` });
 
-  // Strict Creator Authorization: only the user who created this lead (or Administrator) can reassign it
+
   const currentRole = String(req.user?.role || req.headers['x-user-role'] || '').toUpperCase();
   const currentUserId = req.user?.id ? String(req.user.id) : (req.headers['x-user-id'] ? String(req.headers['x-user-id']) : null);
   const currentUserEmail = (req.user?.email || req.headers['x-user-email'] || '').toLowerCase().trim();
@@ -437,7 +438,7 @@ router.post('/leads/:id/assign', async (req, res) => {
   const finalStatus = cleanAssignedTo ? 'ASSIGNED' : 'NEW';
   const finalAssigneeName = cleanAssignedTo ? (effectiveName || 'Assigned Telecaller') : 'Unassigned';
 
-  // Update in MySQL
+
   if (dbPool) {
     try {
       const numLeadId = parseInt(leadId, 10);
@@ -454,7 +455,7 @@ router.post('/leads/:id/assign', async (req, res) => {
     }
   }
 
-  // Update in-memory store
+
   const storeIdx = dbLeadsStore.findIndex((l) => String(l.id).trim() === leadId);
   if (storeIdx !== -1) {
     dbLeadsStore[storeIdx].assignedTo = cleanAssignedTo ? String(cleanAssignedTo) : null;
@@ -478,7 +479,8 @@ router.post('/leads/:id/assign', async (req, res) => {
     const prod = productName || 'Careermate';
     const pkg = packageName || lead.campaignName || 'CURRENT AFFAIRS AUGUST -2026';
     const msg = `Assigned by: ${creator} -> Product: ${prod} -> Package: ${pkg} -> Total Leads: 1`;
-    createNotificationForTelecaller(lead.assignedTo, 'New Lead Assigned', msg);
+    const targetRoute = `/package-works?package=${encodeURIComponent(prod)}&workspace=${encodeURIComponent(pkg)}&dept=TELECALLING&tab=TELECALLING`;
+    createNotificationForTelecaller(lead.assignedTo, 'New Lead Assigned', msg, targetRoute);
 
     const reassignerId = actorId || req.headers['x-user-id'] || lead.creatorId;
     if (reassignerId && String(reassignerId) !== String(lead.assignedTo)) {
@@ -505,7 +507,7 @@ router.post('/leads/:id/assign', async (req, res) => {
   return res.json(lead);
 });
 
-// PUT /api/leads/:id - Update lead details (Creator-only)
+
 router.put('/leads/:id', async (req, res) => {
   const leadId = req.params.id;
   const currentRole = String(req.user?.role || req.headers['x-user-role'] || '').toUpperCase();
@@ -539,7 +541,7 @@ router.put('/leads/:id', async (req, res) => {
     return res.status(404).json({ error: 'Lead not found.' });
   }
 
-  // Strict Creator Authorization
+
   const leadCreatorId = lead.creator_id !== undefined ? String(lead.creator_id) : (lead.creatorId !== undefined ? String(lead.creatorId) : '');
   const leadCreatorEmail = (lead.creator_user_email || lead.creator_email || lead.creatorEmail || '').toLowerCase().trim();
   const leadCreatorName = (lead.creator_full_name || lead.creator_name || lead.creatorName || '').toLowerCase().trim();
@@ -617,7 +619,7 @@ router.put('/leads/:id', async (req, res) => {
   return res.json({ success: true, lead: updatedObj });
 });
 
-// DELETE /api/leads/:id - Delete lead (Creator-only)
+
 router.delete('/leads/:id', async (req, res) => {
   const leadId = req.params.id;
   const currentRole = String(req.user?.role || req.headers['x-user-role'] || '').toUpperCase();
@@ -650,7 +652,7 @@ router.delete('/leads/:id', async (req, res) => {
     return res.status(404).json({ error: 'Lead not found.' });
   }
 
-  // Strict Creator Authorization
+
   const leadCreatorId = lead.creator_id !== undefined ? String(lead.creator_id) : (lead.creatorId !== undefined ? String(lead.creatorId) : '');
   const leadCreatorEmail = (lead.creator_user_email || lead.creator_email || lead.creatorEmail || '').toLowerCase().trim();
   const leadCreatorName = (lead.creator_full_name || lead.creator_name || lead.creatorName || '').toLowerCase().trim();
@@ -732,7 +734,7 @@ router.post('/calls', async (req, res) => {
         await dbPool.query('UPDATE leads SET status = ?, updated_at = NOW() WHERE phone LIKE ?', [newStatus, `%${rawPhone}%`]);
       }
 
-      // Fetch authentic lead record from MySQL so campaign and assignment metadata are preserved
+  
       let fetchSql = `
         SELECT l.*, 
                c.full_name as creator_full_name, 
@@ -854,7 +856,7 @@ router.post('/calls', async (req, res) => {
   emitRealtimeEvent('lead:status_changed', { leadId: finalLead.id, status: newStatus });
   emitRealtimeEvent('lead:updated', finalLead);
 
-  // Mark previous follow-ups for this lead as COMPLETED
+
   const targetLeadId = newCall.leadId;
   const targetPhone = newCall.leadPhone ? String(newCall.leadPhone).replace(/\D/g, '') : '';
   dbFollowUpsStore.forEach((f) => {
@@ -870,7 +872,7 @@ router.post('/calls', async (req, res) => {
     try {
       await dbPool.query("UPDATE lead_follow_ups SET status = 'COMPLETED' WHERE (lead_id = ? OR lead_phone LIKE ?) AND status = 'PENDING'", [targetLeadId, `%${targetPhone}%`]);
     } catch (e) {
-      // Table may not exist in pure JSON memory mode
+      
     }
   }
 
@@ -901,66 +903,69 @@ router.post('/calls', async (req, res) => {
     userAgent: req.headers['user-agent'],
   });
 
-  // --------------------------------------------------------------------------
-  // NOTIFICATIONS MATRIX: DIGITAL MARKETING <--> TELECALLING FLOW
-  // --------------------------------------------------------------------------
 
-  // 1. OUTCOME: INTERESTED
   if (outcomeUpper === 'INTERESTED' || newStatus === 'INTERESTED') {
     const creatorTarget = (lead && lead.creatorId) ? lead.creatorId : '4';
 
-    // Notify Digital Marketing / Lead Creator
+    const leadPkg = finalLead.packageName || finalLead.package || finalLead.campaignName || 'CURRENT AFFAIRS AUGUST -2026';
+    const leadProd = finalLead.productName || (leadPkg.toLowerCase().includes('class') ? 'Classmate' : (leadPkg.toLowerCase().includes('jesus') ? 'Jesus the messanger' : 'Careermate'));
+    const telecallerTargetRoute = `/package-works?package=${encodeURIComponent(leadProd)}&workspace=${encodeURIComponent(leadPkg)}&dept=TELECALLING&tab=TELECALLING`;
+
+  
     dispatchNotification({
       userIds: [creatorTarget, '4'],
       title: `Lead Interested: ${finalLead.firstName} ${finalLead.lastName || ''}`.trim(),
-      message: `Lead "${finalLead.firstName} ${finalLead.lastName || ''}".trim() (${newCall.leadPhone}) has shown interest! Handled by ${effectiveCallerName}. Campaign: ${finalLead.campaignName || 'Digital Campaign'}.`,
+      message: `Lead "${finalLead.firstName} ${finalLead.lastName || ''}" (${newCall.leadPhone}) has shown interest! Handled by ${effectiveCallerName}. Campaign: ${finalLead.campaignName || 'Digital Campaign'}.`,
       type: 'SUCCESS',
-      targetRoute: '/leads',
+      targetRoute: `/package-works?package=${encodeURIComponent(leadProd)}&workspace=${encodeURIComponent(leadPkg)}&dept=DIGITAL_MARKETING&tab=LEADS`,
     }).catch(() => {});
 
-    // Notify Telecaller
+   
     dispatchNotification({
       userIds: [effectiveCallerId],
       title: 'Lead Marked as Interested',
-      message: `You marked "${finalLead.firstName} ${finalLead.lastName || ''}".trim() as Interested. Great job!`,
+      message: `You marked "${finalLead.firstName} ${finalLead.lastName || ''}" as Interested. Great job!`,
       type: 'SUCCESS',
-      targetRoute: '/telecalling',
+      targetRoute: telecallerTargetRoute,
     }).catch(() => {});
   }
 
-  // 2. OUTCOME: QUALIFIED
+ 
   if (outcomeUpper === 'QUALIFIED' || newStatus === 'QUALIFIED') {
     const creatorTarget = (lead && lead.creatorId) ? lead.creatorId : '4';
+    const leadPkg = finalLead.packageName || finalLead.package || finalLead.campaignName || 'CURRENT AFFAIRS AUGUST -2026';
+    const leadProd = finalLead.productName || (leadPkg.toLowerCase().includes('class') ? 'Classmate' : (leadPkg.toLowerCase().includes('jesus') ? 'Jesus the messanger' : 'Careermate'));
+    const telecallerTargetRoute = `/package-works?package=${encodeURIComponent(leadProd)}&workspace=${encodeURIComponent(leadPkg)}&dept=TELECALLING&tab=TELECALLING`;
 
-    // Notify Digital Marketing / Creator
+    
     dispatchNotification({
       userIds: [creatorTarget, '4'],
       title: `Lead Qualified: ${finalLead.firstName} ${finalLead.lastName || ''}`.trim(),
-      message: `High-value lead "${finalLead.firstName} ${finalLead.lastName || ''}".trim() (${newCall.leadPhone}) has been qualified by ${effectiveCallerName}! Ready for package conversion.`,
+      message: `High-value lead "${finalLead.firstName} ${finalLead.lastName || ''}" (${newCall.leadPhone}) has been qualified by ${effectiveCallerName}! Ready for package conversion.`,
       type: 'SUCCESS',
-      targetRoute: '/leads',
+      targetRoute: `/package-works?package=${encodeURIComponent(leadProd)}&workspace=${encodeURIComponent(leadPkg)}&dept=DIGITAL_MARKETING&tab=LEADS`,
     }).catch(() => {});
 
-    // Notify BDM (role BDM / user ID 2)
+  
     dispatchNotification({
       userIds: ['2'],
       title: `New Qualified Lead: ${finalLead.firstName} ${finalLead.lastName || ''}`.trim(),
-      message: `Lead "${finalLead.firstName} ${finalLead.lastName || ''}".trim() was qualified by ${effectiveCallerName}. Ready for package proposal and deal closure.`,
+      message: `Lead "${finalLead.firstName} ${finalLead.lastName || ''}" was qualified by ${effectiveCallerName}. Ready for package proposal and deal closure.`,
       type: 'SUCCESS',
-      targetRoute: '/package-works',
+      targetRoute: `/package-works?package=${encodeURIComponent(leadProd)}&workspace=${encodeURIComponent(leadPkg)}&dept=ANALYTICS&tab=REPORTS`,
     }).catch(() => {});
 
-    // Notify Telecaller
+   
     dispatchNotification({
       userIds: [effectiveCallerId],
       title: 'Lead Qualified!',
-      message: `Lead "${finalLead.firstName} ${finalLead.lastName || ''}".trim() has been successfully qualified! Target milestone progressed.`,
+      message: `Lead "${finalLead.firstName} ${finalLead.lastName || ''}" has been successfully qualified! Target milestone progressed.`,
       type: 'SUCCESS',
-      targetRoute: '/telecalling',
+      targetRoute: telecallerTargetRoute,
     }).catch(() => {});
   }
 
-  // 3. TARGET ACHIEVE EVALUATION & NOTIFICATIONS
+ 
   try {
     const todayDateStr = new Date().toISOString().split('T')[0];
     const callerIdStr = String(effectiveCallerId).toLowerCase();
@@ -970,7 +975,7 @@ router.post('/calls', async (req, res) => {
       return isCaller && isToday;
     });
 
-    // 1 per 1 lead: Count UNIQUE leads called today
+   
     const uniqueLeadKeys = new Set();
     const uniqueInterestedLeadKeys = new Set();
 
@@ -1001,7 +1006,7 @@ router.post('/calls', async (req, res) => {
       );
 
       if (!alreadyNotified) {
-        // Notify Telecaller
+    
         dispatchNotification({
           userIds: [effectiveCallerId],
           title: 'Target Achieved! Congratulations!',
@@ -1010,7 +1015,7 @@ router.post('/calls', async (req, res) => {
           targetRoute: '/package-works?package=CAREERMATE&workspace=CURRENT-AFFAIR-PACKAGE&dept=TELECALLING&tab=TELECALLER_MEMBERS',
         }).catch(() => {});
 
-        // Notify Digital Marketer (4), Admin (1), Marketing Manager (3), BDM (2)
+     
         dispatchNotification({
           userIds: ['4', '1', '2', '3'],
           title: `Telecaller Target Achieved: ${effectiveCallerName}`,
@@ -1027,7 +1032,7 @@ router.post('/calls', async (req, res) => {
   return res.status(201).json({ call: newCall, lead: finalLead });
 });
 
-// PATCH /api/leads/:id/status - Update lead status directly with notifications
+
 router.patch('/leads/:id/status', async (req, res) => {
   const { status, actorId, actorName, actorEmail } = req.body;
   const leadId = String(req.params.id).trim();
@@ -1103,24 +1108,28 @@ router.patch('/leads/:id/status', async (req, res) => {
   const effectiveActorName = actorName || req.headers['x-user-name'] || lead.assigneeName || 'Telecaller';
   const effectiveActorId = actorId || req.headers['x-user-id'] || lead.assignedTo || '6';
 
-  // Notifications on status change
+
+  const leadPkg = lead.packageName || lead.package || lead.campaignName || 'CURRENT AFFAIRS AUGUST -2026';
+  const leadProd = lead.productName || (leadPkg.toLowerCase().includes('class') ? 'Classmate' : (leadPkg.toLowerCase().includes('jesus') ? 'Jesus the messanger' : 'Careermate'));
+  const telecallerTargetRoute = `/package-works?package=${encodeURIComponent(leadProd)}&workspace=${encodeURIComponent(leadPkg)}&dept=TELECALLING&tab=TELECALLING`;
+
   if (newStatus === 'INTERESTED') {
     const creatorTarget = lead.creatorId || '4';
     dispatchNotification({
       userIds: [creatorTarget, '4'],
       title: `Lead Interested: ${lead.firstName} ${lead.lastName || ''}`.trim(),
-      message: `Lead "${lead.firstName} ${lead.lastName || ''}".trim() has shown interest! Handled by ${effectiveActorName}. Campaign: ${lead.campaignName || 'Digital Campaign'}.`,
+      message: `Lead "${lead.firstName} ${lead.lastName || ''}" has shown interest! Handled by ${effectiveActorName}. Campaign: ${lead.campaignName || 'Digital Campaign'}.`,
       type: 'SUCCESS',
-      targetRoute: '/leads',
+      targetRoute: `/package-works?package=${encodeURIComponent(leadProd)}&workspace=${encodeURIComponent(leadPkg)}&dept=DIGITAL_MARKETING&tab=LEADS`,
     }).catch(() => {});
 
     if (lead.assignedTo) {
       dispatchNotification({
         userIds: [lead.assignedTo],
         title: 'Lead Marked as Interested',
-        message: `You marked "${lead.firstName} ${lead.lastName || ''}".trim() as Interested. Great job!`,
+        message: `You marked "${lead.firstName} ${lead.lastName || ''}" as Interested. Great job!`,
         type: 'SUCCESS',
-        targetRoute: '/telecalling',
+        targetRoute: telecallerTargetRoute,
       }).catch(() => {});
     }
   } else if (newStatus === 'QUALIFIED') {
@@ -1128,26 +1137,26 @@ router.patch('/leads/:id/status', async (req, res) => {
     dispatchNotification({
       userIds: [creatorTarget, '4'],
       title: `Lead Qualified: ${lead.firstName} ${lead.lastName || ''}`.trim(),
-      message: `High-value lead "${lead.firstName} ${lead.lastName || ''}".trim() has been qualified by ${effectiveActorName}! Ready for package conversion.`,
+      message: `High-value lead "${lead.firstName} ${lead.lastName || ''}" has been qualified by ${effectiveActorName}! Ready for package conversion.`,
       type: 'SUCCESS',
-      targetRoute: '/leads',
+      targetRoute: `/package-works?package=${encodeURIComponent(leadProd)}&workspace=${encodeURIComponent(leadPkg)}&dept=DIGITAL_MARKETING&tab=LEADS`,
     }).catch(() => {});
 
     dispatchNotification({
       userIds: ['2'],
       title: `New Qualified Lead for Conversion: ${lead.firstName} ${lead.lastName || ''}`.trim(),
-      message: `Lead "${lead.firstName} ${lead.lastName || ''}".trim() was qualified by ${effectiveActorName}. Ready for package conversion.`,
+      message: `Lead "${lead.firstName} ${lead.lastName || ''}" was qualified by ${effectiveActorName}. Ready for package conversion.`,
       type: 'SUCCESS',
-      targetRoute: '/package-works',
+      targetRoute: `/package-works?package=${encodeURIComponent(leadProd)}&workspace=${encodeURIComponent(leadPkg)}&dept=ANALYTICS&tab=REPORTS`,
     }).catch(() => {});
 
     if (lead.assignedTo) {
       dispatchNotification({
         userIds: [lead.assignedTo],
         title: 'Lead Qualified!',
-        message: `Lead "${lead.firstName} ${lead.lastName || ''}".trim() has been successfully qualified! Target milestone progressed.`,
+        message: `Lead "${lead.firstName} ${lead.lastName || ''}" has been successfully qualified! Target milestone progressed.`,
         type: 'SUCCESS',
-        targetRoute: '/telecalling',
+        targetRoute: telecallerTargetRoute,
       }).catch(() => {});
     }
   }
@@ -1159,7 +1168,7 @@ router.get('/followups', (req, res) => {
   return res.json(dbFollowUpsStore);
 });
 
-// POST /api/leads/batch-import - Batch Excel/CSV upload with Equal Auto-Assignment among Telecallers
+
 router.post('/leads/batch-import', async (req, res) => {
   const { leads, selectedTelecallerIds, campaignId, campaignName, source, uploaderId, uploaderEmail, uploaderRole } = req.body;
   const effectiveRole = String(uploaderRole || req.headers['x-user-role'] || '').toUpperCase();
@@ -1174,7 +1183,7 @@ router.post('/leads/batch-import', async (req, res) => {
     return res.status(400).json({ error: 'No lead array provided in request payload.' });
   }
 
-  // Validate that all 5 fields exist for every lead in the array
+
   for (let i = 0; i < leads.length; i++) {
     const raw = leads[i];
     const fName = String(raw.firstName || raw['First Name'] || raw['first_name'] || '').trim();
@@ -1190,10 +1199,10 @@ router.post('/leads/batch-import', async (req, res) => {
     }
   }
 
-  // 1. Determine active telecallers to distribute leads among (STRICTLY TELECALLER role only)
+
   let telecallers = dbUsersStore.filter((u) => u.role === 'TELECALLER' && u.isActive !== false);
 
-  // Sync any telecallers supplied from frontend payload if not already in store
+
   if (Array.isArray(req.body.telecallersList) && req.body.telecallersList.length > 0) {
     req.body.telecallersList.forEach((reqTc) => {
       if (!telecallers.some((t) => t.id === reqTc.id)) {
@@ -1220,12 +1229,12 @@ router.post('/leads/batch-import', async (req, res) => {
     }
   }
 
-  // Fallback default telecallers if no telecallers are present
+ 
   if (telecallers.length === 0) {
     telecallers = [];
   }
 
-  // 💡 Step 1: Look up the real database integer ID using the campaign name before running the loop
+
   let mysqlCampaignId = 1; 
   const targetCampName = campaignName || 'Digital Ad Campaign';
   if (dbPool) {
@@ -1253,7 +1262,7 @@ router.post('/leads/batch-import', async (req, res) => {
     allocationSummary[tc.id] = { id: tc.id, fullName: tc.fullName, email: tc.email, count: 0 };
   });
 
-  // 2. Perform Round-Robin Equal Assignment
+ 
   for (let i = 0; i < leads.length; i++) {
     const raw = leads[i];
     const assignedTelecaller = telecallers.length > 0 ? telecallers[i % telecallers.length] : null;
@@ -1277,7 +1286,7 @@ router.post('/leads/batch-import', async (req, res) => {
       }
     }
 
-    // 💡 Step 2: Clean and string-to-integer conversion safeguards for user IDs
+
     const cleanAssignedToId = assignedTelecaller ? (parseInt(String(assignedTelecaller.id).replace(/\D/g, ''), 10) || null) : null;
     const cleanCreatorId = parseInt(String(uploaderUid || '1').replace(/\D/g, ''), 10) || 1;
 
@@ -1299,8 +1308,7 @@ router.post('/leads/batch-import', async (req, res) => {
       creatorName: req.body.creatorName || uploaderNameResolved || 'System Administrator',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      
-      // Hidden properties bound strictly for safe MySQL transaction queries:
+  
       _mysqlCampaignId: mysqlCampaignId,
       _mysqlAssignedTo: cleanAssignedToId,
       _mysqlCreatorId: cleanCreatorId
@@ -1317,7 +1325,7 @@ router.post('/leads/batch-import', async (req, res) => {
   if (dbPool) {
     try {
       for (const l of createdLeads) {
-        // 💡 Step 3: Pushed validated numerical column fields into the SQL bindings
+       
         await dbPool.query(
           `INSERT INTO leads (first_name, last_name, email, phone, source, status, assigned_to, creator_id, creator_name, creator_email, campaign_id, campaign_name, created_at, updated_at)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
@@ -1328,11 +1336,11 @@ router.post('/leads/batch-import', async (req, res) => {
             l.phone, 
             l.source, 
             l.status, 
-            l._mysqlAssignedTo, // Clean integer/null reference
-            l._mysqlCreatorId,  // Clean integer user reference
+            l._mysqlAssignedTo,
+            l._mysqlCreatorId,  
             l.creatorName, 
             l.creatorEmail, 
-            l._mysqlCampaignId, // 🟢 Verified integer reference instead of 'cmp_default'
+            l._mysqlCampaignId, 
             l.campaignName
           ]
         );
@@ -1342,7 +1350,7 @@ router.post('/leads/batch-import', async (req, res) => {
     }
   }
 
-  // 3. Emit Realtime Events & Record Audit Log
+
   emitRealtimeEvent('leads:batch_imported', { total: createdLeads.length, allocationSummary });
 
   const creator = req.body.creatorName || req.body.uploaderEmail || 'System Administrator';
@@ -1352,10 +1360,12 @@ router.post('/leads/batch-import', async (req, res) => {
   Object.values(allocationSummary).forEach((summary) => {
     if (summary && summary.id && summary.count > 0) {
       const msg = `Assigned by: ${creator} -> Product: ${prod} -> Package: ${pkg} -> Total Leads: ${summary.count}`;
+      const targetRoute = `/package-works?package=${encodeURIComponent(prod)}&workspace=${encodeURIComponent(pkg)}&dept=TELECALLING&tab=TELECALLING`;
       createNotificationForTelecaller(
         summary.id,
         `New Leads Assigned (${summary.count} Leads)`,
-        msg
+        msg,
+        targetRoute
       );
     }
   });
@@ -1382,7 +1392,6 @@ router.post('/leads/batch-import', async (req, res) => {
   });
 });
 
-// GET /api/leads/telecalling-summary - Summary Dashboard metrics for Digital Marketing Head & Admin
 router.get('/leads/telecalling-summary', async (req, res) => {
   const currentRole = String(req.user?.role || req.headers['x-user-role'] || '').toUpperCase();
   const currentUserId = req.user?.id ? String(req.user.id) : (req.headers['x-user-id'] ? String(req.headers['x-user-id']) : null);
@@ -1434,7 +1443,7 @@ router.get('/leads/telecalling-summary', async (req, res) => {
     allUsers = dbUsersStore;
   }
 
-  // If requester is a telecaller, calculate summary only for their assigned leads
+
   const telecallerLeads = isTelecallerRole && currentUserId
     ? allLeads.filter((l) => String(l.assignedTo || l.assigned_to) === currentUserId)
     : allLeads;
@@ -1460,14 +1469,38 @@ router.get('/leads/telecalling-summary', async (req, res) => {
     }
   });
 
-  // Telecallers performance summary (STRICTLY TELECALLER role)
+  let allCalls = [...dbCallActivitiesStore];
+  if (dbPool) {
+    try {
+      const [callRows] = await dbPool.query(`
+        SELECT id, lead_id as leadId, telecaller_id as telecallerId, outcome, duration_seconds as durationSeconds, remarks, called_at as calledAt
+        FROM call_activities
+      `);
+      if (Array.isArray(callRows) && callRows.length > 0) {
+        allCalls = callRows;
+      }
+    } catch (ce) {}
+  }
+
+ 
   const telecallers = allUsers.filter((u) => u.role === 'TELECALLER' && u.isActive !== false);
 
   const telecallerMetrics = telecallers.map((tc) => {
     const assigned = allLeads.filter((l) => String(l.assignedTo || l.assigned_to) === String(tc.id));
-    const calls = dbCallActivitiesStore.filter((c) => String(c.telecallerId) === String(tc.id));
+    const calls = allCalls.filter((c) => String(c.telecallerId) === String(tc.id));
 
-    // 1 per 1 lead: count UNIQUE leads called
+    const attendedCalls = calls.filter((c) => {
+      const out = String(c.outcome || '').toUpperCase();
+      return out === 'CONNECTED' || out === 'INTERESTED' || out === 'NOT_INTERESTED' || out === 'QUALIFIED';
+    });
+    const notAttendedCalls = calls.filter((c) => {
+      const out = String(c.outcome || '').toUpperCase();
+      return out === 'NO_ANSWER' || out === 'BUSY' || out === 'WRONG_NUMBER' || out === 'LINE_BUSY';
+    });
+    const interestedCalls = calls.filter((c) => String(c.outcome || '').toUpperCase() === 'INTERESTED');
+    const notInterestedCalls = calls.filter((c) => String(c.outcome || '').toUpperCase() === 'NOT_INTERESTED');
+
+  
     const uniqueLeadsCalled = new Set(
       calls
         .map((c) => String(c.leadId || c.leadPhone || c.leadName || '').trim().toLowerCase())
@@ -1518,18 +1551,18 @@ router.get('/leads/telecalling-summary', async (req, res) => {
     totalLeads,
     assignedLeads,
     unassignedLeads,
-    totalCallsLogged: dbCallActivitiesStore.length,
+    totalCallsLogged: allCalls.length,
     statusBreakdown,
     telecallerMetrics,
   });
 });
 
-// GET /api/telecaller-targets/common
+
 router.get('/telecaller-targets/common', (req, res) => {
   return res.json(dbCommonTargetStore);
 });
 
-// POST /api/telecaller-targets/common
+
 router.post('/telecaller-targets/common', (req, res) => {
   const { dailyCallsTarget, dailyInterestedTarget, dailyDurationTargetSeconds, updatedBy } = req.body;
   if (dailyCallsTarget !== undefined) {
@@ -1548,7 +1581,7 @@ router.post('/telecaller-targets/common', (req, res) => {
   return res.json(dbCommonTargetStore);
 });
 
-// GET /api/telecaller-targets
+
 router.get('/telecaller-targets', (req, res) => {
   return res.json({
     common: dbCommonTargetStore,
@@ -1556,7 +1589,7 @@ router.get('/telecaller-targets', (req, res) => {
   });
 });
 
-// POST /api/telecaller-targets/:telecallerId (Set target for single specific telecaller)
+
 router.post('/telecaller-targets/:telecallerId', (req, res) => {
   const { telecallerId } = req.params;
   const { dailyCallsTarget, dailyInterestedTarget, dailyDurationTargetSeconds, updatedBy, telecallerName, telecallerEmail } = req.body;

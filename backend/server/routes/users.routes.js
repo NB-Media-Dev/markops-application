@@ -5,7 +5,7 @@ const { recordAuditLog } = require('../services/audit.service');
 
 const router = express.Router();
 
-// GET /api/users - List all users from MySQL Workbench database or fallback memory store
+
 router.get('/users', async (req, res) => {
   if (dbPool) {
     try {
@@ -58,7 +58,6 @@ function resolveRoleId(role) {
   return found ? found.id : 1;
 }
 
-// POST /api/users - Admin user creation flow (ALWAYS adds new user, NEVER updates existing admin)
 router.post('/users', async (req, res) => {
   const { email, fullName, role, department, isActive, password } = req.body;
   if (!email || !fullName || !role) {
@@ -70,12 +69,12 @@ router.post('/users', async (req, res) => {
   const userActive = isActive !== undefined ? Boolean(isActive) : true;
   const targetRoleId = resolveRoleId(role);
 
-  // 1. Never allow creating a duplicate with the Administrator email
+
   if (normalizedEmail === 'admin@markops.io') {
     return res.status(400).json({ error: 'Cannot create a user with the System Administrator email (admin@markops.io).' });
   }
 
-  // 2. Check if a user with this email already exists in MySQL
+
   if (dbPool) {
     try {
       const [existing] = await dbPool.query('SELECT id, email FROM users WHERE LOWER(email) = ?', [normalizedEmail]);
@@ -87,7 +86,7 @@ router.post('/users', async (req, res) => {
     }
   }
 
-  // 3. Check if user already exists in memory store
+
   if (dbUsersStore.some((u) => u.email && u.email.toLowerCase() === normalizedEmail)) {
     return res.status(409).json({ error: `A user with email "${normalizedEmail}" already exists. Please use a unique email address.` });
   }
@@ -164,7 +163,7 @@ router.post('/users', async (req, res) => {
   return res.status(201).json(newUser);
 });
 
-// DELETE /api/users/:id - Delete user with Audit Event
+
 router.delete('/users/:id', async (req, res) => {
   const userId = req.params.id;
 
@@ -205,7 +204,7 @@ router.delete('/users/:id', async (req, res) => {
   return res.json({ message: 'User successfully deleted from database.', user: deletedUser });
 });
 
-// PATCH /api/users/:id/status - Toggle user active status
+
 router.patch('/users/:id/status', async (req, res) => {
   const userId = req.params.id;
   const user = dbUsersStore.find((u) => String(u.id) === String(userId));
@@ -254,7 +253,7 @@ router.patch('/users/:id/status', async (req, res) => {
   return res.json({ id: userId, isActive: newActiveState });
 });
 
-// PUT /api/users/:id - Update user details & password
+
 router.put('/users/:id', async (req, res) => {
   const userId = req.params.id;
   const { email, fullName, role, department, isActive, password } = req.body;

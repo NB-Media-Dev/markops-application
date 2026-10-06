@@ -6,7 +6,7 @@ const DB_URL = process.env.DATABASE_URL?.replace(/[?&]ssl-mode=[^&]*/i, '').repl
   const conn = await mysql.createConnection({ uri: DB_URL, ssl: { rejectUnauthorized: false } });
   console.log('Connected!');
 
-  // Fix updated_at to have proper defaults on Aiven
+ 
   const tables = ['roles', 'teams', 'users', 'campaigns', 'packages', 'ads', 'tasks', 'leads'];
   for (const t of tables) {
     try {
@@ -17,7 +17,7 @@ const DB_URL = process.env.DATABASE_URL?.replace(/[?&]ssl-mode=[^&]*/i, '').repl
     }
   }
 
-  // Seed roles
+ 
   try {
     await conn.query(`
       INSERT INTO roles (id, name, code, description, created_at, updated_at) VALUES
@@ -34,7 +34,7 @@ const DB_URL = process.env.DATABASE_URL?.replace(/[?&]ssl-mode=[^&]*/i, '').repl
     console.log('Roles error:', e.message);
   }
 
-  // Seed teams
+ 
   try {
     await conn.query(`
       INSERT INTO teams (id, name, description, created_at, updated_at) VALUES
@@ -50,7 +50,7 @@ const DB_URL = process.env.DATABASE_URL?.replace(/[?&]ssl-mode=[^&]*/i, '').repl
     console.log('Teams error:', e.message);
   }
 
-  // Seed admin user  (password: admin123)
+
   const hash = '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQOEg6Lruj3BoB6tK3y/G';
   try {
     await conn.query(`
@@ -68,7 +68,7 @@ const DB_URL = process.env.DATABASE_URL?.replace(/[?&]ssl-mode=[^&]*/i, '').repl
     console.log('Admin user error:', e.message);
   }
 
-  // Verify
+ 
   const [roles] = await conn.query('SELECT id, name, code FROM roles ORDER BY id');
   console.log('\nRoles:', roles.map(r => `${r.id}:${r.code}`).join(', '));
   const [users] = await conn.query('SELECT id, email, full_name FROM users');

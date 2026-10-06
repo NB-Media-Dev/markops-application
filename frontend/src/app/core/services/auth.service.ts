@@ -90,13 +90,7 @@ export class AuthService {
     return this.initAuth();
   }
 
-  /**
-   * Startup authentication sequence:
-   * 1. Read token from localStorage / cookie
-   * 2. Restore cached user state
-   * 3. Validate against /api/auth/me
-   * 4. Mark authInitialized = true
-   */
+
   private async initAuth(): Promise<boolean> {
     if (!this.isBrowser) {
       this._isInitialized.set(true);
@@ -194,9 +188,6 @@ export class AuthService {
     return this.initPromise;
   }
 
-  /**
-   * Cookie Management Helpers
-   */
   private setCookie(name: string, value: string, days = 7): void {
     if (!this.isBrowser) return;
     const expires = new Date(Date.now() + days * 864e5).toUTCString();
@@ -221,9 +212,7 @@ export class AuthService {
     document.cookie = `${encodeURIComponent(name)}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax`;
   }
 
-  /**
-   * Parses basic user profile claims from JWT payload if available
-   */
+
   private parseUserFromJwt(token: string): User | null {
     try {
       if (!token || !token.includes('.')) {
@@ -248,10 +237,7 @@ export class AuthService {
     return null;
   }
 
-  /**
-   * Executes initial authentication sequence:
-   * Login Page → POST /auth/login → Validate credentials → Store JWT token & user
-   */
+
   async login(credentials: LoginCredentials): Promise<boolean> {
     this._isLoading.set(true);
     this._authError.set(null);

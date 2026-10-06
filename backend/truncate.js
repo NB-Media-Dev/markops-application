@@ -1,16 +1,18 @@
+require('dotenv').config();
 const mysql = require('mysql2/promise');
 
 async function main() {
-  const url = new URL(process.env.DATABASE_URL);
+  if (!process.env.DATABASE_URL) {
+    throw new Error('DATABASE_URL is not set in environment or .env');
+  }
+
+  const rawUrl = process.env.DATABASE_URL;
+  const dbUrl = rawUrl.replace(/[?&]ssl-mode=[^&]*/i, '').replace(/\?$/, '');
 
   const connection = await mysql.createConnection({
-    host: url.hostname,
-    port: Number(url.port),
-    user: decodeURIComponent(url.username),
-    password: decodeURIComponent(url.password),
-    database: url.pathname.slice(1),
+    uri: dbUrl,
     ssl: {
-      rejectUnauthorized: true
+      rejectUnauthorized: false
     }
   });
 

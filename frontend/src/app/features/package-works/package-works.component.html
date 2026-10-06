@@ -123,6 +123,10 @@
       <app-package-hub-overview
         [packageMetrics]="packageMetrics()"
         [operationDepartments]="operationDepartments()"
+        [isTelecaller]="isTelecaller()"
+        [telecallerPipelineCounts]="telecallerPipelineCounts()"
+        [isDesigner]="isDesigner()"
+        [designerPipelineCounts]="designerPipelineCounts()"
         (departmentSelect)="selectDepartment($any($event))"
       ></app-package-hub-overview>
     }

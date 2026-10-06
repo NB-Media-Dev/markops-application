@@ -64,9 +64,7 @@ export function getAuthToken(): string | null {
   return null;
 }
 
-/**
- * Safe fetch wrapper that automatically formats URLs, attaches JWT token from storage/cookies, and includes credentials.
- */
+
 export async function safeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const urlStr = typeof input === 'string' ? input : input.toString();
   const token = getAuthToken();

@@ -1,8 +1,3 @@
-/**
- * Live DB Migration Script
- * Aligns the Aiven live DB schema with what the backend code expects.
- * Run once with: node migrate-live-db.js
- */
 
 const mysql = require('mysql2/promise');
 
@@ -33,76 +28,64 @@ async function run(conn, sql, label) {
 
   await conn.query('SET FOREIGN_KEY_CHECKS = 0');
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // TASKS – add missing columns
-  // ─────────────────────────────────────────────────────────────────────────
+ 
   console.log('📋 Patching `tasks` table...');
   await run(conn, `ALTER TABLE tasks ADD COLUMN package_name VARCHAR(100) DEFAULT 'Careermate'`, 'tasks.package_name');
   await run(conn, `ALTER TABLE tasks ADD COLUMN attachment_url LONGTEXT DEFAULT NULL`, 'tasks.attachment_url');
   await run(conn, `ALTER TABLE tasks ADD COLUMN attachment_name VARCHAR(255) DEFAULT NULL`, 'tasks.attachment_name');
   await run(conn, `ALTER TABLE tasks ADD COLUMN content LONGTEXT DEFAULT NULL`, 'tasks.content');
   await run(conn, `ALTER TABLE tasks ADD COLUMN reviewer_feedback TEXT DEFAULT NULL`, 'tasks.reviewer_feedback');
-  // Extend status ENUM to include DRAFT
+ 
   await run(conn,
     `ALTER TABLE tasks MODIFY COLUMN status ENUM('DRAFT','ASSIGNED','ACCEPTED','IN_PROGRESS','SUBMITTED','REDESIGN_REQUIRED','APPROVED') NOT NULL DEFAULT 'ASSIGNED'`,
     'tasks.status ENUM extended'
   );
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // LEADS – add missing columns
-  // ─────────────────────────────────────────────────────────────────────────
+
   console.log('\n👥 Patching `leads` table...');
   await run(conn, `ALTER TABLE leads ADD COLUMN creator_id INT DEFAULT NULL`, 'leads.creator_id');
   await run(conn, `ALTER TABLE leads ADD COLUMN creator_name VARCHAR(100) DEFAULT NULL`, 'leads.creator_name');
   await run(conn, `ALTER TABLE leads ADD COLUMN creator_email VARCHAR(150) DEFAULT NULL`, 'leads.creator_email');
   await run(conn, `ALTER TABLE leads ADD COLUMN campaign_name VARCHAR(255) DEFAULT NULL`, 'leads.campaign_name');
-  // Extend status ENUM if needed
+  
   await run(conn,
     `ALTER TABLE leads MODIFY COLUMN status ENUM('NEW','ASSIGNED','CONTACTED','INTERESTED','NOT_INTERESTED','QUALIFIED','CONVERTED','LOST') NOT NULL DEFAULT 'NEW'`,
     'leads.status ENUM'
   );
-  // Make last_name and email nullable (code allows them)
+  
   await run(conn, `ALTER TABLE leads MODIFY COLUMN last_name VARCHAR(100) DEFAULT NULL`, 'leads.last_name nullable');
   await run(conn, `ALTER TABLE leads MODIFY COLUMN email VARCHAR(191) DEFAULT NULL`, 'leads.email nullable');
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // NOTIFICATIONS – add target_route column
-  // ─────────────────────────────────────────────────────────────────────────
+  
   console.log('\n🔔 Patching `notifications` table...');
   await run(conn, `ALTER TABLE notifications ADD COLUMN target_route VARCHAR(255) DEFAULT NULL`, 'notifications.target_route');
-  // Remove FK constraint if it causes issues (Aiven may have it differently)
+  
   await run(conn,
     `ALTER TABLE notifications MODIFY COLUMN user_id INT NOT NULL`,
     'notifications.user_id'
   );
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // CAMPAIGNS – add missing columns used in backend code
-  // ─────────────────────────────────────────────────────────────────────────
+
   console.log('\n📣 Patching `campaigns` table...');
   await run(conn, `ALTER TABLE campaigns ADD COLUMN spend DECIMAL(12,2) NOT NULL DEFAULT 0.00`, 'campaigns.spend');
   await run(conn, `ALTER TABLE campaigns ADD COLUMN leads_count INT NOT NULL DEFAULT 0`, 'campaigns.leads_count');
   await run(conn, `ALTER TABLE campaigns ADD COLUMN product_id VARCHAR(100) DEFAULT 'pkg_careermate'`, 'campaigns.product_id');
-  // Allow start_date to be nullable (code sometimes omits it)
+
   await run(conn, `ALTER TABLE campaigns MODIFY COLUMN start_date DATE DEFAULT NULL`, 'campaigns.start_date nullable');
-  // Allow owner_id to be nullable
+ 
   await run(conn, `ALTER TABLE campaigns MODIFY COLUMN owner_id INT DEFAULT NULL`, 'campaigns.owner_id nullable');
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // ADS – add spend/impressions/clicks/leads_count/platform (legacy columns)
-  // ─────────────────────────────────────────────────────────────────────────
+ 
   console.log('\n📢 Patching `ads` table...');
   await run(conn, `ALTER TABLE ads ADD COLUMN platform VARCHAR(50) DEFAULT 'Meta'`, 'ads.platform');
   await run(conn, `ALTER TABLE ads ADD COLUMN spend DECIMAL(12,2) NOT NULL DEFAULT 0.00`, 'ads.spend');
   await run(conn, `ALTER TABLE ads ADD COLUMN impressions INT NOT NULL DEFAULT 0`, 'ads.impressions');
   await run(conn, `ALTER TABLE ads ADD COLUMN clicks INT NOT NULL DEFAULT 0`, 'ads.clicks');
   await run(conn, `ALTER TABLE ads ADD COLUMN leads_count INT NOT NULL DEFAULT 0`, 'ads.leads_count');
-  // Allow campaign_id to be nullable
+
   await run(conn, `ALTER TABLE ads MODIFY COLUMN campaign_id INT DEFAULT NULL`, 'ads.campaign_id nullable');
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // PACKAGES – ensure table exists with correct columns
-  // ─────────────────────────────────────────────────────────────────────────
+
   console.log('\n📦 Ensuring `packages` table schema...');
   await run(conn, `
     CREATE TABLE IF NOT EXISTS packages (
@@ -121,15 +104,10 @@ async function run(conn, sql, label) {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   `, 'packages table');
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // USERS – ensure budget columns exist and is_active works
-  // ─────────────────────────────────────────────────────────────────────────
+
   console.log('\n👤 Checking `users` table...');
   await run(conn, `ALTER TABLE users MODIFY COLUMN is_active TINYINT(1) NOT NULL DEFAULT 1`, 'users.is_active');
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // SEED: Ensure at least the roles and system admin exist
-  // ─────────────────────────────────────────────────────────────────────────
   console.log('\n🌱 Seeding roles...');
   await run(conn, `
     INSERT INTO roles (id, name, code, description) VALUES
@@ -154,7 +132,7 @@ async function run(conn, sql, label) {
   `, 'teams seed');
 
   console.log('\n🌱 Seeding admin user...');
-  // Password: admin123  →  bcrypt hash
+
   await run(conn, `
     INSERT INTO users (id, email, password_hash, full_name, role_id, team_id, department, is_active) VALUES
     (1, 'admin@markops.io', '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQOEg6Lruj3BoB6tK3y/G', 'System Administrator', 1, 1, 'Executive Operations', 1)
@@ -167,9 +145,7 @@ async function run(conn, sql, label) {
 
   await conn.query('SET FOREIGN_KEY_CHECKS = 1');
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Final verification
-  // ─────────────────────────────────────────────────────────────────────────
+
   console.log('\n🔍 Final verification...');
   const checks = [
     ['tasks',         ['id','title','content','package_name','attachment_url','attachment_name','reviewer_feedback']],

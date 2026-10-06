@@ -160,9 +160,7 @@ export class TaskManagementService {
     return Array.from(map.values());
   }
 
-  /**
-   * Switches task view between 'my' and 'all', saving state in storage and fetching tasks
-   */
+ 
   async switchView(view: 'all' | 'my'): Promise<void> {
     this._activeView.set(view);
     if (this.isBrowser) {
@@ -174,9 +172,7 @@ export class TaskManagementService {
     await this.fetchTasksEndpoint(`/api/tasks?view=${view}`);
   }
 
-  /**
-   * Switches active view to 'my' and loads tasks
-   */
+
   async getMyTasks(): Promise<void> {
     this._activeView.set('my');
     if (this.isBrowser) {
@@ -188,9 +184,7 @@ export class TaskManagementService {
     await this.fetchTasksEndpoint('/api/tasks?view=my');
   }
 
-  /**
-   * Switches active view to 'all' and loads tasks
-   */
+
   async getAllTasks(): Promise<void> {
     this._activeView.set('all');
     if (this.isBrowser) {
@@ -202,9 +196,6 @@ export class TaskManagementService {
     await this.fetchTasksEndpoint('/api/tasks?view=all');
   }
 
-  /**
-   * Loads tasks based on active view or specified view parameter
-   */
   async loadTasks(view?: 'all' | 'my'): Promise<void> {
     if (view) {
       this._activeView.set(view);
@@ -213,9 +204,7 @@ export class TaskManagementService {
     await this.fetchTasksEndpoint(`/api/tasks?view=${targetView}`);
   }
 
-  /**
-   * Internal reusable fetch for /api/tasks and /api/tasks/my
-   */
+
   private async fetchTasksEndpoint(endpoint: string): Promise<void> {
     if (!this.isBrowser) return;
 
@@ -266,9 +255,7 @@ export class TaskManagementService {
     this._isLoading.set(false);
   }
 
-  /**
-   * Fetches Designer Dashboard Analytics
-   */
+
   async loadDesignerMetrics(): Promise<void> {
     if (!this.isBrowser) return;
 
@@ -286,9 +273,7 @@ export class TaskManagementService {
     }
   }
 
-  /**
-   * Selects active task for detail view drawer / version upload modal
-   */
+
   async selectTask(taskId: string): Promise<void> {
     const found = this._tasks().find((t) => String(t.id) === String(taskId));
     if (found) {
@@ -310,9 +295,7 @@ export class TaskManagementService {
     this._selectedTask.set(null);
   }
 
-  /**
-   * Action 1: Designer starts work on an ASSIGNED task (transitions to IN_PROGRESS)
-   */
+
   async startWork(taskId: string): Promise<boolean> {
     try {
       const res = await safeFetch(`/api/tasks/${taskId}/start`, {
@@ -333,9 +316,7 @@ export class TaskManagementService {
     }
   }
 
-  /**
-   * Action 2: Designer submits completed design file (transitions IN_PROGRESS -> SUBMITTED)
-   */
+
   async submitDesign(taskId: string, req: SubmitVersionRequest): Promise<boolean> {
     try {
       const res = await safeFetch(`/api/tasks/${taskId}/submit`, {
@@ -361,9 +342,7 @@ export class TaskManagementService {
     }
   }
 
-  /**
-   * Action 3: Creator approves submitted design (transitions SUBMITTED -> APPROVED)
-   */
+ 
   async approveTask(taskId: string): Promise<boolean> {
     try {
       const res = await safeFetch(`/api/tasks/${taskId}/approve`, {
@@ -383,9 +362,7 @@ export class TaskManagementService {
     }
   }
 
-  /**
-   * Action 4: Creator requests redesign with mandatory explanation (transitions SUBMITTED -> REDESIGN_REQUIRED)
-   */
+
   async requestRedesign(taskId: string, reason: string): Promise<boolean> {
     const trimmedReason = (reason || '').trim();
     if (!trimmedReason) return false;
@@ -409,9 +386,7 @@ export class TaskManagementService {
     }
   }
 
-  /**
-   * Action 5: Designer starts redesign (transitions REDESIGN_REQUIRED -> IN_PROGRESS)
-   */
+
   async startRedesign(taskId: string): Promise<boolean> {
     try {
       const res = await safeFetch(`/api/tasks/${taskId}/start-redesign`, {
@@ -431,9 +406,7 @@ export class TaskManagementService {
     }
   }
 
-  /**
-   * Advances task status through lifecycle (generic fallback)
-   */
+  
   async transitionStatus(taskId: string, newStatus: TaskStatus, remark?: string): Promise<boolean> {
     try {
       const res = await safeFetch(`/api/tasks/${taskId}/status`, {
@@ -454,9 +427,7 @@ export class TaskManagementService {
     return false;
   }
 
-  /**
-   * Submits creative asset version (Increments v1.0, v2.0 without overwriting history)
-   */
+ 
   async submitCreativeVersion(taskId: string, req: SubmitVersionRequest): Promise<boolean> {
     try {
       const res = await safeFetch(`/api/tasks/${taskId}/versions`, {
@@ -479,9 +450,7 @@ export class TaskManagementService {
     return false;
   }
 
-  /**
-   * Manager task creation flow
-   */
+ 
   async createTask(req: CreateTaskRequest): Promise<Task | null> {
     try {
       const res = await safeFetch('/api/tasks', {
@@ -505,9 +474,7 @@ export class TaskManagementService {
     return null;
   }
 
-  /**
-   * Deletes a task record permanently
-   */
+ 
   async deleteTask(taskId: string): Promise<boolean> {
     try {
       const res = await safeFetch(`/api/tasks/${taskId}`, {
@@ -539,9 +506,7 @@ export class TaskManagementService {
     return false;
   }
 
-  /**
-   * Adds reviewer comment / feedback remark / git commit message
-   */
+  
   async addComment(taskId: string, comment: string, userMeta?: { userId?: string; userName?: string; userRole?: string }): Promise<boolean> {
     try {
       const res = await safeFetch(`/api/tasks/${taskId}/comments`, {

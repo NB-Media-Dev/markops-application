@@ -833,4 +833,12 @@ export class DesignerDashboardComponent implements OnInit {
       }
     }
   }
+
+  navigateBack(): void {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      this.router.navigate(['/dashboard']);
+    }
+  }
 }

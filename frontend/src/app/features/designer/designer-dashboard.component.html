@@ -1,4 +1,24 @@
 <div class="designer-dashboard" [class.embedded-mode]="embedded">
+  <!-- Clean Breadcrumb Bar in standalone mode -->
+  @if (!embedded) {
+    <header class="page-header mb-3">
+      <div class="header-titles-group">
+        <nav class="clean-breadcrumbs" aria-label="Breadcrumb">
+          <button type="button" class="btn-back" (click)="navigateBack()" title="Back">
+            <span class="material-symbols-outlined icon-back">arrow_back</span>
+          </button>
+          <div class="breadcrumbs-list">
+            <a routerLink="/dashboard" class="bc-item">Dashboard</a>
+            <span class="bc-sep">/</span>
+            <a routerLink="/package-works" class="bc-item bc-package">Package Works</a>
+            <span class="bc-sep">/</span>
+            <span class="bc-item active">{{ isDesigner() ? 'My Tasks' : 'Tasks' }}</span>
+          </div>
+        </nav>
+      </div>
+    </header>
+  }
+
   <!-- Top Navigation Toolbar matching user design: Tabs on Left, Date Filters & Assign Task on Right -->
   @if (!isDesigner()) {
     <div class="pkg-top-subtabs-nav">

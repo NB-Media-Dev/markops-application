@@ -79,7 +79,7 @@ export function isTaskForPackage(
     (fp) => normalize(fp.name) === normTarget || normalize(fp.id) === normTarget
   );
 
-  // CASE 1: targetPackage is a Product (e.g. Careermate, Classmate, Jesus the messanger)
+
   if (fixedProduct) {
     const fixedId = normalize(fixedProduct.id);
     const fixedName = normalize(fixedProduct.name);
@@ -87,12 +87,11 @@ export function isTaskForPackage(
     if (t.packageName && t.packageName.trim()) {
       const normTPkg = normalize(t.packageName);
 
-      // Directly matches product name or product id
+
       if (normTPkg === fixedName || normTPkg === fixedId) {
         return true;
       }
 
-      // If extraPackages provided, verify if the custom package belongs to this product
       if (extraPackages && extraPackages.length > 0) {
         const match = extraPackages.find((p) => normalize(p.name || '') === normTPkg);
         if (match && match.productId) {
@@ -100,19 +99,18 @@ export function isTaskForPackage(
           if (matchProd === fixedId || matchProd.includes(fixedId.replace('pkg ', '')) || fixedId.includes(matchProd)) {
             return true;
           }
-          // Belongs to another product
+    
           return false;
         }
       }
 
-      // Check product keyword prefix if not belonging to another known product
       if (fixedId.includes('career') && normTPkg.includes('career')) return true;
       if (fixedId.includes('class') && normTPkg.includes('class')) return true;
       if (fixedId.includes('jesus') && (normTPkg.includes('jesus') || normTPkg.includes('messang'))) return true;
       return false;
     }
 
-    // Fallback for legacy tasks with no packageName: check text fields
+  
     const combined = normalize(`${t.title || ''} ${t.description || ''} ${t.campaignName || ''} ${t.content || ''}`);
     if (fixedId.includes('career')) {
       return combined.includes('careermate') || combined.includes('career');
@@ -126,14 +124,21 @@ export function isTaskForPackage(
     return false;
   }
 
-  // CASE 2: targetPackage is a SPECIFIC CUSTOM PACKAGE (e.g. "TNPSC Gold", "Class 10 CBSE", "General Studies")
-  // Strict matching: Only tasks explicitly created for/assigned to this package match.
+
   if (t.packageName && t.packageName.trim()) {
     const normTPkg = normalize(t.packageName);
-    return normTPkg === normTarget;
+    if (normTPkg === normTarget || normTPkg.includes(normTarget) || normTarget.includes(normTPkg)) {
+      return true;
+    }
   }
 
-  // If task has no packageName at all, it does not belong to this specific package
+  if (t.title && t.title.trim()) {
+    const normTitle = normalize(t.title);
+    if (normTitle === normTarget || normTitle.includes(normTarget) || normTarget.includes(normTitle)) {
+      return true;
+    }
+  }
+
   return false;
 }
 

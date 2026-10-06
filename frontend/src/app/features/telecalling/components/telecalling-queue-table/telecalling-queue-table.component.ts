@@ -24,7 +24,7 @@ export class TelecallingQueueTableComponent {
   @Input() selectedCampaign = 'ALL';
   @Input() dateFilter: 'ALL' | 'TODAY' | 'YESTERDAY' | 'CUSTOM' = 'ALL';
 
-  // Helper functions
+
   @Input() getStatusBadgeClassFn!: (status?: string) => string;
   @Input() getLeadCurrentStatusFn!: (lead: LeadItem) => string;
   @Input() hasScheduledCallbackFn!: (lead: LeadItem) => boolean;
@@ -33,7 +33,7 @@ export class TelecallingQueueTableComponent {
   @Input() getLeadCreatorNameFn!: (lead: LeadItem) => string;
   @Input() getLeadMetricsFn!: (lead: LeadItem) => any;
 
-  // Pagination
+
   @Input() currentPage = 1;
   @Input() pageSize = 10;
   @Input() totalPages = 1;

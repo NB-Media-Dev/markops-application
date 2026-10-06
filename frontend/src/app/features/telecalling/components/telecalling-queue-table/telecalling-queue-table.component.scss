@@ -1,4 +1,4 @@
-/* Toolbar & Filter Bar */
+
 .toolbar-card {
   background: #FFFFFF;
   border: 1.5px solid #E2E8F0;
@@ -68,7 +68,7 @@
   }
 }
 
-/* UNIFIED FULL-WIDTH TABLE & QUEUE STYLES */
+
 .table-card.card-full-queue {
   width: 100%;
   border-radius: 16px;
@@ -686,7 +686,7 @@
     }
   }
 
-  /* Empty State Cell */
+
   .empty-state-cell {
     padding: 3rem 1.5rem !important;
     text-align: center;
@@ -809,7 +809,7 @@
   }
 }
 
-/* Pagination Bar */
+
 .table-pagination-bar {
   display: flex;
   justify-content: space-between;
@@ -898,7 +898,6 @@
   }
 }
 
-/* Status Pill Color definitions */
 .status-pill {
   &.status-pill-sky,
   &.status-pill-new {
@@ -983,7 +982,6 @@
   }
 }
 
-/* Animations */
 @keyframes phoneIconRinging {
   0%, 100% { transform: rotate(0deg) scale(1); }
   10%, 30%, 50%, 70%, 90% { transform: rotate(-12deg) scale(1.1); color: #EF4444; }

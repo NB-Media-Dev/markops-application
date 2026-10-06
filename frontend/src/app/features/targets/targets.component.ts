@@ -63,7 +63,6 @@ export class TargetsComponent implements OnInit {
         return isCaller && isToday;
       });
 
-      // 1 per 1 lead: count UNIQUE leads called today
       const uniqueLeadsCalledToday = new Set(
         todayCalls
           .map((c) => String(c.leadId || c.leadPhone || c.leadName || '').trim().toLowerCase())
@@ -119,7 +118,26 @@ export class TargetsComponent implements OnInit {
   });
 
   readonly filteredProgressList = computed(() => {
-    const list = this.telecallerProgressList();
+    let list = this.telecallerProgressList();
+    const user = this.authService.currentUser();
+
+    if (!this.isManagerOrAdmin()) {
+      if (user) {
+        const uId = String(user.id || '').trim();
+        const uEmail = String(user.email || '').toLowerCase().trim();
+        const uName = String(user.fullName || '').toLowerCase().trim();
+        list = list.filter((item) => {
+          const itemUid = String(item.telecallerId || '').trim();
+          const itemEmail = String(item.telecallerEmail || '').toLowerCase().trim();
+          const itemName = String(item.telecallerName || '').toLowerCase().trim();
+          return (uId && itemUid === uId) ||
+                 (uEmail && itemEmail === uEmail) ||
+                 (uName && itemName === uName) ||
+                 (uName && (itemName.includes(uName) || uName.includes(itemName)));
+        });
+      }
+    }
+
     const query = this.searchQuery().toLowerCase().trim();
     const filter = this.statusFilter();
 
@@ -138,7 +156,6 @@ export class TargetsComponent implements OnInit {
       return matchesSearch && matchesStatus;
     });
   });
-
 
   readonly summaryKpis = computed(() => {
     const list = this.telecallerProgressList();
@@ -163,18 +180,20 @@ export class TargetsComponent implements OnInit {
     this.userService.loadUsersFromDatabase();
     this.targetService.loadTargets();
 
-    // Auto-detect compliance status on load so the alert banner shows as seen in the target design
+  
     setTimeout(() => {
-      const kpis = this.summaryKpis();
-      if (kpis && kpis.deficitCount > 0) {
-        const list = this.telecallerProgressList();
-        const deficits = list
-          .filter((t) => t.status === 'BEHIND_TARGET' || t.status === 'CRITICAL_DEFICIT')
-          .map((t) => t.telecallerName);
-        this.lastEvaluationSummary.set({
-          alertedCount: deficits.length,
-          deficitTelecallers: deficits,
-        });
+      if (this.isManagerOrAdmin()) {
+        const kpis = this.summaryKpis();
+        if (kpis && kpis.deficitCount > 0) {
+          const list = this.telecallerProgressList();
+          const deficits = list
+            .filter((t) => t.status === 'BEHIND_TARGET' || t.status === 'CRITICAL_DEFICIT')
+            .map((t) => t.telecallerName);
+          this.lastEvaluationSummary.set({
+            alertedCount: deficits.length,
+            deficitTelecallers: deficits,
+          });
+        }
       }
     }, 400);
   }

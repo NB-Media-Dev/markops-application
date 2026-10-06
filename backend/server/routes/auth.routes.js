@@ -259,7 +259,7 @@ router.get('/me', async (req, res) => {
     return res.status(401).json({ error: 'Missing or invalid Authorization token' });
   }
 
-  // Handle demo / fallback tokens
+
   if (token === 'mo_jwt_default' || token.startsWith('mo_jwt_')) {
     let role = 'ADMINISTRATOR';
     let userId = '1';

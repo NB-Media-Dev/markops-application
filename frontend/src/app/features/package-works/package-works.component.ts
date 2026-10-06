@@ -76,7 +76,7 @@ export class PackageWorksComponent implements OnInit {
   readonly activeWorkspacePackage = signal<ProductPackage | null>(null);
   readonly activeOperationTab = signal<string>('PACKAGES');
 
-  // Product Package Management State
+ 
   readonly isCreateProductPackageModalOpen = signal<boolean>(false);
   readonly isPackageDetailModalOpen = signal<boolean>(false);
   readonly selectedProductPackage = signal<ProductPackage | null>(null);
@@ -84,7 +84,7 @@ export class PackageWorksComponent implements OnInit {
   readonly createdPackageImagePreview = signal<string>('');
   readonly isSubmittingPackage = signal<boolean>(false);
 
-  // Edit Product Package State
+
   readonly isEditProductPackageModalOpen = signal<boolean>(false);
   readonly editingProductPackage = signal<ProductPackage | null>(null);
   readonly editPackageImageFile = signal<File | null>(null);
@@ -364,7 +364,7 @@ export class PackageWorksComponent implements OnInit {
 
     const depts: OperationDepartment[] = [];
 
-    // 1. Designer Content / Operations (Tasks)
+  
     if (role === 'ADMINISTRATOR' || role === 'MARKETING_MANAGER' || role === 'DESIGNER' || role === 'BDM') {
       depts.push({
         id: 'DESIGNER',
@@ -378,7 +378,6 @@ export class PackageWorksComponent implements OnInit {
       });
     }
 
-    // 2. Digital Marketing Content / Operations (Campaigns, Ads Metrics, Leads)
     if (role === 'ADMINISTRATOR' || role === 'MARKETING_MANAGER' || role === 'DIGITAL_MARKETING') {
       depts.push({
         id: 'DIGITAL_MARKETING',
@@ -394,7 +393,6 @@ export class PackageWorksComponent implements OnInit {
       });
     }
 
-    // 3. Telecalling Content / Operations (Telecalling Member Details, Targets) - Only for Admin, Telecaller
     if (role === 'ADMINISTRATOR' || role === 'MARKETING_MANAGER' || role === 'TELECALLER') {
       const tcTabs: RoleOperationTab[] = [];
       if (role === 'ADMINISTRATOR' || role === 'MARKETING_MANAGER') {
@@ -414,7 +412,7 @@ export class PackageWorksComponent implements OnInit {
       });
     }
 
-    // 4. Analytics & Management (Transactions, Reports, Audit Logs)
+
     if (role === 'ADMINISTRATOR' || role === 'MARKETING_MANAGER' || role === 'BDM') {
       const mgmtTabs: RoleOperationTab[] = [];
       if (role === 'ADMINISTRATOR' || role === 'MARKETING_MANAGER') {
@@ -575,12 +573,12 @@ export class PackageWorksComponent implements OnInit {
     const activeProd = (this.activePackageName() || '').toLowerCase().trim();
 
     return allLeads.filter((l) => {
-      // 1. If telecaller, strictly check if assigned to this telecaller
+
       if (user && user.role === 'TELECALLER') {
         if (!isLeadAssignedToUser(l, user)) return false;
       }
 
-      // 2. Package matching
+  
       if (ws) {
         const wsName = (ws.name || '').toLowerCase().trim();
         const wsId = String(ws.id || '').toLowerCase().trim();
@@ -593,7 +591,7 @@ export class PackageWorksComponent implements OnInit {
         return false;
       }
 
-      // Catalog / product level:
+      
       const src = (l.source || '').toLowerCase();
       const cmp = (l.campaignName || '').toLowerCase();
       if (activeProd.includes('career')) {
@@ -619,6 +617,82 @@ export class PackageWorksComponent implements OnInit {
     return this.txnService.transactions();
   });
 
+
+  readonly isTelecaller = computed<boolean>(() => {
+    return this.currentRole() === 'TELECALLER';
+  });
+
+  readonly telecallerPipelineCounts = computed(() => {
+    const leads = this.filteredLeads();
+    const calls = this.leadService.calls();
+    let newCount = 0;
+    let followUpCount = 0;
+    let interestedCount = 0;
+    let qualifiedCount = 0;
+    let retryCount = 0;
+
+    leads.forEach((l) => {
+      const lId = String(l.id || '').trim().toLowerCase();
+      const lPhone = String(l.phone || '').replace(/\D/g, '');
+      const leadCalls = calls.filter((c) => {
+        const cLeadId = String(c.leadId || (c as any).lead_id || '').trim().toLowerCase();
+        const cPhone = String(c.leadPhone || (c as any).lead_phone || '').replace(/\D/g, '');
+        return (cLeadId && lId && cLeadId === lId) || (lPhone && cPhone && lPhone === cPhone);
+      });
+
+      let status = (l.status || 'ASSIGNED').toUpperCase().replace(/\s+/g, '_');
+      if (leadCalls.length > 0) {
+        const sorted = [...leadCalls].sort(
+          (a, b) =>
+            new Date((b as any).callDate || b.calledAt || (b as any).createdAt || 0).getTime() -
+            new Date((a as any).callDate || a.calledAt || (a as any).createdAt || 0).getTime()
+        );
+        const out = String(sorted[0].outcome || '').toUpperCase().replace(/\s+/g, '_');
+        if (out) status = out === 'BUSY' ? 'LINE_BUSY' : out;
+      }
+
+      if (status === 'INTERESTED') {
+        interestedCount++;
+      } else if (status === 'QUALIFIED' || status === 'CONVERTED' || status === 'PAID') {
+        qualifiedCount++;
+      } else if (status === 'FOLLOW_UP') {
+        followUpCount++;
+      } else if (['LINE_BUSY', 'BUSY', 'NO_ANSWER'].includes(status)) {
+        retryCount++;
+      } else if (status === 'NEW' || status === 'UNASSIGNED' || leadCalls.length === 0) {
+        newCount++;
+      }
+    });
+
+    return {
+      all: leads.length,
+      new: newCount,
+      followUp: followUpCount,
+      interested: interestedCount,
+      qualified: qualifiedCount,
+      retry: retryCount,
+    };
+  });
+
+  readonly isDesigner = computed<boolean>(() => {
+    return this.currentRole() === 'DESIGNER';
+  });
+
+  readonly designerPipelineCounts = computed(() => {
+    const tasks = this.filteredTasks();
+    const inProgress = tasks.filter((t) => t.status === 'IN_PROGRESS' || t.status === 'ACCEPTED').length;
+    const revision = tasks.filter((t) => t.status === 'REVISION_REQUIRED' || t.status === 'REDESIGN_REQUIRED').length;
+    const inReview = tasks.filter((t) => t.status === 'SUBMITTED' || t.status === 'RESUBMITTED' || t.status === 'UNDER_REVIEW').length;
+    const approved = tasks.filter((t) => t.status === 'APPROVED' || t.status === 'PUBLISHED' || t.status === 'COMPLETED').length;
+
+    return {
+      all: tasks.length,
+      inProgress,
+      revision,
+      inReview,
+      approved,
+    };
+  });
 
   readonly packageMetrics = computed(() => {
     const tasks = this.filteredTasks();
@@ -653,7 +727,7 @@ export class PackageWorksComponent implements OnInit {
       (t) => ws ? isTaskForPackage(t, targetFilter, this.packageService.packages()) : isTaskForPackage(t, pkgName, this.packageService.packages())
     );
 
-    // 1. Audit Entries synthesized from Task Operations (Creation, Status, Versions, Assignments)
+  
     const taskRows = packageTasks.map((t) => {
       const taskIdStr = String(t.id).trim();
       const taskTitleLower = (t.title || '').toLowerCase().trim();
@@ -728,7 +802,7 @@ export class PackageWorksComponent implements OnInit {
       };
     });
 
-    // 2. Extra direct package audit logs (Transactions, Config Changes, Campaigns)
+
     const packageTaskIds = new Set(packageTasks.map((t) => String(t.id)));
     const extraPackageLogs = logs
       .filter((l) => {
@@ -796,52 +870,73 @@ export class PackageWorksComponent implements OnInit {
   private applyRouteQueryParams(params: any): void {
     if (!params) return;
 
-    if (params['package']) {
-      const matched = FIXED_PACKAGES.find((p) => p.name.toLowerCase() === String(params['package']).toLowerCase());
-      if (matched) {
-        this.activePackageName.set(matched.name);
-      } else {
-        this.activePackageName.set(params['package']);
-      }
-    }
-
-    const requestedWorkspace = params['workspace'] || params['workspacePkg'] || params['pkg'] || params['packageWorkspace'];
+    const reqProduct = params['package'] || params['product'] || params['productName'];
+    const requestedWorkspace = params['workspace'] || params['workspacePkg'] || params['pkg'] || params['packageWorkspace'] || params['packageName'];
     const requestedDept = params['dept'] || params['department'];
     const requestedTab = params['tab'] || params['subtab'];
 
-    if (!requestedWorkspace && !requestedDept && !requestedTab) {
+    if (!reqProduct && !requestedWorkspace && !requestedDept && !requestedTab) {
       return;
+    }
+
+    if (reqProduct) {
+      const cleanProd = String(reqProduct).toLowerCase().trim();
+      const matched = FIXED_PACKAGES.find((p) =>
+        p.name.toLowerCase() === cleanProd ||
+        p.id.toLowerCase() === cleanProd ||
+        cleanProd.includes(p.name.toLowerCase()) ||
+        p.name.toLowerCase().includes(cleanProd)
+      );
+      if (matched) {
+        this.activePackageName.set(matched.name);
+      } else {
+        this.activePackageName.set(String(reqProduct));
+      }
     }
 
     const allPkgs = this.packageService.packages();
     let targetPkg: ProductPackage | null = null;
 
     if (requestedWorkspace) {
-      targetPkg = allPkgs.find((p) =>
-        String(p.name).toLowerCase().trim() === String(requestedWorkspace).toLowerCase().trim() ||
-        String(p.id) === String(requestedWorkspace)
-      ) || null;
+      const normWs = String(requestedWorkspace).toLowerCase().replace(/[^a-z0-9]/g, '');
+      targetPkg = allPkgs.find((p) => {
+        const pNameNorm = String(p.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const pIdNorm = String(p.id || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        return pNameNorm === normWs || pIdNorm === normWs || String(p.id) === String(requestedWorkspace) ||
+               String(p.name || '').toLowerCase().includes(String(requestedWorkspace).toLowerCase()) ||
+               String(requestedWorkspace).toLowerCase().includes(String(p.name || '').toLowerCase());
+      }) || null;
     }
 
-    if (!targetPkg && (requestedDept === 'TELECALLING' || requestedTab === 'TELECALLER_MEMBERS' || requestedTab === 'TARGETS')) {
+    if (!targetPkg && requestedWorkspace) {
+      const prodMeta = this.activePackageMeta();
+      targetPkg = {
+        id: 4,
+        name: String(requestedWorkspace),
+        productId: prodMeta?.id || 'pkg_careermate',
+        status: 'ACTIVE',
+      } as ProductPackage;
+    }
+
+    if (!targetPkg && !requestedWorkspace && (requestedDept === 'TELECALLING' || requestedTab === 'TELECALLER_MEMBERS' || requestedTab === 'TARGETS')) {
       targetPkg = allPkgs.find((p) => String(p.name).toLowerCase().includes('current') || String(p.name).toLowerCase().includes('affair'))
         || allPkgs.find((p) => (p.productId || '').toLowerCase().includes('career'))
         || allPkgs[0]
         || null;
-
-      if (!targetPkg) {
-        targetPkg = {
-          id: 4,
-          name: 'CURRENT-AFFAIR-PACKAGE',
-          productId: 'pkg_careermate',
-          status: 'ACTIVE',
-        } as ProductPackage;
-      }
     }
 
     if (targetPkg) {
       this.selectedProductPackage.set(targetPkg);
       this.activeWorkspacePackage.set(targetPkg);
+
+      if (!reqProduct && targetPkg.productId) {
+        const prodObj = this.availablePackages.find(
+          (p) => p.id.toLowerCase() === targetPkg!.productId.toLowerCase()
+        );
+        if (prodObj) {
+          this.activePackageName.set(prodObj.name);
+        }
+      }
 
       if (requestedDept) {
         const validDepts: Array<'DESIGNER' | 'DIGITAL_MARKETING' | 'TELECALLING' | 'ANALYTICS'> = [
@@ -851,7 +946,7 @@ export class PackageWorksComponent implements OnInit {
         if (validDepts.includes(upperDept as any)) {
           this.activeDepartment.set(upperDept as any);
         }
-      } else if (requestedTab === 'TELECALLER_MEMBERS' || requestedTab === 'TARGETS') {
+      } else if (requestedTab === 'TELECALLER_MEMBERS' || requestedTab === 'TARGETS' || requestedTab === 'TELECALLING') {
         this.activeDepartment.set('TELECALLING');
       }
 
@@ -905,7 +1000,7 @@ export class PackageWorksComponent implements OnInit {
     this.fetchAuditLogs();
   }
 
-  // Product Package Operations
+
   openCreateProductPackageModal(): void {
     if (!this.canCreatePackage()) {
       alert('Only administrators are authorized to create packages.');
@@ -989,7 +1084,6 @@ export class PackageWorksComponent implements OnInit {
     });
   }
 
-  // Edit Product Package Operations
   openEditProductPackageModal(pkg: ProductPackage, event?: Event): void {
     if (event) {
       event.preventDefault();
@@ -1925,7 +2019,6 @@ export class PackageWorksComponent implements OnInit {
     const verTime = new Date(ver.createdAt).getTime();
     if (isNaN(verTime)) return '';
 
-    // Direct status history search (from IN_PROGRESS to ver.createdAt)
     if (task.statusHistory && task.statusHistory.length > 0) {
       const sortedHistory = [...task.statusHistory]
         .filter((h) => h.createdAt && !isNaN(new Date(h.createdAt).getTime()))
@@ -1948,7 +2041,7 @@ export class PackageWorksComponent implements OnInit {
       }
     }
 
-    // Compare to previous version
+
     if (task.versions && task.versions.length > 1) {
       const sortedVers = [...task.versions]
         .filter((v) => v.createdAt && !isNaN(new Date(v.createdAt).getTime()))

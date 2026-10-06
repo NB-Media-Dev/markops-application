@@ -13,9 +13,7 @@ const browserDistFolder = join(import.meta.dirname, '../browser');
 const angularApp = new AngularNodeAppEngine({ allowedHosts: ['*'] });
 const httpServer = createServer(app);
 
-/**
- * Serve static files from /browser
- */
+
 app.use(
   express.static(browserDistFolder, {
     maxAge: '1y',
@@ -24,9 +22,7 @@ app.use(
   }),
 );
 
-/**
- * Handle all non-API requests by rendering the Angular application via SSR.
- */
+
 app.use((req: any, res: any, next: any) => {
   angularApp
     .handle(req)
@@ -46,3 +42,4 @@ if (isMainModule(import.meta.url) || process.env['pm_id']) {
 
 
 export const reqHandler = createNodeRequestHandler(app);
+

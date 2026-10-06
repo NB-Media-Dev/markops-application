@@ -24,7 +24,7 @@ export class PackageService {
       tap({
         next: (data) => {
           if (productId) {
-            // Merge or set packages
+           
             this.packages.update((current) => {
               const other = current.filter((p) => p.productId !== productId);
               return [...data, ...other];

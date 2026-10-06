@@ -4,14 +4,12 @@
   gap: 1.5rem;
 }
 
-/* Custom Packages Grid */
 .custom-packages-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   gap: 1.5rem;
 }
 
-/* Package Display Card */
 .package-display-card {
   background: #FFFFFF;
   border: 1.5px solid #E2E8F0;
@@ -31,7 +29,7 @@
     border-color: #3B82F6;
   }
 
-  /* Banner Image Area */
+ 
   .package-display-banner {
     position: relative;
     width: 100%;
@@ -131,7 +129,7 @@
     }
   }
 
-  /* Bottom Card Info */
+  
   .package-display-info {
     padding-top: 14px;
     display: flex;
@@ -223,7 +221,7 @@
   }
 }
 
-/* Empty State Card */
+
 .packages-empty-state-card {
   background: #FFFFFF;
   border: 1.5px dashed #CBD5E1;

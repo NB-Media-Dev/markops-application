@@ -12,6 +12,24 @@ import { OperationDepartment } from '../../package-works.component';
 export class PackageHubOverviewComponent {
   @Input() packageMetrics: any = null;
   @Input() operationDepartments: OperationDepartment[] = [];
+  @Input() isTelecaller = false;
+  @Input() telecallerPipelineCounts: {
+    all: number;
+    new: number;
+    followUp: number;
+    interested: number;
+    qualified: number;
+    retry?: number;
+  } | null = null;
+
+  @Input() isDesigner = false;
+  @Input() designerPipelineCounts: {
+    all: number;
+    inProgress: number;
+    revision: number;
+    inReview: number;
+    approved: number;
+  } | null = null;
 
   @Output() departmentSelect = new EventEmitter<string>();
 

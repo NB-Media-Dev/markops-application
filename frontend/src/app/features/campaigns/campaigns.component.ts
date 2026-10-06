@@ -324,7 +324,7 @@ export class CampaignsComponent implements OnInit {
     if (pkg && pkg !== 'all') {
       const fixedProd = FIXED_PACKAGES.find((fp) => fp.name.toLowerCase() === pkg || fp.id.toLowerCase() === pkg);
       if (fixedProd) {
-        // Product-level filtering
+       
         const prodId = fixedProd.id.toLowerCase();
         list = list.filter((c) => {
           const cPkg = ((c as any).packageName || (c as any).package || '').toLowerCase().trim();
@@ -345,7 +345,7 @@ export class CampaignsComponent implements OnInit {
           return false;
         });
       } else {
-        // Specific package filtering: MUST STRICTLY MATCH THIS PACKAGE ONLY!
+       
         list = list.filter((c) => {
           const cPkg = ((c as any).packageName || (c as any).package || '').toLowerCase().trim();
           const name = (c.name || '').toLowerCase();

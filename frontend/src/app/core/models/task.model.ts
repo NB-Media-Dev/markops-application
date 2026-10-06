@@ -149,9 +149,7 @@ export interface DesignerDashboardMetrics {
   }[];
 }
 
-/**
- * Computes standard workflow progress percentage based on task status
- */
+
 export function computeTaskProgressPercent(status?: string | null, customPercent?: number): number {
   const s = String(status || '').toUpperCase().trim();
   switch (s) {

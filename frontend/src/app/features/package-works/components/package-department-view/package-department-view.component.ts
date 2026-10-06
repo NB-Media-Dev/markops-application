@@ -35,7 +35,7 @@ export class PackageDepartmentViewComponent {
   @Input() packageReportSummary: any = null;
   @Input() filteredAuditLogs: any[] = [];
 
-  // Helper function inputs
+  
   @Input() getAuditLogCreatorFn!: (log: any) => { name: string; role: string };
   @Input() getAuditLogAssigneeFn!: (log: any) => string;
   @Input() getAuditLogTaskTitleFn!: (log: any) => string;

@@ -40,7 +40,7 @@ function saveBase64PackageImage(dataUrl, fileName = 'package_banner.png') {
   }
 }
 
-// GET /api/packages - List packages optionally filtered by product
+
 router.get('/packages', async (req, res) => {
   const reqProduct = req.query.productId || req.query.product || req.query.package;
   const normalizedKey = reqProduct ? normalizeProductId(reqProduct) : null;
@@ -78,7 +78,7 @@ router.get('/packages', async (req, res) => {
       }
     }
 
-    // In-memory fallback
+  
     let list = [...dbPackagesStore];
     if (normalizedKey) {
       list = list.filter((p) => {
@@ -94,7 +94,7 @@ router.get('/packages', async (req, res) => {
   }
 });
 
-// GET /api/packages/summary - Get package counts grouped by product
+
 router.get('/packages/summary', async (req, res) => {
   try {
     const summary = {
@@ -125,7 +125,7 @@ router.get('/packages/summary', async (req, res) => {
       }
     }
 
-    // Memory fallback
+  
     dbPackagesStore.forEach((p) => {
       const key = normalizeProductId(p.productId);
       if (summary[key] !== undefined) {
@@ -139,7 +139,7 @@ router.get('/packages/summary', async (req, res) => {
   }
 });
 
-// GET /api/packages/:id - Get single package
+
 router.get('/packages/:id', async (req, res) => {
   const { id } = req.params;
   try {
@@ -176,7 +176,7 @@ router.get('/packages/:id', async (req, res) => {
   }
 });
 
-// POST /api/packages - Create package under specific product (Admin only)
+
 router.post('/packages', async (req, res) => {
   const userRole = String(req.user?.role || req.headers['x-user-role'] || '').toUpperCase();
   if (userRole && userRole !== 'ADMINISTRATOR' && userRole !== 'ADMIN') {
@@ -235,7 +235,7 @@ router.post('/packages', async (req, res) => {
   }
 });
 
-// PUT /api/packages/:id - Update package (Admin only)
+
 router.put('/packages/:id', async (req, res) => {
   const userRole = String(req.user?.role || req.headers['x-user-role'] || '').toUpperCase();
   if (userRole && userRole !== 'ADMINISTRATOR' && userRole !== 'ADMIN') {
@@ -337,7 +337,7 @@ router.put('/packages/:id', async (req, res) => {
   }
 });
 
-// DELETE /api/packages/:id - Delete package (Admin only)
+
 router.delete('/packages/:id', async (req, res) => {
   const userRole = String(req.user?.role || req.headers['x-user-role'] || '').toUpperCase();
   if (userRole && userRole !== 'ADMINISTRATOR' && userRole !== 'ADMIN') {

@@ -52,9 +52,6 @@
   }
 }
 
-/* ==========================================================================
-   TOP NAVBAR (Reference Design: Clean Logo, Center Search, User Pill, Dark Action)
-   ========================================================================== */
 .top-navbar {
   height: 64px;
   background-color: #FFFFFF;
@@ -703,9 +700,7 @@
   }
 }
 
-/* ==========================================================================
-   GLOBAL REALTIME NOTIFICATION TOAST
-   ========================================================================== */
+
 .global-realtime-toast {
   position: fixed;
   top: 1.5rem;
@@ -788,7 +783,7 @@
   }
 }
 
-/* Bell Shake & Pulse Animations when unread notifications exist */
+
 @keyframes bellShakeRing {
   0% { transform: rotate(0); }
   2% { transform: rotate(14deg); }

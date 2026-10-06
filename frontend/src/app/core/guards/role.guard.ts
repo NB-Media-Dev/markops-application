@@ -3,9 +3,7 @@ import { CanActivateFn, Router } from '@angular/router';
 import { AuthService, ROLE_DEFAULT_ROUTES } from '../services/auth.service';
 import { UserRole } from '../models/auth.model';
 
-/**
- * Functional Angular Route Guard enforcing role-specific navigation permissions.
- */
+
 export const roleGuard: CanActivateFn = async (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);

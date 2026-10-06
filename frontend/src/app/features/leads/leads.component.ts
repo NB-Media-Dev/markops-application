@@ -63,7 +63,7 @@ export class LeadsComponent implements OnInit {
   readonly pageSize = signal<number>(10);
   readonly pageSizeOptions: number[] = [10, 25, 50, 100];
 
-  // Single Lead Form Fields
+  
   newFirstName = '';
   newLastName = '';
   newEmail = '';
@@ -130,7 +130,7 @@ export class LeadsComponent implements OnInit {
       }
     });
 
-    // Also include any assignees from existing leads if not already listed
+
     this.leadService.leads().forEach((l) => {
       const aName = (l.assigneeName || (l as any).assignee_name || '').trim();
       const aId = String(l.assignedTo || (l as any).assigned_to || '').trim();
@@ -199,7 +199,7 @@ export class LeadsComponent implements OnInit {
       });
     }
 
-    // Also collect distinct campaign names from loaded leads (e.g. "Exam panle")
+
     const allLeads = this.leadService.leads();
     allLeads.forEach((l) => {
       const name = (l.campaignName || (l as any).campaign_name || '').trim();
@@ -414,10 +414,10 @@ export class LeadsComponent implements OnInit {
       alert('Access Denied: Only Digital Marketing and Admin roles are authorized to upload lead files.');
       return;
     }
-    // Refresh campaigns from backend so all campaigns are loaded
+   
     this.campaignService.loadCampaigns().subscribe();
 
-    // Reset fields so no sample excel file is loaded by default
+
     this.clearSelectedFile();
     this.campaignName = '';
 
@@ -701,7 +701,7 @@ export class LeadsComponent implements OnInit {
           return false;
         });
       } else {
-        // Specific package filtering: MUST STRICTLY MATCH THIS PACKAGE ONLY!
+       
         list = list.filter((l) => {
           const src = (l.source || '').toLowerCase();
           const cmp = (l.campaignName || '').toLowerCase();
@@ -716,7 +716,7 @@ export class LeadsComponent implements OnInit {
   readonly filteredLeadsList = computed<LeadItem[]>(() => {
     let list = this.myLeadsList();
 
-    // 1. Status Filter
+   
     const st = (this.filterStatus() || 'ALL').trim();
     if (st !== 'ALL') {
       const cleanSt = st.toUpperCase().replace(/[\s_-]+/g, '');
@@ -733,7 +733,7 @@ export class LeadsComponent implements OnInit {
       });
     }
 
-    // 2. Search Query Filter
+  
     const query = (this.searchQuery() || '').toLowerCase().trim();
     if (query) {
       const cleanDigits = query.replace(/\D/g, '');
@@ -760,7 +760,7 @@ export class LeadsComponent implements OnInit {
       });
     }
 
-    // 3. Telecaller Assignment Filter
+  
     const tc = (this.filterTelecaller() || 'ALL').trim();
     if (tc === 'UNASSIGNED') {
       list = list.filter((l) => {
@@ -781,23 +781,22 @@ export class LeadsComponent implements OnInit {
         const lAssignedId = String(l.assignedTo || (l as any).assigned_to || '').trim().toLowerCase();
         const lAssigneeName = String(l.assigneeName || (l as any).assignee_name || '').toLowerCase().trim();
 
-        // Numerical / string ID match
+  
         if (lAssignedId && (lAssignedId === matchedId || lAssignedId === tcVal)) return true;
 
-        // Exact or partial name match
+       
         if (lAssigneeName && matchedName) {
           if (lAssigneeName === matchedName) return true;
           if (lAssigneeName.includes(matchedName) || matchedName.includes(lAssigneeName)) return true;
         }
 
-        // Telecaller assignment match helper
         if (matchedUser && isLeadAssignedToUser(l, matchedUser)) return true;
 
         return false;
       });
     }
 
-    // 4. Campaign Filter
+
     const cmp = (this.filterCampaign() || 'ALL').trim();
     if (cmp !== 'ALL') {
       const cmpLower = cmp.toLowerCase();
@@ -960,8 +959,7 @@ export class LeadsComponent implements OnInit {
     }
   }
 
-  // Permission Check: Reassign, Edit, and Delete are strictly restricted to the lead's creator only
-  isLeadCreator(lead: LeadItem): boolean {
+   isLeadCreator(lead: LeadItem): boolean {
     if (!lead) return false;
     const user = this.authService.currentUser();
     if (!user) return false;
@@ -994,7 +992,7 @@ export class LeadsComponent implements OnInit {
     return this.isLeadCreator(lead);
   }
 
-  // Lead Details & Call History Modal State
+
   readonly selectedLeadForDetails = signal<LeadItem | null>(null);
 
   openLeadDetails(lead: LeadItem) {
@@ -1023,7 +1021,7 @@ export class LeadsComponent implements OnInit {
     });
   }
 
-  // Edit Lead Modal State
+
   readonly showEditModal = signal<boolean>(false);
   readonly editingLead = signal<LeadItem | null>(null);
   readonly isSavingEdit = signal<boolean>(false);
@@ -1108,7 +1106,7 @@ export class LeadsComponent implements OnInit {
     if (confirm(`Are you sure you want to permanently delete lead "${leadName}"? This action cannot be undone.`)) {
       this.leadService.deleteLead(lead.id).subscribe({
         next: () => {
-          // deleted successfully
+          
         },
         error: (err) => {
           alert(err?.error?.error || err?.message || 'Failed to delete lead.');

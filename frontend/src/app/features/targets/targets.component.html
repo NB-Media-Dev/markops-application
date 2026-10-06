@@ -7,8 +7,7 @@
           <span class="material-symbols-outlined icon-glow">tune</span>
           <span>Set Common Target</span>
         </button>
-      }
-      <button
+          <button
         class="btn-action-secondary"
         [disabled]="isEvaluating()"
         (click)="runTargetComplianceCheck()"
@@ -16,11 +15,13 @@
         <span class="material-symbols-outlined fs-18">notifications_active</span>
         <span>{{ isEvaluating() ? 'Evaluating Quotas...' : 'Check Target Compliance' }}</span>
       </button>
+      }
+    
     </div>
   </header>
 
-  <!-- Evaluation Alert Summary Banner -->
-  @if (lastEvaluationSummary(); as summary) {
+  <!-- Evaluation Alert Summary Banner (Admin & Marketing Manager Only) -->
+  @if (isManagerOrAdmin() && lastEvaluationSummary(); as summary) {
     <div class="alert-banner alert-warning">
       <div class="alert-icon-wrap">
         <span class="material-symbols-outlined">warning</span>
@@ -188,52 +189,54 @@
       </section>
     }
 
-  <!-- Controls & Filters Bar -->
-  <div class="toolbar-card">
-    <div class="search-box">
-      <span class="material-symbols-outlined search-icon">search</span>
-      <input
-        type="text"
-        placeholder="Search telecallers by name, email, or department..."
-        [value]="searchQuery()"
-        (input)="onSearch($event)"
-      />
-    </div>
+  <!-- Controls & Filters Bar (Manager & Admin Only) -->
+  @if (isManagerOrAdmin()) {
+    <div class="toolbar-card">
+      <div class="search-box">
+        <span class="material-symbols-outlined search-icon">search</span>
+        <input
+          type="text"
+          placeholder="Search telecallers by name, email, or department..."
+          [value]="searchQuery()"
+          (input)="onSearch($event)"
+        />
+      </div>
 
-    <div class="segmented-tabs">
-      <button
-        class="tab-pill-btn"
-        [class.active]="statusFilter() === 'ALL'"
-        (click)="setFilter('ALL')"
-      >
-        All Telecallers
-      </button>
-      <button
-        class="tab-pill-btn"
-        [class.active]="statusFilter() === 'ON_TRACK'"
-        (click)="setFilter('ON_TRACK')"
-      >
-        <span class="tab-indicator-dot dot-active"></span>
-        On Track
-      </button>
-      <button
-        class="tab-pill-btn"
-        [class.active]="statusFilter() === 'ACHIEVED'"
-        (click)="setFilter('ACHIEVED')"
-      >
-        <span class="tab-indicator-dot dot-achieved"></span>
-        Achieved
-      </button>
-      <button
-        class="tab-pill-btn"
-        [class.active]="statusFilter() === 'BEHIND_TARGET'"
-        (click)="setFilter('BEHIND_TARGET')"
-      >
-        <span class="tab-indicator-dot dot-behind"></span>
-        Behind Target
-      </button>
+      <div class="segmented-tabs">
+        <button
+          class="tab-pill-btn"
+          [class.active]="statusFilter() === 'ALL'"
+          (click)="setFilter('ALL')"
+        >
+          All Telecallers
+        </button>
+        <button
+          class="tab-pill-btn"
+          [class.active]="statusFilter() === 'ON_TRACK'"
+          (click)="setFilter('ON_TRACK')"
+        >
+          <span class="tab-indicator-dot dot-active"></span>
+          On Track
+        </button>
+        <button
+          class="tab-pill-btn"
+          [class.active]="statusFilter() === 'ACHIEVED'"
+          (click)="setFilter('ACHIEVED')"
+        >
+          <span class="tab-indicator-dot dot-achieved"></span>
+          Achieved
+        </button>
+        <button
+          class="tab-pill-btn"
+          [class.active]="statusFilter() === 'BEHIND_TARGET'"
+          (click)="setFilter('BEHIND_TARGET')"
+        >
+          <span class="tab-indicator-dot dot-behind"></span>
+          Behind Target
+        </button>
+      </div>
     </div>
-  </div>
+  }
 
   <!-- Telecaller Targets Table Card -->
   <div class="table-card card-targets-perf">
@@ -243,10 +246,14 @@
           <span class="material-symbols-outlined">track_changes</span>
         </div>
         <div>
-          <h3>Telecaller Daily Target Performance & Quotas</h3>
-          <span class="table-sub-meta"
-            >{{ filteredProgressList().length }} telecaller accounts monitored</span
-          >
+          <h3>{{ isManagerOrAdmin() ? 'Telecaller Daily Target Performance & Quotas' : 'My Daily Target Performance & Quotas' }}</h3>
+          <span class="table-sub-meta">
+            @if (isManagerOrAdmin()) {
+              {{ filteredProgressList().length }} telecaller accounts monitored
+            } @else {
+              Personal Daily Target & Call Performance Record
+            }
+          </span>
         </div>
       </div>
     </div>
