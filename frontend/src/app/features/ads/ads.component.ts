@@ -5,11 +5,25 @@ import { RouterModule } from '@angular/router';
 import { CampaignService, AdItem, CampaignItem } from '../../core/services/campaign.service';
 import { AuthService } from '../../core/services/auth.service';
 import { FIXED_PACKAGES } from '../../core/models/package.model';
+import { AdKpisComponent } from './components/ad-kpis/ad-kpis.component';
+import { AdsToolbarComponent } from './components/ads-toolbar/ads-toolbar.component';
+import { AdsTableComponent } from './components/ads-table/ads-table.component';
+import { AdFormModalComponent } from './components/modals/ad-form-modal/ad-form-modal.component';
+import { AdDeleteModalComponent } from './components/modals/ad-delete-modal/ad-delete-modal.component';
 
 @Component({
   selector: 'app-ads',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterModule,
+    AdKpisComponent,
+    AdsToolbarComponent,
+    AdsTableComponent,
+    AdFormModalComponent,
+    AdDeleteModalComponent,
+  ],
   templateUrl: './ads.component.html',
   styleUrl: './ads.component.scss',
 })
@@ -36,7 +50,6 @@ export class AdsComponent implements OnInit {
   readonly successMessage = signal<string | null>(null);
   readonly errorMessage = signal<string | null>(null);
 
- 
   formModel = {
     name: '',
     campaignId: '',
@@ -52,10 +65,8 @@ export class AdsComponent implements OnInit {
     platformAdId: '',
   };
 
-
   readonly deleteConfirmTarget = signal<AdItem | null>(null);
 
- 
   readonly totalSpend = computed(() =>
     this.filteredAds.reduce((sum, a) => sum + (a.spend || 0), 0)
   );

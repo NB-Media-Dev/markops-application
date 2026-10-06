@@ -8,11 +8,31 @@ import { AuthService } from '../../core/services/auth.service';
 import { CampaignService } from '../../core/services/campaign.service';
 import { isLeadAssignedToUser } from '../telecalling/telecalling.component';
 import { FIXED_PACKAGES } from '../../core/models/package.model';
+import { LeadsToolbarComponent } from './components/leads-toolbar/leads-toolbar.component';
+import { LeadsTableComponent } from './components/leads-table/leads-table.component';
+import { TelecallingMonitorComponent } from './components/telecalling-monitor/telecalling-monitor.component';
+import { ExcelUploadModalComponent } from './components/modals/excel-upload-modal/excel-upload-modal.component';
+import { AddLeadModalComponent } from './components/modals/add-lead-modal/add-lead-modal.component';
+import { AssignLeadModalComponent } from './components/modals/assign-lead-modal/assign-lead-modal.component';
+import { EditLeadModalComponent } from './components/modals/edit-lead-modal/edit-lead-modal.component';
+import { LeadDetailsModalComponent } from './components/modals/lead-details-modal/lead-details-modal.component';
 
 @Component({
   selector: 'app-leads',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterModule,
+    LeadsToolbarComponent,
+    LeadsTableComponent,
+    TelecallingMonitorComponent,
+    ExcelUploadModalComponent,
+    AddLeadModalComponent,
+    AssignLeadModalComponent,
+    EditLeadModalComponent,
+    LeadDetailsModalComponent,
+  ],
   templateUrl: './leads.component.html',
   styleUrl: './leads.component.scss',
 })

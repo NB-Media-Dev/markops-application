@@ -1,0 +1,159 @@
+<!-- EXCEL UPLOAD & EQUAL AUTO-ASSIGNMENT MODAL -->
+@if (isOpen) {
+  <div class="modal-backdrop" (click)="onClose()">
+    <div class="modal-card modal-md lead-upload-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div class="modal-squircle-icon icon-upload-store">
+            <span class="material-symbols-outlined">storefront</span>
+          </div>
+          <h2>Lead Upload</h2>
+        </div>
+        <button
+          class="btn-close-modal"
+          (click)="onClose()"
+          aria-label="Close"
+          type="button"
+        >
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <!-- Success Notification Alert -->
+        @if (uploadSuccessMessage) {
+          <div class="alert alert-success">
+            <span class="material-symbols-outlined">check_circle</span>
+            <span>{{ uploadSuccessMessage }}</span>
+          </div>
+        }
+        <!-- Validation Error Alert -->
+        @if (uploadValidationError) {
+          <div class="alert alert-danger">
+            <span class="material-symbols-outlined">warning</span>
+            <span>{{ uploadValidationError }}</span>
+          </div>
+        }
+        <!-- Campaign Name Field -->
+        <div class="form-group">
+          <label class="form-label">MARKETING CAMPAIGN <span class="required">*</span></label>
+          <select [ngModel]="campaignName" (ngModelChange)="onCampaignChange($event)" class="form-input custom-select" required>
+            <option value="" disabled selected>-- Select Marketing Campaign --</option>
+            @for (cmp of availableCampaigns; track cmp) {
+              <option [value]="cmp.name">
+                {{ cmp.name }}
+              </option>
+            }
+          </select>
+        </div>
+        <!-- Lead Sheet Select / Upload Zone -->
+        <div class="upload-drop-zone">
+          <div class="drop-zone-header">
+            <div class="drop-icon-squircle">
+              <span class="material-symbols-outlined">cloud_upload</span>
+            </div>
+            <div class="drop-zone-titles">
+              <h4 class="drop-zone-title">Select Lead Sheet</h4>
+              <p class="drop-zone-desc">
+                Required columns: <strong>First Name, Last Name, Email, Phone, Source</strong>
+              </p>
+            </div>
+          </div>
+          <div class="upload-actions-row">
+            @if (!selectedFileName) {
+              <label class="btn-browse-file">
+                <span class="material-symbols-outlined">upload_file</span>
+                <span>Browse / Select Excel File</span>
+                <input
+                  type="file"
+                  accept=".csv, .xlsx, .txt, .xls"
+                  (change)="onFile($event)"
+                  hidden
+                />
+              </label>
+            }
+            @if (selectedFileName) {
+              <label class="btn-file-selected" [class.btn-has-file]="parsedLeads.length > 0">
+                <span class="material-symbols-outlined">check_circle</span>
+                <span>Change File</span>
+                <input
+                  type="file"
+                  accept=".csv, .xlsx, .txt, .xls"
+                  (change)="onFile($event)"
+                  hidden
+                />
+              </label>
+            }
+            <!-- Selected File Chip -->
+            @if (selectedFileName) {
+              <div class="selected-file-chip">
+                <span class="material-symbols-outlined chip-doc-icon">description</span>
+                <span class="chip-file-name">{{ selectedFileName }}</span>
+                <span class="chip-leads-count">({{ parsedLeads.length }} leads)</span>
+                <button
+                  type="button"
+                  class="btn-chip-remove"
+                  (click)="onClearFile()"
+                  title="Remove file"
+                >
+                  <span class="material-symbols-outlined">close</span>
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+        <!-- Target Telecallers for Equal Distribution -->
+        <div class="telecallers-selection-box">
+          <div class="box-title">
+            <span class="material-symbols-outlined">group</span>
+            <span>TARGET TELECALLERS FOR EQUAL DISTRIBUTION</span>
+          </div>
+          @if (activeTelecallers.length > 0) {
+            <div class="telecaller-checkboxes-grid">
+              @for (tc of activeTelecallers; track tc) {
+                <label
+                  class="tc-select-card"
+                  [class.selected]="selectedTelecallerIds.includes(tc.id)"
+                >
+                  <input
+                    type="checkbox"
+                    class="tc-custom-checkbox"
+                    [checked]="selectedTelecallerIds.includes(tc.id)"
+                    (change)="onToggleTc(tc.id)"
+                  />
+                  <div class="tc-card-content">
+                    <span class="tc-card-name">{{ tc.fullName }}</span>
+                    <span class="tc-card-email">{{ tc.email }}</span>
+                  </div>
+                </label>
+              }
+            </div>
+          }
+          @if (activeTelecallers.length === 0) {
+            <div class="no-telecallers-note">
+              <span class="material-symbols-outlined">info</span>
+              <span>No active telecallers found for assignment.</span>
+            </div>
+          }
+        </div>
+      </div>
+      <div class="modal-footer upload-modal-footer">
+        <button class="btn-modal-cancel" (click)="onClose()" type="button">Cancel</button>
+        <button
+          class="btn-upload-assign"
+          type="button"
+          (click)="onSubmit()"
+          [disabled]="
+            !campaignName ||
+            !campaignName.trim() ||
+            parsedLeads.length === 0 ||
+            selectedTelecallerIds.length === 0 ||
+            uploadValidationError !== null
+          "
+        >
+          <span class="material-symbols-outlined">verified</span>
+          <span>Upload & Assign</span>
+        </button>
+      </div>
+    </div>
+  </div>
+}

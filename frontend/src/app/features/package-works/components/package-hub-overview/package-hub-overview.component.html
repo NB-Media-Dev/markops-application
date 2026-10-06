@@ -1,0 +1,95 @@
+<!-- Package Workspace KPIs (Rich Elevated 3-Card Bar) -->
+@if (packageMetrics) {
+  <div class="kpi-grid package-hub-kpi-grid">
+    <!-- Card 1: Total Designer Tasks (Rose Theme) -->
+    <div
+      class="kpi-card card-tasks hub-kpi-card"
+      style="cursor: pointer"
+      title="Click to view Designer Tasks"
+    >
+      <div class="kpi-squircle-icon icon-rose">
+        <span class="material-symbols-outlined">palette</span>
+      </div>
+      <div class="kpi-info-cluster">
+        <div class="kpi-top-row">
+          <span class="kpi-title">Total Tasks</span>
+          <span class="kpi-badge-chip chip-rose">Designer</span>
+        </div>
+        <span class="kpi-value">{{ packageMetrics.totalTasks }}</span>
+      </div>
+    </div>
+    <!-- Card 2: Total Campaigns (Amber Theme) -->
+    <div
+      class="kpi-card card-revenue hub-kpi-card"
+      style="cursor: pointer"
+      title="Click to view Digital Marketing Campaigns"
+    >
+      <div class="kpi-squircle-icon icon-amber">
+        <span class="material-symbols-outlined">campaign</span>
+      </div>
+      <div class="kpi-info-cluster">
+        <div class="kpi-top-row">
+          <span class="kpi-title">Total Campaigns</span>
+          <span class="kpi-badge-chip chip-amber">Marketing</span>
+        </div>
+        <span class="kpi-value">{{ packageMetrics.totalCampaigns }}</span>
+      </div>
+    </div>
+    <!-- Card 3: Total Leads (Purple Theme) -->
+    <div
+      class="kpi-card card-leads hub-kpi-card"
+      style="cursor: pointer"
+      title="Click to view Leads Pipeline"
+    >
+      <div class="kpi-squircle-icon icon-purple">
+        <span class="material-symbols-outlined">groups</span>
+      </div>
+      <div class="kpi-info-cluster">
+        <div class="kpi-top-row">
+          <span class="kpi-title">Total Leads</span>
+          <span class="kpi-badge-chip chip-purple">Pipeline</span>
+        </div>
+        <span class="kpi-value">{{ packageMetrics.totalLeads | number }}</span>
+      </div>
+    </div>
+  </div>
+}
+<!-- Hub Section Title Bar -->
+<div class="hub-section-header">
+  <div class="hub-header-titles">
+    <h2 class="hub-section-title">Department Operations</h2>
+  </div>
+</div>
+<!-- 4 Vibrant Department Navigation Cards (Elevated Large Grid) -->
+@if (operationDepartments.length > 0) {
+  <div class="hub-departments-grid">
+    @for (dept of operationDepartments; track dept.id) {
+      <div
+        class="dept-showcase-card"
+        [ngClass]="'dept-card-' + dept.id.toLowerCase()"
+        (click)="onSelectDepartment(dept.id)"
+      >
+        <!-- Top Banner Pill & Icon -->
+        <div class="dept-card-header">
+          <div class="dept-card-icon-box">
+            <span class="material-symbols-outlined">{{ dept.icon }}</span>
+          </div>
+          @if (dept.badge) {
+            <span class="dept-card-badge">{{ dept.badge }}</span>
+          }
+        </div>
+        <!-- Title & Description -->
+        <div class="dept-card-body">
+          <h3 class="dept-card-title">{{ dept.label }}</h3>
+        </div>
+        <!-- Bottom Footer Link with Animated Arrow -->
+        <div class="dept-card-footer">
+          <div class="dept-card-action">
+            <span class="action-text">Open </span>
+            <span class="material-symbols-outlined action-arrow">arrow_forward</span>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+}

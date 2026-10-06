@@ -195,18 +195,6 @@ export const routes: Routes = [
         data: { title: 'Notifications', icon: 'notifications' },
       },
       {
-        path: 'settings',
-        loadComponent: () =>
-          import('./features/settings/settings.component').then((m) => m.SettingsComponent),
-        data: { title: 'Settings', icon: 'settings' },
-      },
-      {
-        path: 'integrations',
-        loadComponent: () =>
-          import('./features/settings/settings.component').then((m) => m.SettingsComponent),
-        data: { title: 'Integrations', icon: 'hub' },
-      },
-      {
         path: 'designer-tasks',
         loadComponent: () =>
           import('./features/designer/designer-dashboard.component').then((m) => m.DesignerDashboardComponent),

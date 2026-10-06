@@ -5,11 +5,25 @@ import { RouterModule } from '@angular/router';
 import { CampaignService, CampaignItem } from '../../core/services/campaign.service';
 import { AuthService } from '../../core/services/auth.service';
 import { FIXED_PACKAGES } from '../../core/models/package.model';
+import { CampaignKpisComponent } from './components/campaign-kpis/campaign-kpis.component';
+import { CampaignToolbarComponent } from './components/campaign-toolbar/campaign-toolbar.component';
+import { CampaignsTableComponent } from './components/campaigns-table/campaigns-table.component';
+import { CampaignFormModalComponent } from './components/modals/campaign-form-modal/campaign-form-modal.component';
+import { CampaignDeleteModalComponent } from './components/modals/campaign-delete-modal/campaign-delete-modal.component';
 
 @Component({
   selector: 'app-campaigns',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterModule,
+    CampaignKpisComponent,
+    CampaignToolbarComponent,
+    CampaignsTableComponent,
+    CampaignFormModalComponent,
+    CampaignDeleteModalComponent,
+  ],
   templateUrl: './campaigns.component.html',
   styleUrl: './campaigns.component.scss',
 })

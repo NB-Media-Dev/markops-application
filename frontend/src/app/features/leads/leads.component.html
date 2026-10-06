@@ -72,1288 +72,143 @@
 
   <!-- TAB 1: ALL LEADS LIST VIEW -->
   @if (activeTab() === 'LEADS_LIST') {
-    <!-- Filter & Toolbar Card -->
-    <div class="toolbar-card leads-filter-toolbar">
-      <!-- Search Input -->
-      <div class="filter-search-box">
-        <span class="material-symbols-outlined search-icon">search</span>
-        <input
-          type="text"
-          [ngModel]="searchQuery()"
-          (ngModelChange)="onSearchChange($event)"
-          placeholder="Search by name, phone, email, campaign, assignee..."
-          class="filter-search-input"
-        />
-        @if (searchQuery()) {
-          <button
-            type="button"
-            class="btn-clear-search"
-            (click)="onSearchChange('')"
-            title="Clear search"
-          >
-            ✕
-          </button>
-        }
-      </div>
-      <div class="filters-row-wrap">
-        <!-- Status Filter -->
-        <div class="filter-group">
-          <label class="filter-label">
-            <span class="material-symbols-outlined filter-icon">flag</span>
-            <span>Status:</span>
-          </label>
-          <select
-            [ngModel]="filterStatus()"
-            (ngModelChange)="onStatusChange($event)"
-            class="filter-select"
-          >
-            <option value="ALL">All Statuses</option>
-            <option value="NEW">New</option>
-            <option value="ASSIGNED">Assigned</option>
-            <option value="CONTACTED">Contacted</option>
-            <option value="CONNECTED">Connected</option>
-            <option value="INTERESTED">Interested</option>
-            <option value="QUALIFIED">Qualified / Paid</option>
-            <option value="FOLLOW_UP">Follow-up</option>
-            <option value="NO_ANSWER">No Answer</option>
-            <option value="LINE_BUSY">Busy / Line Busy</option>
-            <option value="WRONG_NUMBER">Wrong Number</option>
-            <option value="NOT_INTERESTED">Not Interested</option>
-            <option value="CONVERTED">Converted</option>
-          </select>
-        </div>
-        <!-- Telecaller Assignment Filter (for Admin / Digital Marketing) -->
-        @if (!isTelecaller()) {
-          <div class="filter-group">
-            <label class="filter-label">
-              <span class="material-symbols-outlined filter-icon">headset_mic</span>
-              <span>Telecaller:</span>
-            </label>
-            <select
-              [ngModel]="filterTelecaller()"
-              (ngModelChange)="onTelecallerChange($event)"
-              class="filter-select"
-            >
-              <option value="ALL">All Telecallers</option>
-              <option value="UNASSIGNED">Unassigned Only</option>
-              @for (tc of activeTelecallers(); track tc.id) {
-                <option [value]="tc.id || tc.fullName">{{ tc.fullName }}</option>
-              }
-            </select>
-          </div>
-        }
-        <!-- Campaign Filter -->
-        @if (availableCampaigns().length > 0) {
-          <div class="filter-group">
-            <label class="filter-label">
-              <span class="material-symbols-outlined filter-icon">campaign</span>
-              <span>Campaign:</span>
-            </label>
-            <select
-              [ngModel]="filterCampaign()"
-              (ngModelChange)="onCampaignChange($event)"
-              class="filter-select"
-            >
-              <option value="ALL">All Campaigns</option>
-              @for (c of availableCampaigns(); track c.name) {
-                <option [value]="c.name">{{ c.name }}</option>
-              }
-            </select>
-          </div>
-        }
-        <!-- Reset Filters Button -->
-        @if (hasActiveFilters()) {
-          <button
-            type="button"
-            class="btn-reset-filters"
-            (click)="resetFilters()"
-            title="Reset all active filters"
-          >
-            <span class="material-symbols-outlined fs-15">restart_alt</span>
-            <span>Reset Filters</span>
-          </button>
-        }
-      </div>
-      <!-- Quick Stats Counts -->
-      <div class="quick-stats-group">
-        @if (hasActiveFilters()) {
-          <span class="stat-badge-pill">
-            <strong class="text-indigo">{{ filteredLeads.length }}</strong> Matching
-          </span>
-        }
-        <span class="stat-badge-pill">
-          <strong class="text-indigo">{{ myLeadsList().length }}</strong>
-          {{ isTelecaller() ? 'My Assigned Leads' : 'Total Leads' }}
-        </span>
-        @if (!isTelecaller()) {
-          <span class="stat-badge-pill">
-            <strong class="text-purple">{{ activeTelecallers().length }}</strong> Active Telecallers
-          </span>
-        }
-      </div>
-    </div>
-    <!-- Leads Data Table Card -->
-    <div class="table-card card-leads-perf">
-      <div class="card-title-bar">
-        <div class="title-with-badge">
-          <div class="title-icon-squircle">
-            <span class="material-symbols-outlined">groups</span>
-          </div>
-          <div>
-            <h3>{{ isTelecaller() ? 'My Assigned Leads' : 'Leads Directory' }}</h3>
-            <span class="table-sub-meta">
-              Showing {{ paginatedLeads.length }} of {{ filteredLeads.length }} leads
-              @if (hasActiveFilters()) {
-                <span>(filtered from {{ myLeadsList().length }})</span>
-              }
-            </span>
-          </div>
-        </div>
-        <!-- Quick Page Size Selector in Header -->
-        @if (filteredLeads.length > 0) {
-          <div class="table-header-page-size">
-            <label>Show:</label>
-            <select
-              [ngModel]="pageSize()"
-              (ngModelChange)="setPageSize($event)"
-              class="page-size-header-select"
-            >
-              @for (size of pageSizeOptions; track size) {
-                <option [value]="size">{{ size }} rows</option>
-              }
-            </select>
-          </div>
-        }
-      </div>
-      <div class="table-responsive">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Lead Name</th>
-              <th>Contact Info</th>
-              <th>Source</th>
-              <th>Campaign</th>
-              <th>Status</th>
-              <th>Assigned Telecaller</th>
-              <th class="text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (lead of paginatedLeads; track lead.id) {
-              <tr class="lead-row">
-                <td>
-                  <div class="lead-name-cell">
-                    <span class="font-bold lead-fullname"
-                      >{{ lead.firstName }} {{ lead.lastName }}</span
-                    >
-                  </div>
-                </td>
-                <td>
-                  <div class="contact-box">
-                    <span class="contact-phone">{{ lead.phone }}</span>
-                    @if (lead.email) {
-                      <span class="contact-email">{{ lead.email }}</span>
-                    }
-                  </div>
-                </td>
-                <td>
-                  <span class="source-tag">{{ lead.source }}</span>
-                </td>
-                <td>
-                  <span class="campaign-name-txt">{{
-                    lead.campaignName || 'General Campaign'
-                  }}</span>
-                </td>
-                <td>
-                  <span class="status-pill" [ngClass]="getStatusBadgeClass(lead.status)">
-                    <span class="pill-glow-dot">●</span> {{ (lead.status || '').replace('_', ' ') }}
-                  </span>
-                </td>
-                <td>
-                  @if (lead.assigneeName) {
-                    <div class="telecaller-tag-chip">
-                      <span class="material-symbols-outlined icon-chip">headset_mic</span>
-                      <span>{{ lead.assigneeName }}</span>
-                    </div>
-                  }
-                  @if (!lead.assigneeName) {
-                    <span class="unassigned-txt">Unassigned</span>
-                  }
-                </td>
-                <td class="text-right">
-                  <div class="lead-actions-cluster">
-                    <button
-                      class="btn-action-detail btn-sm"
-                      (click)="openLeadDetails(lead)"
-                      title="View complete interaction and telecalling call history"
-                    >
-                      <span class="material-symbols-outlined fs-15">visibility</span>
-                      <span>View Details</span>
-                    </button>
-                    @if (canReassignLead(lead)) {
-                      <button
-                        class="btn-action-secondary btn-sm"
-                        (click)="assignLead(lead)"
-                        title="Assign / Reassign Telecaller (Creator only)"
-                      >
-                        <span class="material-symbols-outlined fs-15">assignment_ind</span>
-                        <span>Reassign</span>
-                      </button>
-                    }
-                    @if (canEditOrDeleteLead(lead)) {
-                      <button
-                        class="btn-action-edit btn-sm"
-                        (click)="openEditLeadModal(lead)"
-                        title="Edit Lead (Creator only)"
-                      >
-                        <span class="material-symbols-outlined fs-15">edit</span>
-                        <span>Edit</span>
-                      </button>
-                    }
-                    @if (canEditOrDeleteLead(lead)) {
-                      <button
-                        class="btn-action-delete btn-sm"
-                        (click)="deleteLead(lead)"
-                        title="Delete Lead (Creator only)"
-                      >
-                        <span class="material-symbols-outlined fs-15">delete</span>
-                        <span>Delete</span>
-                      </button>
-                    }
-                  </div>
-                </td>
-              </tr>
-            }
-            <!-- Empty State -->
-            @if (filteredLeads.length === 0) {
-              <tr>
-                <td colspan="7" class="empty-state-cell">
-                  <div class="empty-state-box">
-                    <div class="empty-icon-squircle">
-                      <span class="material-symbols-outlined">{{
-                        hasActiveFilters() ? 'filter_list_off' : 'contacts'
-                      }}</span>
-                    </div>
-                    <h4 class="empty-title">
-                      {{
-                        hasActiveFilters()
-                          ? 'No leads match your filter criteria'
-                          : isTelecaller()
-                            ? 'No leads assigned to you yet'
-                            : 'No leads found'
-                      }}
-                    </h4>
-                    @if (hasActiveFilters()) {
-                      <p class="empty-subtitle">
-                        Try adjusting your search query, status, telecaller or campaign filter.
-                      </p>
-                    }
-                    @if (!hasActiveFilters()) {
-                      <p class="empty-subtitle">
-                        {{
-                          isTelecaller()
-                            ? 'New leads assigned by Digital Marketing will appear here.'
-                            : 'Import leads using Excel upload or add a lead manually.'
-                        }}
-                      </p>
-                    }
-                    @if (hasActiveFilters()) {
-                      <button class="btn-action-secondary btn-sm" (click)="resetFilters()">
-                        <span class="material-symbols-outlined fs-15">restart_alt</span>
-                        <span>Reset All Filters</span>
-                      </button>
-                    }
-                    @if (!hasActiveFilters() && canUploadLeads()) {
-                      <button class="btn-action-primary btn-sm" (click)="openExcelModal()">
-                        <span class="material-symbols-outlined icon-glow">upload_file</span>
-                        <span>Upload Excel</span>
-                      </button>
-                    }
-                  </div>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-      <!-- Pagination Footer Bar -->
-      @if (filteredLeads.length > 0) {
-        <div class="table-pagination-bar">
-          <div class="pagination-info">
-            <span>
-              Showing <strong>{{ (currentPage() - 1) * pageSize() + 1 }}</strong> -
-              <strong>{{ mathMin(currentPage() * pageSize(), filteredLeads.length) }}</strong> of
-              <strong>{{ filteredLeads.length }}</strong> leads
-              @if (hasActiveFilters()) {
-                <span class="filtered-from-note"> (filtered from {{ myLeadsList().length }})</span>
-              }
-            </span>
-          </div>
-          <div class="pagination-controls-cluster">
-            <!-- Page Size Selector -->
-            <!-- Page Navigation Buttons -->
-            @if (totalPages() > 1) {
-              <div class="pagination-nav-group">
-                <button
-                  type="button"
-                  class="btn-page-nav"
-                  [disabled]="currentPage() === 1"
-                  (click)="setPage(1)"
-                  title="First Page"
-                >
-                  <span class="material-symbols-outlined fs-16">first_page</span>
-                </button>
-                <button
-                  type="button"
-                  class="btn-page-nav"
-                  [disabled]="currentPage() === 1"
-                  (click)="prevPage()"
-                  title="Previous Page"
-                >
-                  <span class="material-symbols-outlined fs-16">chevron_left</span>
-                </button>
-                @for (p of getPageNumbers(); track p) {
-                  @if (p === '...') {
-                    <span class="page-ellipsis">...</span>
-                  }
-                  @if (p !== '...') {
-                    <button
-                      type="button"
-                      class="btn-page-num"
-                      [class.active-page]="p === currentPage()"
-                      (click)="setPage(p)"
-                    >
-                      {{ p }}
-                    </button>
-                  }
-                }
-                <button
-                  type="button"
-                  class="btn-page-nav"
-                  [disabled]="currentPage() === totalPages()"
-                  (click)="nextPage()"
-                  title="Next Page"
-                >
-                  <span class="material-symbols-outlined fs-16">chevron_right</span>
-                </button>
-                <button
-                  type="button"
-                  class="btn-page-nav"
-                  [disabled]="currentPage() === totalPages()"
-                  (click)="setPage(totalPages())"
-                  title="Last Page"
-                >
-                  <span class="material-symbols-outlined fs-16">last_page</span>
-                </button>
-              </div>
-            }
-          </div>
-        </div>
-      }
-    </div>
+    <!-- 1. Leads Toolbar & Filters -->
+    <app-leads-toolbar
+      [searchQuery]="searchQuery()"
+      [filterStatus]="filterStatus()"
+      [filterTelecaller]="filterTelecaller()"
+      [filterCampaign]="filterCampaign()"
+      [isTelecaller]="isTelecaller()"
+      [activeTelecallers]="activeTelecallers()"
+      [availableCampaigns]="availableCampaigns()"
+      [hasActiveFilters]="hasActiveFilters()"
+      [filteredLeadsCount]="filteredLeads.length"
+      [myLeadsCount]="myLeadsList().length"
+      (searchChange)="onSearchChange($event)"
+      (statusChange)="onStatusChange($event)"
+      (telecallerChange)="onTelecallerChange($event)"
+      (campaignChange)="onCampaignChange($event)"
+      (resetFilters)="resetFilters()"
+    ></app-leads-toolbar>
+
+    <!-- 2. Leads Data Table Card -->
+    <app-leads-table
+      [isTelecaller]="isTelecaller()"
+      [paginatedLeads]="paginatedLeads"
+      [filteredLeads]="filteredLeads"
+      [myLeadsList]="myLeadsList()"
+      [hasActiveFilters]="hasActiveFilters()"
+      [pageSize]="pageSize()"
+      [pageSizeOptions]="pageSizeOptions"
+      [currentPage]="currentPage()"
+      [totalPages]="totalPages()"
+      [canUploadLeads]="canUploadLeads()"
+      [canReassignLeadFn]="canReassignLead.bind(this)"
+      [canEditOrDeleteLeadFn]="canEditOrDeleteLead.bind(this)"
+      [getStatusBadgeClassFn]="getStatusBadgeClass.bind(this)"
+      (pageSizeChange)="setPageSize($event)"
+      (pageChange)="setPage($event)"
+      (leadDetails)="openLeadDetails($event)"
+      (reassign)="assignLead($event)"
+      (edit)="openEditLeadModal($event)"
+      (delete)="deleteLead($event)"
+      (openExcel)="openExcelModal()"
+      (resetFilters)="resetFilters()"
+    ></app-leads-table>
   }
 
   <!-- TAB 2: TELECALLING MONITORING DASHBOARD -->
   @if (activeTab() === 'TELECALLING_MONITOR') {
-    @if (leadService.summary(); as sum) {
-      <div class="dashboard-overview">
-        <!-- High Level KPIs -->
-        <div class="kpi-grid">
-          <div class="kpi-card border-blue">
-            <div class="kpi-top-row">
-              <div class="kpi-squircle-icon icon-blue">
-                <span class="material-symbols-outlined">groups</span>
-              </div>
-            </div>
-            <div class="kpi-body">
-              <span class="kpi-title">Total Leads</span>
-              <div class="kpi-value">{{ sum.totalLeads }}</div>
-            </div>
-            <div class="kpi-footer-row">
-              <span class="kpi-footer-text">{{ sum.assignedLeads }} Assigned</span>
-              <span class="kpi-footer-pill pill-blue">{{ sum.unassignedLeads }} Unassigned</span>
-            </div>
-          </div>
-          <div class="kpi-card border-emerald">
-            <div class="kpi-top-row">
-              <div class="kpi-squircle-icon icon-emerald">
-                <span class="material-symbols-outlined">call</span>
-              </div>
-            </div>
-            <div class="kpi-body">
-              <span class="kpi-title">Total Calls</span>
-              <div class="kpi-value">{{ sum.totalCallsLogged }}</div>
-            </div>
-            <div class="kpi-footer-row">
-              <span class="kpi-footer-text">Telecaller Calls</span>
-              <span class="kpi-footer-pill pill-emerald">Active Log</span>
-            </div>
-          </div>
-          <div class="kpi-card border-purple">
-            <div class="kpi-top-row">
-              <div class="kpi-squircle-icon icon-purple">
-                <span class="material-symbols-outlined">thumb_up</span>
-              </div>
-            </div>
-            <div class="kpi-body">
-              <span class="kpi-title">Interested Leads</span>
-              <div class="kpi-value">{{ sum.statusBreakdown['INTERESTED'] || 0 }}</div>
-            </div>
-            <div class="kpi-footer-row">
-              <span class="kpi-footer-text">{{ sum.statusBreakdown['PAID'] || 0 }} PAID</span>
-              <span class="kpi-footer-pill pill-purple">High Intent</span>
-            </div>
-          </div>
-          <div class="kpi-card border-amber">
-            <div class="kpi-top-row">
-              <div class="kpi-squircle-icon icon-amber">
-                <span class="material-symbols-outlined">headset_mic</span>
-              </div>
-            </div>
-            <div class="kpi-body">
-              <span class="kpi-title">Telecallers</span>
-              <div class="kpi-value">{{ sum.telecallerMetrics.length }}</div>
-            </div>
-            <div class="kpi-footer-row">
-              <span class="kpi-footer-text">Active Queue</span>
-              <span class="kpi-footer-pill pill-amber">Equal Distribution</span>
-            </div>
-          </div>
-        </div>
-        <!-- Telecaller Equal Allocation & Progress Cards -->
-        <div class="card-section mt-6">
-          <div class="section-header">
-            <div>
-              <h3>Telecaller Performance</h3>
-              <p class="subtitle">Overview of lead distribution and call outcomes per telecaller</p>
-            </div>
-          </div>
-          <div class="telecaller-metrics-grid">
-            @for (tc of sum.telecallerMetrics; track tc) {
-              <div class="telecaller-metric-card">
-                <div class="tc-header">
-                  <div class="tc-avatar">
-                    <span class="material-symbols-outlined">person</span>
-                  </div>
-                  <div>
-                    <div class="tc-name">{{ tc.fullName }}</div>
-                    <div class="tc-dept">{{ tc.email }}</div>
-                  </div>
-                  <span class="badge badge-teal">Equal Share</span>
-                </div>
-                <div class="tc-stats-row">
-                  <div class="tc-stat">
-                    <span class="stat-label">Assigned</span>
-                    <span class="stat-val font-bold text-primary">{{ tc.assignedLeadsCount }}</span>
-                  </div>
-                  <div class="tc-stat">
-                    <span class="stat-label">Calls</span>
-                    <span class="stat-val font-bold text-emerald">{{ tc.callsLoggedCount }}</span>
-                  </div>
-                  <div class="tc-stat">
-                    <span class="stat-label">Interested</span>
-                    <span class="stat-val font-bold text-purple">{{ tc.interestedCount }}</span>
-                  </div>
-                </div>
-                <div class="progress-bar-container mt-3">
-                  <div class="progress-info">
-                    <span>Progress</span>
-                    <span
-                      >{{
-                        tc.assignedLeadsCount > 0
-                          ? Math.round((tc.callsLoggedCount / tc.assignedLeadsCount) * 100)
-                          : 0
-                      }}%</span
-                    >
-                  </div>
-                  <div class="progress-track">
-                    <div
-                      class="progress-fill"
-                      [style.width.%]="
-                        tc.assignedLeadsCount > 0
-                          ? Math.min(100, (tc.callsLoggedCount / tc.assignedLeadsCount) * 100)
-                          : 0
-                      "
-                    ></div>
-                  </div>
-                </div>
-                <div class="call-outcomes-badges mt-3">
-                  <span class="mini-badge bg-emerald-subtle" title="Attended Calls">
-                    <span class="material-symbols-outlined text-emerald fs-14">call_made</span>
-                    Attended: {{ tc.attendedCount }}
-                  </span>
-                  <span class="mini-badge bg-amber-subtle" title="Not Attended">
-                    <span class="material-symbols-outlined text-amber fs-14">phone_missed</span> Not
-                    Attended: {{ tc.notAttendedCount }}
-                  </span>
-                  <span class="mini-badge bg-danger-subtle" title="Not Interested">
-                    <span class="material-symbols-outlined text-danger fs-14">thumb_down</span> Not
-                    Interested: {{ tc.notInterestedCount }}
-                  </span>
-                  <span class="mini-badge bg-slate-subtle" title="Avg Call Duration">
-                    <span class="material-symbols-outlined text-slate fs-14">timer</span> Avg:
-                    {{ tc.avgDurationSeconds }}s
-                  </span>
-                </div>
-              </div>
-            }
-          </div>
-        </div>
-        <!-- Telecaller Table Breakdown -->
-        <div class="table-card mt-6">
-          <div class="card-header-flex">
-            <h3>Telecaller Overview Matrix</h3>
-          </div>
-          <div class="table-responsive">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Telecaller Name</th>
-                  <th>Department</th>
-                  <th>Assigned Leads</th>
-                  <th>Calls Logged</th>
-                  <th>Attended</th>
-                  <th>Not Attended</th>
-                  <th>Interested</th>
-                  <th>Not Interested</th>
-                  <th>Total Duration</th>
-                  <th>Connect Rate</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (tc of sum.telecallerMetrics; track tc) {
-                  <tr>
-                    <td class="font-bold">
-                      <div class="user-inline">
-                        <span class="material-symbols-outlined text-teal">account_circle</span>
-                        <span>{{ tc.fullName }}</span>
-                      </div>
-                    </td>
-                    <td>{{ tc.department }}</td>
-                    <td class="font-bold text-blue">{{ tc.assignedLeadsCount }} Leads</td>
-                    <td>{{ tc.callsLoggedCount }}</td>
-                    <td>
-                      <span class="text-emerald font-bold">{{ tc.attendedCount }}</span>
-                    </td>
-                    <td>
-                      <span class="text-amber">{{ tc.notAttendedCount }}</span>
-                    </td>
-                    <td>
-                      <span class="badge badge-purple">{{ tc.interestedCount }}</span>
-                    </td>
-                    <td>
-                      <span class="text-danger">{{ tc.notInterestedCount }}</span>
-                    </td>
-                    <td>
-                      {{ Math.floor(tc.totalDurationSeconds / 60) }}m
-                      {{ tc.totalDurationSeconds % 60 }}s
-                    </td>
-                    <td>
-                      <span class="badge badge-green">{{ tc.conversionRate }}%</span>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    }
+    <app-telecalling-monitor
+      [summary]="leadService.summary()"
+    ></app-telecalling-monitor>
   }
 
-  <!-- EXCEL UPLOAD & EQUAL AUTO-ASSIGNMENT MODAL -->
-  @if (showExcelModal()) {
-    <div class="modal-backdrop" (click)="closeExcelModal()">
-      <div class="modal-card modal-md lead-upload-card" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <div class="modal-title-wrap">
-            <div class="modal-squircle-icon icon-upload-store">
-              <span class="material-symbols-outlined">storefront</span>
-            </div>
-            <h2>Lead Upload</h2>
-          </div>
-          <button
-            class="btn-close-modal"
-            (click)="closeExcelModal()"
-            aria-label="Close"
-            type="button"
-          >
-            <span class="material-symbols-outlined">close</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          <!-- Success Notification Alert -->
-          @if (uploadSuccessMessage()) {
-            <div class="alert alert-success">
-              <span class="material-symbols-outlined">check_circle</span>
-              <span>{{ uploadSuccessMessage() }}</span>
-            </div>
-          }
-          <!-- Validation Error Alert -->
-          @if (uploadValidationError()) {
-            <div class="alert alert-danger">
-              <span class="material-symbols-outlined">warning</span>
-              <span>{{ uploadValidationError() }}</span>
-            </div>
-          }
-          <!-- Campaign Name Field -->
-          <div class="form-group">
-            <label class="form-label">MARKETING CAMPAIGN <span class="required">*</span></label>
-            <select [(ngModel)]="campaignName" class="form-input custom-select" required>
-              <option value="" disabled selected>-- Select Marketing Campaign --</option>
-              @for (cmp of availableCampaigns(); track cmp) {
-                <option [value]="cmp.name">
-                  {{ cmp.name }}
-                </option>
-              }
-            </select>
-          </div>
-          <!-- Lead Sheet Select / Upload Zone -->
-          <div class="upload-drop-zone">
-            <div class="drop-zone-header">
-              <div class="drop-icon-squircle">
-                <span class="material-symbols-outlined">cloud_upload</span>
-              </div>
-              <div class="drop-zone-titles">
-                <h4 class="drop-zone-title">Select Lead Sheet</h4>
-                <p class="drop-zone-desc">
-                  Required columns: <strong>First Name, Last Name, Email, Phone, Source</strong>
-                </p>
-              </div>
-            </div>
-            <div class="upload-actions-row">
-              @if (!selectedFileName()) {
-                <label class="btn-browse-file">
-                  <span class="material-symbols-outlined">upload_file</span>
-                  <span>Browse / Select Excel File</span>
-                  <input
-                    type="file"
-                    accept=".csv, .xlsx, .txt, .xls"
-                    (change)="onFileSelected($event)"
-                    hidden
-                  />
-                </label>
-              }
-              @if (selectedFileName()) {
-                <label class="btn-file-selected" [class.btn-has-file]="parsedLeads().length > 0">
-                  <span class="material-symbols-outlined">check_circle</span>
-                  <span>Change File</span>
-                  <input
-                    type="file"
-                    accept=".csv, .xlsx, .txt, .xls"
-                    (change)="onFileSelected($event)"
-                    hidden
-                  />
-                </label>
-              }
-              <!-- Selected File Chip -->
-              @if (selectedFileName()) {
-                <div class="selected-file-chip">
-                  <span class="material-symbols-outlined chip-doc-icon">description</span>
-                  <span class="chip-file-name">{{ selectedFileName() }}</span>
-                  <span class="chip-leads-count">({{ parsedLeads().length }} leads)</span>
-                  <button
-                    type="button"
-                    class="btn-chip-remove"
-                    (click)="clearSelectedFile()"
-                    title="Remove file"
-                  >
-                    <span class="material-symbols-outlined">close</span>
-                  </button>
-                </div>
-              }
-            </div>
-          </div>
-          <!-- Target Telecallers for Equal Distribution -->
-          <div class="telecallers-selection-box">
-            <div class="box-title">
-              <span class="material-symbols-outlined">group</span>
-              <span>TARGET TELECALLERS FOR EQUAL DISTRIBUTION</span>
-            </div>
-            @if (activeTelecallers().length > 0) {
-              <div class="telecaller-checkboxes-grid">
-                @for (tc of activeTelecallers(); track tc) {
-                  <label
-                    class="tc-select-card"
-                    [class.selected]="selectedTelecallerIds().includes(tc.id)"
-                  >
-                    <input
-                      type="checkbox"
-                      class="tc-custom-checkbox"
-                      [checked]="selectedTelecallerIds().includes(tc.id)"
-                      (change)="toggleTelecallerSelection(tc.id)"
-                    />
-                    <div class="tc-card-content">
-                      <span class="tc-card-name">{{ tc.fullName }}</span>
-                      <span class="tc-card-email">{{ tc.email }}</span>
-                    </div>
-                  </label>
-                }
-              </div>
-            }
-            @if (activeTelecallers().length === 0) {
-              <div class="no-telecallers-note">
-                <span class="material-symbols-outlined">info</span>
-                <span>No active telecallers found for assignment.</span>
-              </div>
-            }
-          </div>
-        </div>
-        <div class="modal-footer upload-modal-footer">
-          <button class="btn-modal-cancel" (click)="closeExcelModal()" type="button">Cancel</button>
-          <button
-            class="btn-upload-assign"
-            type="button"
-            (click)="submitEqualAutoAssignment()"
-            [disabled]="
-              !campaignName ||
-              !campaignName.trim() ||
-              parsedLeads().length === 0 ||
-              selectedTelecallerIds().length === 0 ||
-              uploadValidationError() !== null
-            "
-          >
-            <span class="material-symbols-outlined">verified</span>
-            <span>Upload & Assign</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  }
+  <!-- MODAL 1: EXCEL UPLOAD & EQUAL AUTO-ASSIGNMENT MODAL -->
+  <app-excel-upload-modal
+    [isOpen]="showExcelModal()"
+    [campaignName]="campaignName"
+    [availableCampaigns]="availableCampaigns()"
+    [selectedFileName]="selectedFileName()"
+    [parsedLeads]="parsedLeads()"
+    [uploadSuccessMessage]="uploadSuccessMessage()"
+    [uploadValidationError]="uploadValidationError()"
+    [activeTelecallers]="activeTelecallers()"
+    [selectedTelecallerIds]="selectedTelecallerIds()"
+    (campaignNameChange)="campaignName = $event"
+    (fileSelected)="onFileSelected($event)"
+    (clearFile)="clearSelectedFile()"
+    (toggleTelecaller)="toggleTelecallerSelection($event)"
+    (closeModal)="closeExcelModal()"
+    (submit)="submitEqualAutoAssignment()"
+  ></app-excel-upload-modal>
 
-  <!-- SINGLE MANUAL LEAD MODAL -->
-  @if (showModal()) {
-    <div class="modal-backdrop" (click)="closeModal()">
-      <div class="modal-card modal-md add-lead-modal-card" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <div class="modal-title-wrap">
-            <div class="modal-squircle-icon">
-              <span class="material-symbols-outlined">person_add</span>
-            </div>
-            <div>
-              <h2>Add New Lead</h2>
-              <p class="modal-sub">Manually insert a Paid lead and assign to a telecaller</p>
-            </div>
-          </div>
-          <button class="btn-close-modal" (click)="closeModal()" aria-label="Close" type="button">
-            <span class="material-symbols-outlined">close</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          <!-- Row 1: First Name & Last Name -->
-          <div class="form-row">
-            <div class="form-group flex-1">
-              <label class="form-label">First Name <span class="required">*</span></label>
-              <input
-                type="text"
-                [(ngModel)]="newFirstName"
-                (blur)="firstNameTouched = true"
-                placeholder="e.g. Rahul"
-                class="form-input"
-                [class.input-error]="firstNameTouched && !newFirstName.trim()"
-                required
-              />
-              @if (firstNameTouched && !newFirstName.trim()) {
-                <span class="field-error-msg">
-                  <span class="material-symbols-outlined fs-14">error</span> First name is required
-                </span>
-              }
-            </div>
-            <div class="form-group flex-1">
-              <label class="form-label">Last Name <span class="required">*</span></label>
-              <input
-                type="text"
-                [(ngModel)]="newLastName"
-                (blur)="lastNameTouched = true"
-                placeholder="e.g. Sharma"
-                class="form-input"
-                [class.input-error]="lastNameTouched && !newLastName.trim()"
-                required
-              />
-              @if (lastNameTouched && !newLastName.trim()) {
-                <span class="field-error-msg">
-                  <span class="material-symbols-outlined fs-14">error</span> Last name is required
-                </span>
-              }
-            </div>
-          </div>
-          <!-- Row 2: Phone Number (With live validation) -->
-          <div class="form-group">
-            <label class="form-label">Phone Number <span class="required">*</span></label>
-            <div class="input-with-icon-wrap">
-              <input
-                type="tel"
-                [(ngModel)]="newPhone"
-                (blur)="phoneTouched = true"
-                placeholder="Enter 10 digital Number"
-                class="form-input"
-                [class.input-error]="phoneTouched && !isPhoneValid(newPhone)"
-                [class.input-valid]="newPhone && isPhoneValid(newPhone)"
-                required
-              />
-              @if (newPhone && isPhoneValid(newPhone)) {
-                <span class="input-right-status-icon">
-                  <span class="material-symbols-outlined text-emerald fs-18">check_circle</span>
-                </span>
-              }
-            </div>
-            @if (phoneTouched && !isPhoneValid(newPhone)) {
-              <span class="field-error-msg">
-                <span class="material-symbols-outlined fs-14">error</span> Please enter a valid
-                10-digit mobile number (e.g. +91 9876543210)
-              </span>
-            }
-            @if (newPhone && isPhoneValid(newPhone)) {
-              <span class="field-valid-msg">
-                <span class="material-symbols-outlined fs-14">verified</span> Verified phone format
-              </span>
-            }
-          </div>
-          <!-- Row 3: Email Address (With live validation) -->
-          <div class="form-group">
-            <label class="form-label">Email Address <span class="required">*</span></label>
-            <div class="input-with-icon-wrap">
-              <input
-                type="email"
-                [(ngModel)]="newEmail"
-                (blur)="emailTouched = true"
-                placeholder="e.g. rahul.sharma@example.com"
-                class="form-input"
-                [class.input-error]="emailTouched && !isEmailValid(newEmail)"
-                [class.input-valid]="newEmail && isEmailValid(newEmail)"
-                required
-              />
-              @if (newEmail && isEmailValid(newEmail)) {
-                <span class="input-right-status-icon">
-                  <span class="material-symbols-outlined text-emerald fs-18">check_circle</span>
-                </span>
-              }
-            </div>
-            @if (emailTouched && !isEmailValid(newEmail)) {
-              <span class="field-error-msg">
-                <span class="material-symbols-outlined fs-14">error</span> Please enter a valid
-                email address (e.g. name@domain.com)
-              </span>
-            }
-          </div>
-          <!-- Row 4: Marketing Campaign Dropdown Selection -->
-          <div class="form-group">
-            <label class="form-label">Marketing Campaign <span class="required">*</span></label>
-            <select
-              class="form-input custom-select"
-              [ngModel]="newCampaignId"
-              (change)="onCampaignSelectChange($event)"
-            >
-              @if (availableCampaigns().length === 0) {
-                <option value="">General Ad Campaign</option>
-              }
-              @for (cmp of availableCampaigns(); track cmp) {
-                <option [value]="cmp.id">
-                  {{ cmp.name }}
-                </option>
-              }
-            </select>
-          </div>
-          <!-- Row 5: Lead Source Selection -->
-          <div class="form-group">
-            <label class="form-label">Lead Source <span class="required">*</span></label>
-            <select class="form-input custom-select" [(ngModel)]="newSource">
-              <option value="Google">Google</option>
-              <option value=" LinkedIn">LinkedIn</option>
-              <option value="Facebook">Facebook</option>
-              <option value="Instagram">Instagram</option>
-              <option value="Meta">Meta</option>
-              <option value="Youtube">Youtube</option>
-            </select>
-          </div>
-          <!-- Row 6: Target Telecaller Assignment (Referenced from Upload Leads) -->
-          <div class="form-group telecaller-assign-group">
-            <label class="form-label">
-              <span>Target Telecaller Assignment</span>
-              <span class="badge-role-telecaller">Telecalling Queue</span>
-            </label>
-            <select
-              class="form-input custom-select"
-              [ngModel]="newAssignedTelecallerId"
-              (change)="onTelecallerSelectChange($event)"
-            >
-              <option value="">Unassigned (Send to General Lead Pool)</option>
-              @for (tc of activeTelecallers(); track tc) {
-                <option [value]="tc.id">
-                  {{ tc.fullName }}
-                </option>
-              }
-            </select>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button
-            class="btn-action-secondary"
-            (click)="closeModal()"
-            [disabled]="isCreatingLead()"
-            type="button"
-          >
-            Cancel
-          </button>
-          <button
-            class="btn-action-primary"
-            type="button"
-            (click)="createLead()"
-            [disabled]="!isAddLeadFormValid || isCreatingLead()"
-          >
-            @if (!isCreatingLead()) {
-              <span class="material-symbols-outlined fs-16">save</span>
-            }
-            @if (!isCreatingLead()) {
-              <span>Save Lead</span>
-            }
-            @if (isCreatingLead()) {
-              <span>Saving Lead...</span>
-            }
-          </button>
-        </div>
-      </div>
-    </div>
-  }
+  <!-- MODAL 2: SINGLE MANUAL LEAD MODAL -->
+  <app-add-lead-modal
+    [isOpen]="showModal()"
+    [newFirstName]="newFirstName"
+    [newLastName]="newLastName"
+    [newEmail]="newEmail"
+    [newPhone]="newPhone"
+    [newSource]="newSource"
+    [newCampaignId]="newCampaignId"
+    [newAssignedTelecallerId]="newAssignedTelecallerId"
+    [availableCampaigns]="availableCampaigns()"
+    [activeTelecallers]="activeTelecallers()"
+    [isCreatingLead]="isCreatingLead()"
+    (newFirstNameChange)="newFirstName = $event"
+    (newLastNameChange)="newLastName = $event"
+    (newEmailChange)="newEmail = $event"
+    (newPhoneChange)="newPhone = $event"
+    (newSourceChange)="newSource = $event"
+    (campaignChange)="onCampaignSelectChange($event)"
+    (telecallerChange)="onTelecallerSelectChange($event)"
+    (closeModal)="closeModal()"
+    (save)="createLead()"
+  ></app-add-lead-modal>
 
-  <!-- MANUAL ASSIGN MODAL -->
-  @if (selectedLeadForAssign) {
-    <div class="modal-backdrop" (click)="selectedLeadForAssign = null">
-      <div class="modal-card modal-sm" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <div class="modal-title-wrap">
-            <div class="modal-squircle-icon">
-              <span class="material-symbols-outlined">assignment_ind</span>
-            </div>
-            <div>
-              <h2>Assign Lead</h2>
-              <p class="modal-sub">
-                {{ selectedLeadForAssign.firstName }} {{ selectedLeadForAssign.lastName }}
-              </p>
-            </div>
-          </div>
-          <button
-            class="btn-close-modal"
-            (click)="selectedLeadForAssign = null"
-            aria-label="Close"
-            type="button"
-          >
-            <span class="material-symbols-outlined">close</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label class="form-label">Select Telecaller <span class="required">*</span></label>
-            <select
-              [ngModel]="selectedUserId"
-              (ngModelChange)="onUserSelected($event)"
-              (change)="onUserSelectChange($event)"
-              class="form-input"
-            >
-              @for (user of realUsersList(); track user) {
-                <option [value]="user.id">
-                  {{ user.fullName }}
-                </option>
-              }
-            </select>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn-action-secondary" (click)="selectedLeadForAssign = null" type="button">
-            Cancel
-          </button>
-          <button
-            class="btn-action-primary"
-            (click)="confirmAssign()"
-            [disabled]="!selectedUserId"
-            type="button"
-          >
-            <span>Assign Lead</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  }
+  <!-- MODAL 3: MANUAL ASSIGN MODAL -->
+  <app-assign-lead-modal
+    [lead]="selectedLeadForAssign"
+    [selectedUserId]="selectedUserId"
+    [realUsersList]="realUsersList()"
+    (userSelected)="onUserSelected($event)"
+    (cancel)="selectedLeadForAssign = null"
+    (confirm)="confirmAssign()"
+  ></app-assign-lead-modal>
 
-  <!-- EDIT LEAD MODAL (Creator Only) -->
-  @if (showEditModal() && editingLead(); as lead) {
-    <div class="modal-backdrop" (click)="closeEditLeadModal()">
-      <div class="modal-card" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <div class="modal-title-wrap">
-            <div class="modal-squircle-icon">
-              <span class="material-symbols-outlined">edit</span>
-            </div>
-            <div>
-              <h2>Edit Lead Details</h2>
-              <p class="modal-sub">
-                Created by {{ lead.creatorName || 'You' }} &bull; Only the creator can modify this
-                lead
-              </p>
-            </div>
-          </div>
-          <button
-            class="btn-close-modal"
-            (click)="closeEditLeadModal()"
-            aria-label="Close"
-            type="button"
-          >
-            <span class="material-symbols-outlined">close</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          @if (editLeadError()) {
-            <div class="form-alert-error">
-              {{ editLeadError() }}
-            </div>
-          }
-          <div class="form-row">
-            <div class="form-group flex-1">
-              <label class="form-label">First Name <span class="required">*</span></label>
-              <input
-                type="text"
-                [(ngModel)]="editFirstName"
-                class="form-input"
-                placeholder="e.g. Rahul"
-              />
-            </div>
-            <div class="form-group flex-1">
-              <label class="form-label">Last Name</label>
-              <input
-                type="text"
-                [(ngModel)]="editLastName"
-                class="form-input"
-                placeholder="e.g. Sharma"
-              />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group flex-1">
-              <label class="form-label">Phone Number <span class="required">*</span></label>
-              <input
-                type="text"
-                [(ngModel)]="editPhone"
-                class="form-input"
-                placeholder="+91 9876543210"
-              />
-            </div>
-            <div class="form-group flex-1">
-              <label class="form-label">Email Address</label>
-              <input
-                type="email"
-                [(ngModel)]="editEmail"
-                class="form-input"
-                placeholder="user@example.com"
-              />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group flex-1">
-              <label class="form-label">Lead Source</label>
-              <input
-                type="text"
-                [(ngModel)]="editSource"
-                class="form-input"
-                placeholder="e.g. Digital Ads, Facebook"
-              />
-            </div>
-            <div class="form-group flex-1">
-              <label class="form-label">Campaign Name</label>
-              <input
-                type="text"
-                [(ngModel)]="editCampaignName"
-                class="form-input"
-                placeholder="e.g. Careermate Intake"
-              />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group flex-1">
-              <label class="form-label">Current Pipeline Status</label>
-              <select [(ngModel)]="editStatus" class="form-input">
-                <option value="NEW">NEW</option>
-                <option value="ASSIGNED">ASSIGNED</option>
-                <option value="CONTACTED">CONTACTED</option>
-                <option value="FOLLOW_UP">FOLLOW UP</option>
-                <option value="INTERESTED">INTERESTED</option>
-                <option value="NOT_INTERESTED">NOT INTERESTED</option>
-                <option value="PAID">PAID</option>
-                <option value="WRONG_NUMBER">WRONG NUMBER</option>
-              </select>
-            </div>
-            <div class="form-group flex-1">
-              <label class="form-label">Assigned Telecaller</label>
-              <select [(ngModel)]="editAssignedTo" class="form-input">
-                <option value="">Unassigned</option>
-                @for (user of realUsersList(); track user) {
-                  <option [value]="user.id">
-                    {{ user.fullName }}
-                  </option>
-                }
-              </select>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button
-            class="btn-action-secondary"
-            (click)="closeEditLeadModal()"
-            [disabled]="isSavingEdit()"
-            type="button"
-          >
-            Cancel
-          </button>
-          <button
-            class="btn-action-primary"
-            (click)="saveLeadEdit()"
-            [disabled]="isSavingEdit()"
-            type="button"
-          >
-            @if (!isSavingEdit()) {
-              <span class="material-symbols-outlined fs-16">check</span>
-            }
-            <span>{{ isSavingEdit() ? 'Saving...' : 'Save Changes' }}</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  }
+  <!-- MODAL 4: EDIT LEAD MODAL (Creator Only) -->
+  <app-edit-lead-modal
+    [isOpen]="showEditModal()"
+    [lead]="editingLead()"
+    [editFirstName]="editFirstName"
+    [editLastName]="editLastName"
+    [editPhone]="editPhone"
+    [editEmail]="editEmail"
+    [editSource]="editSource"
+    [editCampaignName]="editCampaignName"
+    [editStatus]="editStatus"
+    [editAssignedTo]="editAssignedTo"
+    [editLeadError]="editLeadError()"
+    [isSavingEdit]="isSavingEdit()"
+    [realUsersList]="realUsersList()"
+    (editFirstNameChange)="editFirstName = $event"
+    (editLastNameChange)="editLastName = $event"
+    (editPhoneChange)="editPhone = $event"
+    (editEmailChange)="editEmail = $event"
+    (editSourceChange)="editSource = $event"
+    (editCampaignNameChange)="editCampaignName = $event"
+    (editStatusChange)="editStatus = $event"
+    (editAssignedToChange)="editAssignedTo = $event"
+    (closeModal)="closeEditLeadModal()"
+    (save)="saveLeadEdit()"
+  ></app-edit-lead-modal>
 
-  <!-- LEAD DETAILS & TELECALLING HISTORY MODAL -->
-  @if (selectedLeadForDetails(); as lead) {
-    <div class="modal-backdrop" (click)="closeLeadDetails()">
-      <div class="modal-card lead-history-modal modal-lg" (click)="$event.stopPropagation()">
-        <!-- Modal Header -->
-        <div class="modal-header">
-          <div class="modal-title-wrap">
-            <div class="modal-squircle-icon icon-indigo">
-              <span class="material-symbols-outlined">person_pin</span>
-            </div>
-            <div>
-              <div class="modal-title-row">
-                <h2>{{ lead.firstName }} {{ lead.lastName || '' }}</h2>
-                <span class="history-count-badge">
-                  {{ getLeadHistoryCalls(lead).length }} Calls Logged
-                </span>
-              </div>
-              <p class="modal-sub">
-                <a [href]="'tel:' + lead.phone" class="phone-link-sub">
-                  <span class="material-symbols-outlined fs-13">call</span>
-                  <span>{{ lead.phone }}</span>
-                </a>
-                @if (lead.email) {
-                  <span class="sub-dot">&bull;</span>
-                  <span>{{ lead.email }}</span>
-                }
-                <span class="sub-dot">&bull;</span>
-                <span class="status-mini-pill" [ngClass]="getStatusBadgeClass(lead.status)">
-                  {{ (lead.status || '').replace('_', ' ') }}
-                </span>
-              </p>
-            </div>
-          </div>
-          <button class="btn-close-modal" (click)="closeLeadDetails()" aria-label="Close">
-            <span class="material-symbols-outlined">close</span>
-          </button>
-        </div>
-
-        <!-- Modal Body: Overview Summary Grid + Call Timeline -->
-        <div class="modal-body history-modal-body">
-          <!-- Lead Metadata Summary Card -->
-          <div class="lead-detail-summary-grid">
-            <div class="detail-summary-item">
-              <span class="d-label">Campaign</span>
-              <strong class="d-val text-primary">{{ lead.campaignName || 'General Intake' }}</strong>
-            </div>
-            <div class="detail-summary-item">
-              <span class="d-label">Lead Source</span>
-              <span class="d-val source-tag">{{ lead.source || 'Digital' }}</span>
-            </div>
-            <div class="detail-summary-item">
-              <span class="d-label">Assigned Telecaller</span>
-              <strong class="d-val text-dark">{{ lead.assigneeName || 'Unassigned' }}</strong>
-            </div>
-            <div class="detail-summary-item">
-              <span class="d-label">Created By</span>
-              <span class="d-val text-subtle">{{ lead.creatorName || 'Administrator' }}</span>
-            </div>
-            <div class="detail-summary-item">
-              <span class="d-label">Created Date</span>
-              <span class="d-val">{{ lead.createdAt | date: 'mediumDate' }}</span>
-            </div>
-            <div class="detail-summary-item">
-              <span class="d-label">Total Interactions</span>
-              <strong class="d-val text-indigo">{{ getLeadHistoryCalls(lead).length }} Calls</strong>
-            </div>
-          </div>
-
-          <div class="history-timeline-section-header">
-            <div class="sec-title-wrap">
-              <span class="material-symbols-outlined fs-18 text-primary">history</span>
-              <span class="sec-title-txt">Telecalling Call History & Interaction Logs</span>
-            </div>
-          </div>
-
-          <!-- Chronological Call Activities Feed -->
-          @if (getLeadHistoryCalls(lead).length > 0) {
-            <div class="timeline-feed-list custom-scroll">
-              @for (call of getLeadHistoryCalls(lead); track call) {
-                <div class="timeline-card-item">
-                  <div class="timeline-card-top">
-                    <div class="caller-profile">
-                      <div class="caller-avatar-squircle">
-                        {{ call.telecallerName?.[0] || 'T' | uppercase }}
-                      </div>
-                      <div class="caller-meta">
-                        <span class="caller-name">{{ call.telecallerName || 'Telecaller' }}</span>
-                        <span class="call-time-txt">
-                          {{ call.calledAt | date: 'mediumDate' }} &bull;
-                          {{ call.calledAt | date: 'shortTime' }}
-                        </span>
-                      </div>
-                    </div>
-                    <span class="status-pill" [ngClass]="getStatusBadgeClass(call.outcome)">
-                      <span class="pill-glow-dot">●</span>
-                      <span class="pill-label">{{ (call.outcome || '').replace('_', ' ') }}</span>
-                    </span>
-                  </div>
-                  @if (call.remarks) {
-                    <p class="remarks-content">{{ call.remarks }}</p>
-                  }
-                  <div class="timeline-meta-footer">
-                    @if (call.durationSeconds) {
-                      <span class="meta-tag duration-tag">
-                        <span class="material-symbols-outlined fs-12">timer</span>
-                        <span>{{ call.durationSeconds }}s</span>
-                      </span>
-                    }
-                    @if (call.followUpDate) {
-                      <span class="meta-tag followup-tag">
-                        <span class="material-symbols-outlined fs-12">alarm</span>
-                        <span>Reminder: {{ call.followUpDate | date: 'mediumDate' }} {{ call.followUpTime || '' }}</span>
-                      </span>
-                    }
-                  </div>
-                </div>
-              }
-            </div>
-          }
-
-          @if (getLeadHistoryCalls(lead).length === 0) {
-            <div class="empty-timeline-box">
-              <div class="empty-icon-circle">
-                <span class="material-symbols-outlined">phone_missed</span>
-              </div>
-              <h4>No Call Logs Found</h4>
-              <p>No telecalling activities or call interaction history logged for this lead yet.</p>
-            </div>
-          }
-        </div>
-
-        <div class="modal-footer history-modal-footer">
-          <button class="btn-action-secondary btn-sm" (click)="closeLeadDetails()">Close</button>
-        </div>
-      </div>
-    </div>
-  }
+  <!-- MODAL 5: LEAD DETAILS & TELECALLING HISTORY MODAL -->
+  <app-lead-details-modal
+    [lead]="selectedLeadForDetails()"
+    [historyCalls]="getLeadHistoryCalls(selectedLeadForDetails())"
+    [getStatusBadgeClassFn]="getStatusBadgeClass.bind(this)"
+    (closeModal)="closeLeadDetails()"
+  ></app-lead-details-modal>
 </div>

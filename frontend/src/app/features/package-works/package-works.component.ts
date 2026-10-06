@@ -18,12 +18,15 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { TaskPriority } from '../../core/models/task.model';
 
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { DesignerDashboardComponent } from '../designer/designer-dashboard.component';
-import { TelecallingComponent, isLeadAssignedToUser } from '../telecalling/telecalling.component';
-import { TargetsComponent } from '../targets/targets.component';
-import { LeadsComponent } from '../leads/leads.component';
-import { CampaignsComponent } from '../campaigns/campaigns.component';
-import { AdsComponent } from '../ads/ads.component';
+import { PackageCatalogComponent } from './components/package-catalog/package-catalog.component';
+import { PackageHubOverviewComponent } from './components/package-hub-overview/package-hub-overview.component';
+import { PackageDepartmentViewComponent } from './components/package-department-view/package-department-view.component';
+import { CreatePackageModalComponent } from './components/modals/create-package-modal/create-package-modal.component';
+import { EditPackageModalComponent } from './components/modals/edit-package-modal/edit-package-modal.component';
+import { PackageDetailModalComponent } from './components/modals/package-detail-modal/package-detail-modal.component';
+import { DocViewerModalComponent } from './components/modals/doc-viewer-modal/doc-viewer-modal.component';
+import { TaskAuditModalComponent } from './components/modals/task-audit-modal/task-audit-modal.component';
+import { isLeadAssignedToUser } from '../telecalling/telecalling.component';
 
 export interface OperationDepartment {
   id: 'DESIGNER' | 'DIGITAL_MARKETING' | 'TELECALLING' | 'ANALYTICS';
@@ -42,12 +45,14 @@ export interface OperationDepartment {
     RouterModule,
     FormsModule,
     ReactiveFormsModule,
-    DesignerDashboardComponent,
-    TelecallingComponent,
-    TargetsComponent,
-    LeadsComponent,
-    CampaignsComponent,
-    AdsComponent,
+    PackageCatalogComponent,
+    PackageHubOverviewComponent,
+    PackageDepartmentViewComponent,
+    CreatePackageModalComponent,
+    EditPackageModalComponent,
+    PackageDetailModalComponent,
+    DocViewerModalComponent,
+    TaskAuditModalComponent,
   ],
   templateUrl: './package-works.component.html',
   styleUrl: './package-works.component.scss',

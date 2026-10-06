@@ -8,6 +8,12 @@ import { AuthService } from '../../core/services/auth.service';
 import { CampaignService } from '../../core/services/campaign.service';
 import { FIXED_PACKAGES } from '../../core/models/package.model';
 
+import { TelecallingKpisComponent } from './components/telecalling-kpis/telecalling-kpis.component';
+import { TelecallingPipelineStripComponent } from './components/telecalling-pipeline-strip/telecalling-pipeline-strip.component';
+import { TelecallingQueueTableComponent } from './components/telecalling-queue-table/telecalling-queue-table.component';
+import { CallHistoryModalComponent } from './components/modals/call-history-modal/call-history-modal.component';
+import { CallLogModalComponent } from './components/modals/call-log-modal/call-log-modal.component';
+
 export function isLeadAssignedToUser(l: any, user: any): boolean {
   if (!l || !user) return false;
   const uId = String(user.id || '').trim();
@@ -183,7 +189,16 @@ export function parseFollowUpDateTime(dateStr?: string, timeStr?: string): Date 
 @Component({
   selector: 'app-telecalling',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterModule,
+    TelecallingKpisComponent,
+    TelecallingPipelineStripComponent,
+    TelecallingQueueTableComponent,
+    CallHistoryModalComponent,
+    CallLogModalComponent,
+  ],
   templateUrl: './telecalling.component.html',
   styleUrl: './telecalling.component.scss',
 })
@@ -220,7 +235,6 @@ export class TelecallingComponent implements OnInit, OnDestroy {
   readonly todayDate = new Date().toISOString().split('T')[0];
   private clockInterval: any;
 
-
   readonly telecallerPerformanceList = computed(() => {
     const summary = this.leadService.summary();
     if (summary && summary.telecallerMetrics && summary.telecallerMetrics.length > 0) {
@@ -238,7 +252,6 @@ export class TelecallingComponent implements OnInit, OnDestroy {
       const assigned = allLeads.filter((l) => isLeadAssignedToUser(l, tc));
       const calls = allCalls.filter((c) => isCallMadeByUser(c, tc));
 
-      // 1 per 1 lead: count UNIQUE leads called
       const uniqueLeadsCalled = new Set(
         calls
           .map((c) => String(c.leadId || c.leadPhone || c.leadName || '').trim().toLowerCase())
@@ -293,7 +306,6 @@ export class TelecallingComponent implements OnInit, OnDestroy {
       };
     });
   });
-
 
   readonly dateFilter = signal<'ALL' | 'TODAY' | 'YESTERDAY' | 'CUSTOM'>('ALL');
   readonly customDate = signal<string>('');
@@ -366,7 +378,6 @@ export class TelecallingComponent implements OnInit, OnDestroy {
     const portfolioCampaigns = this.campaignService.campaigns();
     const leads = this.assignedLeads();
 
-    // Strictly show ONLY the campaigns from the second image (Campaigns Portfolio)
     if (portfolioCampaigns.length > 0) {
       return portfolioCampaigns.map((cmp) => {
         const count = leads.filter((l) => isLeadInCampaign(l, cmp)).length;
@@ -378,7 +389,6 @@ export class TelecallingComponent implements OnInit, OnDestroy {
       });
     }
 
-    // Fallback if portfolio campaigns are not yet loaded
     const map = new Map<string, number>();
     leads.forEach((l) => {
       const name = (l.campaignName || '').trim();
@@ -522,7 +532,6 @@ export class TelecallingComponent implements OnInit, OnDestroy {
       leads = leads.filter((l) => ['LINE_BUSY', 'BUSY', 'NO_ANSWER'].includes(this.getLeadCurrentStatus(l).toUpperCase()));
     }
 
-    // Live Search Filter (telecaller name, lead name, phone number, etc.)
     const q = this.searchQuery().trim().toLowerCase();
     if (q) {
       leads = leads.filter((l) => {
@@ -561,6 +570,15 @@ export class TelecallingComponent implements OnInit, OnDestroy {
     const start = (page - 1) * size;
     return list.slice(start, start + size);
   });
+
+  // Bound function properties to pass directly to child components
+  readonly getStatusBadgeClassFn = (status?: string) => this.getStatusBadgeClass(status);
+  readonly getLeadCurrentStatusFn = (lead: LeadItem) => this.getLeadCurrentStatus(lead);
+  readonly hasScheduledCallbackFn = (lead: LeadItem) => this.hasScheduledCallback(lead);
+  readonly getFollowUpTimeLabelFn = (lead: LeadItem) => this.getFollowUpTimeLabel(lead);
+  readonly isFollowUpDueFn = (lead: LeadItem) => this.isFollowUpDue(lead);
+  readonly getLeadCreatorNameFn = (lead: LeadItem) => this.getLeadCreatorName(lead);
+  readonly getLeadMetricsFn = (lead: LeadItem) => this.getLeadMetrics(lead);
 
   setSearchQuery(query: string) {
     this.searchQuery.set(query);
@@ -666,21 +684,15 @@ export class TelecallingComponent implements OnInit, OnDestroy {
     return Math.min(a, b);
   }
 
-  /**
-   * User-specific Recent Call Activities (Separate for each Telecaller)
-   */
   readonly displayedCalls = computed(() => {
     const allCalls = this.leadService.calls();
     const user = this.authService.currentUser();
     const filter = this.queueFilter();
 
-    // 1. Telecallers strictly see ONLY their own logged call activities
     if (this.isTelecaller()) {
       return allCalls.filter((c) => isCallMadeByUser(c, user));
     }
 
-    // 2. Administrators / Managers / Digital Marketers:
-    // If they switched to 'MY_LEADS', filter by their own user, otherwise show all team calls
     if (filter === 'MY_LEADS' && user) {
       return allCalls.filter((c) => isCallMadeByUser(c, user));
     }
@@ -695,7 +707,6 @@ export class TelecallingComponent implements OnInit, OnDestroy {
 
     const myCalls = calls.filter((c) => isCallMadeByUser(c, user));
 
-    // 1 per 1 lead: count UNIQUE leads called
     const uniqueLeadsCalled = new Set(
       myCalls
         .map((c) => String(c.leadId || c.leadPhone || c.leadName || '').trim().toLowerCase())
@@ -728,14 +739,13 @@ export class TelecallingComponent implements OnInit, OnDestroy {
 
     return {
       assignedCount: myLeads.length,
-      callsCount: uniqueLeadsCalled.size, // 1 per 1 lead
+      callsCount: uniqueLeadsCalled.size,
       interestedCount: uniqueInterestedLeads.size,
       notInterestedCount: uniqueNotInterestedLeads.size,
       attendedCount: uniqueAttendedLeads.size,
       notAttendedCount: uniqueNotAttendedLeads.size,
     };
   });
-
 
   readonly teamSummaryKpis = computed(() => {
     const list = this.telecallerPerformanceList();
@@ -763,7 +773,6 @@ export class TelecallingComponent implements OnInit, OnDestroy {
     this.userService.loadUsersFromDatabase();
     this.campaignService.loadCampaigns().subscribe();
 
-    // Periodic check to trigger real-time shake when scheduled time strikes
     this.clockInterval = setInterval(() => {
       this.currentTime.set(Date.now());
     }, 2000);
@@ -772,132 +781,6 @@ export class TelecallingComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     if (this.clockInterval) {
       clearInterval(this.clockInterval);
-    }
-  }
-
-  setDurationPreset(seconds: number) {
-    this.callDuration = seconds;
-  }
-
-  onCallOutcomeChange() {
-    if (this.callOutcome === 'BUSY' || this.callOutcome === 'LINE_BUSY' || this.callOutcome === 'NO_ANSWER' || this.callOutcome === 'WRONG_NUMBER') {
-      this.callDuration = 0;
-    } else if (this.callDuration === 0) {
-      this.callDuration = 120;
-    }
-
-    // Auto-enable scheduler when selecting FOLLOW_UP, NO_ANSWER, BUSY, LINE_BUSY, or INTERESTED
-    if (this.callOutcome === 'FOLLOW_UP' || this.callOutcome === 'NO_ANSWER' || this.callOutcome === 'BUSY' || this.callOutcome === 'LINE_BUSY' || this.callOutcome === 'INTERESTED') {
-      this.toggleReminder(true);
-    } else if (this.callOutcome === 'QUALIFIED' || this.callOutcome === 'NOT_INTERESTED' || this.callOutcome === 'CONVERTED' || this.callOutcome === 'LOST') {
-      this.clearFollowUpSchedule();
-    }
-  }
-
-  toggleReminder(forceState?: boolean) {
-    if (forceState !== undefined) {
-      this.enableReminder = forceState;
-    } else {
-      this.enableReminder = !this.enableReminder;
-    }
-
-    if (this.enableReminder) {
-      if (!this.followUpDate) {
-        const now = new Date();
-        const future = new Date(now.getTime() + 30 * 60000);
-        this.followUpDate = now.toISOString().split('T')[0];
-        const hrs = String(future.getHours()).padStart(2, '0');
-        const mins = String(future.getMinutes()).padStart(2, '0');
-        this.followUpTime = `${hrs}:${mins}`;
-      }
-    } else {
-      this.followUpDate = '';
-      this.followUpTime = '';
-    }
-  }
-
-  clearFollowUpSchedule() {
-    this.enableReminder = false;
-    this.followUpDate = '';
-    this.followUpTime = '';
-  }
-
-  shouldShowDuration(): boolean {
-    return (
-      this.callOutcome !== 'BUSY' &&
-      this.callOutcome !== 'LINE_BUSY' &&
-      this.callOutcome !== 'NO_ANSWER' &&
-      this.callOutcome !== 'WRONG_NUMBER'
-    );
-  }
-
-  setFollowUpPresetMinutes(minutes: number) {
-    this.enableReminder = true;
-    const target = new Date(Date.now() + minutes * 60000);
-    this.followUpDate = target.toISOString().split('T')[0];
-    const hrs = String(target.getHours()).padStart(2, '0');
-    const mins = String(target.getMinutes()).padStart(2, '0');
-    this.followUpTime = `${hrs}:${mins}`;
-  }
-
-  setFollowUpPresetTomorrow(hour = 10) {
-    this.enableReminder = true;
-    const target = new Date(Date.now() + 86400000);
-    this.followUpDate = target.toISOString().split('T')[0];
-    this.followUpTime = `${String(hour).padStart(2, '0')}:00`;
-  }
-
-  getRemarksPlaceholder(): string {
-    switch (this.callOutcome) {
-      case 'LINE_BUSY':
-      case 'BUSY':
-        return 'e.g. Line busy / on another call, will retry later...';
-      case 'NO_ANSWER':
-        return 'e.g. Ringing but no answer / call disconnected without response...';
-      case 'WRONG_NUMBER':
-        return 'e.g. Person answered and stated wrong person / invalid number...';
-      case 'FOLLOW_UP':
-        return 'e.g. Customer requested callback later / scheduled follow-up time...';
-      case 'INTERESTED':
-        return 'e.g. Highly interested, syllabus & fee details shared on WhatsApp...';
-      case 'NOT_INTERESTED':
-        return 'e.g. Budget constraint / already enrolled elsewhere / not looking now...';
-      case 'QUALIFIED':
-        return 'e.g. Verified eligibility, high intent lead, ready for onboarding...';
-      case 'CONNECTED':
-      default:
-        return 'e.g. Discussion completed, shared product details...';
-    }
-  }
-
-  getRemarksQuickTemplates(): string[] {
-    switch (this.callOutcome) {
-      case 'LINE_BUSY':
-      case 'BUSY':
-        return ['Line busy, retry later', 'Customer on another call', 'Network busy tone'];
-      case 'NO_ANSWER':
-        return ['Ringing, not answered', 'Call disconnected without answer', 'Switched off / out of reach'];
-      case 'WRONG_NUMBER':
-        return ['Wrong person answered', 'Number does not belong to lead', 'Invalid contact'];
-      case 'FOLLOW_UP':
-        return ['Requested callback later', 'Need to discuss with family', 'Asked to call tomorrow', 'Send details on WhatsApp first'];
-      case 'INTERESTED':
-        return ['Very interested, brochure sent', 'Asked for fee structure & discount', 'Ready for demo session', 'Requested syllabus PDF'];
-      case 'NOT_INTERESTED':
-        return ['Budget constraint', 'Already joined another institute', 'Not looking right now', 'Location too far'];
-      case 'QUALIFIED':
-        return ['High intent lead, ready to pay', 'All prerequisites verified', 'Scheduled enrollment meet', 'Direct conversion lead'];
-      case 'CONNECTED':
-      default:
-        return ['Detailed discussion held', 'Provided course overview', 'Customer requested follow-up'];
-    }
-  }
-
-  insertQuickRemark(template: string) {
-    if (!this.callRemarks || this.callRemarks.trim() === '') {
-      this.callRemarks = template;
-    } else {
-      this.callRemarks = `${this.callRemarks.trim()}, ${template}`;
     }
   }
 
@@ -911,8 +794,6 @@ export class TelecallingComponent implements OnInit, OnDestroy {
     this.callDuration = 120;
     this.callRemarks = '';
     this.nextAction = '';
-
-    // By default, reminder option starts closed until telecaller clicks "Set Reminder" or selects FOLLOW_UP
     this.enableReminder = false;
     this.followUpDate = '';
     this.followUpTime = '10:00';
@@ -963,12 +844,10 @@ export class TelecallingComponent implements OnInit, OnDestroy {
   getLeadCreatorName(lead: LeadItem): string {
     if (!lead) return 'System Administrator';
 
-    // 1. Direct creatorName property on lead if valid
     if (lead.creatorName && lead.creatorName.trim()) {
       return lead.creatorName.trim();
     }
 
-    // 2. Lookup user by creatorId / uploaderId against users list
     const cId = String(lead.creatorId || lead.uploaderId || '').trim().toLowerCase();
     if (cId) {
       const matchedUser = this.userService.users().find(
@@ -979,7 +858,6 @@ export class TelecallingComponent implements OnInit, OnDestroy {
       }
     }
 
-    // 3. Lookup user by creatorEmail / uploaderEmail against users list
     const creatorEmail = (lead.creatorEmail || lead.uploaderEmail || '').trim().toLowerCase();
     if (creatorEmail) {
       const matchedUser = this.userService.users().find(
@@ -1011,27 +889,23 @@ export class TelecallingComponent implements OnInit, OnDestroy {
 
   isFollowUpDue(lead: LeadItem): boolean {
     if (!lead) return false;
-    const nowMs = this.currentTime(); // establishes reactive tracking
+    const nowMs = this.currentTime();
 
     const metrics = this.getLeadMetrics(lead);
     const leadCalls = metrics.calls;
 
-    // 1. If lead has call activities, ONLY check the LATEST (most recent) call!
     if (leadCalls && leadCalls.length > 0) {
       const latestCall = leadCalls[0];
-      // If the latest call did not set a follow-up date (or status was updated), stop shaking!
       if (!latestCall.followUpDate) {
         return false;
       }
       const dt = parseFollowUpDateTime(latestCall.followUpDate, latestCall.followUpTime);
       if (dt) {
-        // Shake ONLY if this latest scheduled time has arrived or passed
         return nowMs >= dt.getTime();
       }
       return false;
     }
 
-    // 2. If no call activities yet, check pending follow-ups store
     const lId = String(lead.id || '').trim().toLowerCase();
     const lPhone = String(lead.phone || '').replace(/\D/g, '');
     const lName = `${lead.firstName || ''} ${lead.lastName || ''}`.trim().toLowerCase();
@@ -1129,13 +1003,17 @@ export class TelecallingComponent implements OnInit, OnDestroy {
     const outcomeFormatted = String(this.callOutcome || 'CONNECTED').toUpperCase().replace(/\s+/g, '_');
     const finalOutcome = outcomeFormatted === 'BUSY' ? 'LINE_BUSY' : outcomeFormatted;
     const leadFullName = `${lead.firstName || ''} ${lead.lastName || ''}`.trim();
-    const effectiveDuration = this.shouldShowDuration() ? (Number(this.callDuration) || 0) : 0;
+    const shouldShowDur =
+      this.callOutcome !== 'BUSY' &&
+      this.callOutcome !== 'LINE_BUSY' &&
+      this.callOutcome !== 'NO_ANSWER' &&
+      this.callOutcome !== 'WRONG_NUMBER';
+    const effectiveDuration = shouldShowDur ? (Number(this.callDuration) || 0) : 0;
     const finalFollowUp = (this.enableReminder && this.followUpDate)
       ? (this.followUpTime ? `${this.followUpDate} ${this.followUpTime}` : this.followUpDate)
       : '';
     const finalFollowUpTime = this.enableReminder ? this.followUpTime : '';
 
-    // 1. Optimistic instant UI update
     this.leadService.leads.update((list) =>
       list.map((l) => (l.id === lead.id || (l.phone && lead.phone && l.phone.replace(/\D/g, '') === lead.phone.replace(/\D/g, '')) ? { ...l, status: finalOutcome as any } : l))
     );
@@ -1239,5 +1117,3 @@ export class TelecallingComponent implements OnInit, OnDestroy {
     }
   }
 }
-
-

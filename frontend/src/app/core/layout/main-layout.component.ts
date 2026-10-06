@@ -29,7 +29,6 @@ export const ROLE_SIDEBAR_MENU: Record<string, NavMenuItem[]> = {
     { label: 'Audit Logs', route: '/audit-logs', icon: 'history' },
     { label: 'Downloads', route: '/downloads', icon: 'download' },
     { label: 'Notifications', route: '/notifications', icon: 'notifications' },
-    { label: 'Settings', route: '/settings', icon: 'settings' },
   ],
   /* MARKETING_MANAGER: [
     { label: 'Dashboard', route: '/dashboard', icon: 'dashboard' },

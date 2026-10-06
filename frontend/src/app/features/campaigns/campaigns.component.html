@@ -32,474 +32,55 @@
     </div>
   }
 
-  <section class="kpi-grid">
-    <div class="kpi-card card-revenue">
-      <div class="kpi-top-row">
-        <div class="kpi-squircle-icon icon-amber">
-          <span class="currency-symbol">₹</span>
-        </div>
-      </div>
-      <div class="kpi-body">
-        <span class="kpi-title">TOTAL AD SPEND</span>
-        <div class="kpi-value">₹{{ totalSpend() | number: '1.2-2' }}</div>
-      </div>
-      <div class="kpi-footer-row">
-        <span class="kpi-footer-text">Budget: ₹{{ totalBudget() | number: '1.0-0' }}</span>
-        <span class="kpi-footer-pill pill-amber">{{ budgetUsedPercent() }}% Allocated</span>
-      </div>
-    </div>
+  <!-- 1. Top KPI Summary Cards -->
+  <app-campaign-kpis
+    [totalSpend]="totalSpend()"
+    [totalBudget]="totalBudget()"
+    [budgetUsedPercent]="budgetUsedPercent()"
+    [totalLeads]="totalLeads()"
+    [totalQualifiedLeads]="totalQualifiedLeads()"
+    [averageCpl]="averageCpl()"
+    [totalConversions]="totalConversions()"
+    [overallConvRate]="overallConvRate()"
+  ></app-campaign-kpis>
 
-    <div class="kpi-card card-leads">
-      <div class="kpi-top-row">
-        <div class="kpi-squircle-icon icon-purple">
-          <span class="material-symbols-outlined">groups</span>
-        </div>
-      </div>
-      <div class="kpi-body">
-        <span class="kpi-title">TOTAL LEADS</span>
-        <div class="kpi-value">{{ totalLeads() | number }}</div>
-      </div>
-      <div class="kpi-footer-row">
-        <span class="kpi-footer-text">PAID: {{ totalQualifiedLeads() | number }}</span>
-        <span class="kpi-footer-pill pill-purple">+{{ totalLeads() | number }} Total</span>
-      </div>
-    </div>
+  <!-- 2. Search Box & Segmented Status Filter Tabs -->
+  <app-campaign-toolbar
+    [searchQuery]="searchQuery()"
+    [filterStatus]="filterStatus()"
+    [totalCampaignsCount]="campaignService.campaigns().length"
+    [activeCount]="activeCampaignsCount()"
+    [planningCount]="planningCampaignsCount()"
+    [pausedCount]="pausedCampaignsCount()"
+    [completedCount]="completedCampaignsCount()"
+    (searchChange)="searchQuery.set($event)"
+    (filterChange)="setFilterStatus($event)"
+  ></app-campaign-toolbar>
 
-    <div class="kpi-card card-conversion">
-      <div class="kpi-top-row">
-        <div class="kpi-squircle-icon icon-emerald">
-          <span class="material-symbols-outlined">trending_down</span>
-        </div>
-      </div>
-      <div class="kpi-body">
-        <span class="kpi-title">AVERAGE CPL</span>
-        <div class="kpi-value">₹{{ averageCpl() }}</div>
-      </div>
-      <div class="kpi-footer-progress">
-        <div class="kpi-progress-meta">
-          <span class="kpi-footer-text">Cost Efficiency</span>
-          <span class="kpi-footer-text text-emerald font-semibold">Per Acquisition</span>
-        </div>
-      </div>
-    </div>
+  <!-- 3. Primary Campaigns Table -->
+  <app-campaigns-table
+    [campaigns]="filteredCampaigns"
+    [totalCampaignsCount]="campaignService.campaigns().length"
+    [canManageCampaigns]="canManageCampaigns()"
+    (create)="openCreateModal()"
+    (edit)="openEditModal($event)"
+    (delete)="confirmDelete($event)"
+  ></app-campaigns-table>
 
-    <div class="kpi-card card-tasks">
-      <div class="kpi-top-row">
-        <div class="kpi-squircle-icon icon-rose">
-          <span class="material-symbols-outlined">verified</span>
-        </div>
-        <div class="kpi-pill-badge pill-rose">{{ overallConvRate() }}% Rate</div>
-      </div>
-      <div class="kpi-body">
-        <span class="kpi-title">TOTAL CONVERSIONS</span>
-        <div class="kpi-value">{{ totalConversions() | number }}</div>
-      </div>
-      <div class="kpi-footer-row">
-        <span class="kpi-footer-text">Funnel Yield</span>
-        <span class="kpi-footer-pill pill-rose">High Intent</span>
-      </div>
-    </div>
-  </section>
+  <!-- 4. Create / Edit Campaign Modal -->
+  <app-campaign-form-modal
+    [isOpen]="showModal()"
+    [isEditing]="isEditing()"
+    [formModel]="formModel"
+    [todayDate]="todayDate"
+    (closeModal)="closeModal()"
+    (save)="saveCampaign()"
+  ></app-campaign-form-modal>
 
-  <div class="toolbar-card">
-    <div class="search-box">
-      <span class="material-symbols-outlined search-icon">search</span>
-      <input
-        type="text"
-        [ngModel]="searchQuery()"
-        (ngModelChange)="searchQuery.set($event)"
-        placeholder="Search by campaign name or objective..."
-      />
-      @if (searchQuery()) {
-        <button class="clear-search-btn" (click)="searchQuery.set('')" title="Clear Search">
-          <span class="material-symbols-outlined">close</span>
-        </button>
-      }
-    </div>
-
-    <div class="segmented-tabs">
-      <button
-        type="button"
-        class="tab-pill-btn"
-        [class.active]="filterStatus() === 'ALL'"
-        (click)="setFilterStatus('ALL')"
-      >
-        All ({{ campaignService.campaigns().length }})
-      </button>
-
-      <button
-        type="button"
-        class="tab-pill-btn"
-        [class.active]="filterStatus() === 'ACTIVE'"
-        (click)="setFilterStatus('ACTIVE')"
-      >
-        <span class="tab-indicator-dot dot-active"></span>
-        Active ({{ activeCampaignsCount() }})
-      </button>
-
-      <button
-        type="button"
-        class="tab-pill-btn"
-        [class.active]="filterStatus() === 'PLANNING'"
-        (click)="setFilterStatus('PLANNING')"
-      >
-        <span class="tab-indicator-dot dot-planning"></span>
-        Planning ({{ planningCampaignsCount() }})
-      </button>
-
-      <button
-        type="button"
-        class="tab-pill-btn"
-        [class.active]="filterStatus() === 'PAUSED'"
-        (click)="setFilterStatus('PAUSED')"
-      >
-        <span class="tab-indicator-dot dot-paused"></span>
-        Paused ({{ pausedCampaignsCount() }})
-      </button>
-
-      <button
-        type="button"
-        class="tab-pill-btn"
-        [class.active]="filterStatus() === 'COMPLETED'"
-        (click)="setFilterStatus('COMPLETED')"
-      >
-        <span class="tab-indicator-dot dot-completed"></span>
-        Completed ({{ completedCampaignsCount() }})
-      </button>
-    </div>
-  </div>
-
-  <!-- Primary Campaigns Table Card -->
-  <div class="table-card card-campaign-perf">
-    <div class="card-title-bar">
-      <div class="title-with-badge">
-        <div class="title-icon-squircle">
-          <span class="material-symbols-outlined">analytics</span>
-        </div>
-        <div>
-          <h3>Campaigns Portfolio</h3>
-          <span class="table-sub-meta"
-            >{{ filteredCampaigns.length }} of {{ campaignService.campaigns().length }} total
-            campaigns</span
-          >
-        </div>
-      </div>
-
-      @if (canManageCampaigns()) {
-        <div class="table-actions">
-          <button class="btn-action-primary btn-sm" (click)="openCreateModal()">
-            <span class="material-symbols-outlined fs-16 icon-glow">add</span>
-            <span>New Campaign</span>
-          </button>
-        </div>
-      }
-    </div>
-
-    <div class="table-responsive">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Campaign Name</th>
-            <th>Status</th>
-            <th>Ad Spend</th>
-            <th>Leads</th>
-            <th>Avg CPL</th>
-            <th>PAID</th>
-            <th>Conversions</th>
-            <th>Conv. Rate</th>
-            @if (canManageCampaigns()) {
-              <th class="text-right">Actions</th>
-            }
-          </tr>
-        </thead>
-        <tbody>
-          @for (cmp of filteredCampaigns; track cmp) {
-            <tr class="campaign-row">
-              <!-- Campaign Name & Package / Objective -->
-              <td>
-                <div class="cmp-title-cell">
-                  <span
-                    class="cmp-color-dot"
-                    [ngClass]="{
-                      'dot-careermate': cmp.name.toLowerCase().includes('career'),
-                      'dot-classmate': cmp.name.toLowerCase().includes('class'),
-                      'dot-jesus': cmp.name.toLowerCase().includes('jesus'),
-                    }"
-                  >
-                  </span>
-                  <div class="cmp-text-stack">
-                    <span class="cmp-name-text">{{ cmp.name }}</span>
-                    <span class="cmp-sub-text">
-                      <span class="objective-badge">{{ cmp.objective | titlecase }}</span>
-                      <span class="dot-sep">&bull;</span>
-                      <span>Started {{ cmp.startDate }}</span>
-                    </span>
-                  </div>
-                </div>
-              </td>
-              <!-- Status -->
-              <td>
-                @if (cmp.status === 'ACTIVE') {
-                  <span class="status-pill status-pill-active">
-                    <span class="pill-glow-dot">●</span> ACTIVE
-                  </span>
-                }
-                @if (cmp.status === 'PLANNING') {
-                  <span class="status-pill status-pill-planning">
-                    <span class="pill-glow-dot">●</span> PLANNING
-                  </span>
-                }
-                @if (cmp.status === 'PAUSED') {
-                  <span class="status-pill status-pill-paused">
-                    <span class="pill-glow-dot">●</span> PAUSED
-                  </span>
-                }
-                @if (cmp.status === 'COMPLETED') {
-                  <span class="status-pill status-pill-completed">
-                    <span class="pill-glow-dot">●</span> COMPLETED
-                  </span>
-                }
-              </td>
-              <!-- Spend -->
-              <td>
-                <span class="metric-spend-text">₹{{ cmp.spend | number: '1.2-2' }}</span>
-              </td>
-              <!-- Leads -->
-              <td>
-                <span class="metric-leads-badge">{{ cmp.leadsCount | number }}</span>
-              </td>
-              <!-- CPL -->
-              <td>
-                <span class="metric-cpl-badge">₹{{ cmp.cpl | number: '1.2-2' }}</span>
-              </td>
-              <!-- Qualified Leads -->
-              <td>
-                <span class="metric-qualified-text">{{ cmp.qualifiedLeads | number }}</span>
-              </td>
-              <!-- Conversions -->
-              <td>
-                <span class="metric-conv-val font-bold">{{ cmp.conversions | number }}</span>
-              </td>
-              <!-- Conv. Rate -->
-              <td>
-                <div class="conv-rate-wrap">
-                  <div class="conv-rate-header">
-                    <span class="rate-val font-bold">{{ cmp.convRate }}%</span>
-                  </div>
-                  <div class="rate-bar-bg">
-                    <div
-                      class="rate-bar-fill"
-                      [style.width.%]="cmp.convRate > 100 ? 100 : cmp.convRate"
-                    ></div>
-                  </div>
-                </div>
-              </td>
-              <!-- Actions -->
-              @if (canManageCampaigns()) {
-                <td class="text-right actions-col">
-                  <div class="action-buttons-group">
-                    <button
-                      class="btn-icon-action btn-edit"
-                      (click)="openEditModal(cmp)"
-                      title="Edit Campaign"
-                    >
-                      <span class="material-symbols-outlined">edit</span>
-                    </button>
-                    <button
-                      class="btn-icon-action btn-delete"
-                      (click)="confirmDelete(cmp)"
-                      title="Delete Campaign"
-                    >
-                      <span class="material-symbols-outlined">delete</span>
-                    </button>
-                  </div>
-                </td>
-              }
-            </tr>
-          }
-
-          <!-- Empty State -->
-          @if (filteredCampaigns.length === 0) {
-            <tr>
-              <td [attr.colspan]="canManageCampaigns() ? 9 : 8" class="empty-state-cell">
-                <div class="empty-state-box">
-                  <div class="empty-icon-squircle">
-                    <span class="material-symbols-outlined">campaign</span>
-                  </div>
-                  <h4 class="empty-title">No campaigns found</h4>
-                  <p class="empty-subtitle">
-                    Create a new digital marketing campaign or adjust your active search/filter
-                    criteria.
-                  </p>
-                  @if (canManageCampaigns()) {
-                    <button class="btn-action-primary btn-sm" (click)="openCreateModal()">
-                      <span class="material-symbols-outlined icon-glow">add</span>
-                      <span>Create Campaign</span>
-                    </button>
-                  }
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- CREATE / EDIT MODAL -->
-  @if (showModal()) {
-    <div class="modal-backdrop" (click)="closeModal()">
-      <div class="modal-card modal-lg" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <div class="modal-title-wrap">
-            <div class="modal-squircle-icon">
-              <span class="material-symbols-outlined">{{
-                isEditing() ? 'edit_note' : 'add_circle'
-              }}</span>
-            </div>
-            <div>
-              <h2>{{ isEditing() ? 'Edit Campaign' : 'Create New Campaign' }}</h2>
-              <p class="modal-sub">Configure ad spend, lead targets, CPL goals, and timelines</p>
-            </div>
-          </div>
-          <button class="btn-close-modal" (click)="closeModal()" aria-label="Close">
-            <span class="material-symbols-outlined">close</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          <div class="form-row">
-            <div class="form-group flex-2">
-              <label class="form-label">Campaign Name <span class="required">*</span></label>
-              <input
-                type="text"
-                [(ngModel)]="formModel.name"
-                placeholder="e.g. Meta Q4 Leads Acceleration"
-                class="form-input"
-              />
-            </div>
-            <div class="form-group flex-1">
-              <label class="form-label">Status</label>
-              <select [(ngModel)]="formModel.status" class="form-input">
-                <option value="ACTIVE">Active</option>
-                <option value="PLANNING">Planning</option>
-                <option value="PAUSED">Paused</option>
-                <option value="COMPLETED">Completed</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group flex-1">
-              <label class="form-label">Objective</label>
-              <select [(ngModel)]="formModel.objective" class="form-input">
-                <option value="LEAD_GENERATION">Lead Generation</option>
-                <option value="BRAND_AWARENESS">Brand Awareness</option>
-                <option value="PERFORMANCE_SCALE">Performance Scale</option>
-                <option value="RETARGETING">Retargeting</option>
-              </select>
-            </div>
-            <div class="form-group flex-1">
-              <label class="form-label">Start Date</label>
-              <input
-                type="date"
-                [(ngModel)]="formModel.startDate"
-                [min]="todayDate"
-                class="form-input"
-              />
-            </div>
-            <div class="form-group flex-1">
-              <label class="form-label">Budget (₹)</label>
-              <input type="number" [(ngModel)]="formModel.budget" min="0" class="form-input" />
-            </div>
-          </div>
-          <!-- Metrics Row with Live Calculation Previews -->
-          <div class="section-divider">
-            <span>Performance & Conversion Metrics</span>
-          </div>
-          <div class="form-row">
-            <div class="form-group flex-1">
-              <label class="form-label">Spend (₹)</label>
-              <input type="number" [(ngModel)]="formModel.spend" min="0" class="form-input" />
-            </div>
-            <div class="form-group flex-1">
-              <label class="form-label">Leads Count</label>
-              <input type="number" [(ngModel)]="formModel.leadsCount" min="0" class="form-input" />
-            </div>
-            <div class="form-group flex-1">
-              <label class="form-label">PAID Leads</label>
-              <input
-                type="number"
-                [(ngModel)]="formModel.qualifiedLeads"
-                min="0"
-                class="form-input"
-              />
-            </div>
-            <div class="form-group flex-1">
-              <label class="form-label">Conversions</label>
-              <input type="number" [(ngModel)]="formModel.conversions" min="0" class="form-input" />
-            </div>
-          </div>
-          <!-- Auto Computed Metrics Badges -->
-          <div class="live-calc-panel">
-            <div class="calc-item calc-item-emerald">
-              <span class="calc-label">Auto-Computed CPL</span>
-              <span class="calc-val">₹{{ computedModalCpl }}</span>
-              <span class="calc-formula">(Spend / Leads)</span>
-            </div>
-            <div class="calc-item calc-item-purple">
-              <span class="calc-label">Auto-Computed Conv. Rate</span>
-              <span class="calc-val">{{ computedModalConvRate }}%</span>
-              <span class="calc-formula">(Conversions / Leads * 100)</span>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn-action-secondary" (click)="closeModal()">Cancel</button>
-          <button class="btn-action-primary" (click)="saveCampaign()">
-            <span class="material-symbols-outlined icon-glow">save</span>
-            <span>{{ isEditing() ? 'Update Campaign' : 'Save Campaign' }}</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  }
-
-  <!-- DELETE CONFIRMATION MODAL -->
-  @if (deleteConfirmTarget()) {
-    <div class="modal-backdrop" (click)="cancelDelete()">
-      <div class="modal-card modal-sm" (click)="$event.stopPropagation()">
-        <div class="modal-header header-danger">
-          <div class="modal-title-wrap">
-            <div class="modal-squircle-icon icon-danger">
-              <span class="material-symbols-outlined">warning</span>
-            </div>
-            <div>
-              <h2>Delete Campaign</h2>
-              <p class="modal-sub">Irreversible action confirmation</p>
-            </div>
-          </div>
-          <button class="btn-close-modal" (click)="cancelDelete()">
-            <span class="material-symbols-outlined">close</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          <p class="delete-msg">
-            Are you sure you want to delete
-            <strong class="delete-target-name">{{ deleteConfirmTarget()?.name }}</strong
-            >?
-          </p>
-          <p class="delete-sub">
-            This action will remove all associated campaign metrics, spend calculations, and
-            historical lead link data.
-          </p>
-        </div>
-        <div class="modal-footer">
-          <button class="btn-action-secondary" (click)="cancelDelete()">Cancel</button>
-          <button class="btn-action-danger" (click)="executeDelete()">
-            <span class="material-symbols-outlined">delete_forever</span>
-            <span>Delete Campaign</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  }
+  <!-- 5. Delete Confirmation Modal -->
+  <app-campaign-delete-modal
+    [target]="deleteConfirmTarget()"
+    (cancel)="cancelDelete()"
+    (confirm)="executeDelete()"
+  ></app-campaign-delete-modal>
 </div>

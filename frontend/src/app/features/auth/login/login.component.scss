@@ -1,8 +1,3 @@
-/* ==========================================================================
-   MARKOPS CLEAN CENTERED LOGIN PAGE
-   Visual direction: Modern, minimalist B2B SaaS authentication
-   Centered brand logo + card, refined typography, smooth focus states
-   ========================================================================== */
 
 .mo-login-page {
   display: flex;
@@ -28,9 +23,6 @@
   align-items: center;
 }
 
-/* --------------------------------------------------------------------------
-   BRAND HEADER (Centered Favicon Logo + Title)
-   -------------------------------------------------------------------------- */
 .mo-brand-header {
   display: flex;
   align-items: center;
@@ -77,9 +69,7 @@
   }
 }
 
-/* --------------------------------------------------------------------------
-   CARD WRAPPER
-   -------------------------------------------------------------------------- */
+
 .mo-card-wrapper {
   width: 100%;
   background-color: #FFFFFF;
@@ -120,7 +110,7 @@
   }
 }
 
-/* Global Auth Error Alert */
+
 .mo-alert {
   display: flex;
   align-items: center;
@@ -141,7 +131,7 @@
   }
 }
 
-/* Form Styles */
+
 .mo-login-form {
   display: flex;
   flex-direction: column;
@@ -323,9 +313,7 @@
   }
 }
 
-/* --------------------------------------------------------------------------
-   FOOTER
-   -------------------------------------------------------------------------- */
+
 .mo-login-footer {
   margin-top: 1.85rem;
   text-align: center;

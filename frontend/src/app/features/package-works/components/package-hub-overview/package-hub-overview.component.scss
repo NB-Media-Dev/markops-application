@@ -1,0 +1,374 @@
+/* Package Workspace KPIs (Rich Elevated 3-Card Bar) */
+.kpi-grid.package-hub-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.15rem;
+  margin-bottom: 1.5rem;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+
+  .hub-kpi-card {
+    background: #FFFFFF;
+    border-radius: 16px;
+    padding: 1.1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.02);
+    border: 1.5px solid transparent;
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+
+    &:hover {
+      transform: translateY(-2px);
+    }
+
+    .kpi-squircle-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFFFFF;
+      flex-shrink: 0;
+
+      .material-symbols-outlined {
+        font-size: 22px;
+      }
+    }
+
+    .kpi-info-cluster {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      flex: 1;
+
+      .kpi-top-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+
+        .kpi-title {
+          font-size: 0.75rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          color: #64748B;
+        }
+
+        .kpi-badge-chip {
+          font-size: 0.65rem;
+          font-weight: 700;
+          padding: 0.15rem 0.5rem;
+          border-radius: 999px;
+          letter-spacing: 0.02em;
+        }
+      }
+
+      .kpi-value {
+        font-family: var(--mo-font-sans);
+        font-size: 1.65rem;
+        font-weight: 800;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        color: #0F172A;
+      }
+    }
+
+    &.card-tasks {
+      border-color: #FECDD3;
+      background: linear-gradient(135deg, #FFFFFF 0%, #FFF5F7 100%);
+      &:hover { border-color: #F43F5E; box-shadow: 0 8px 24px rgba(244, 63, 94, 0.15); }
+      .icon-rose { background: linear-gradient(135deg, #F43F5E 0%, #E11D48 100%); box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3); }
+      .chip-rose { background: #FFE4E6; color: #BE123C; }
+    }
+
+    &.card-revenue {
+      border-color: #FDE68A;
+      background: linear-gradient(135deg, #FFFFFF 0%, #FFFDF0 100%);
+      &:hover { border-color: #F59E0B; box-shadow: 0 8px 24px rgba(245, 158, 11, 0.15); }
+      .icon-amber { background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3); }
+      .chip-amber { background: #FEF3C7; color: #B45309; }
+    }
+
+    &.card-leads {
+      border-color: #DDD6FE;
+      background: linear-gradient(135deg, #FFFFFF 0%, #FAF5FF 100%);
+      &:hover { border-color: #8B5CF6; box-shadow: 0 8px 24px rgba(139, 92, 246, 0.15); }
+      .icon-purple { background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%); box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3); }
+      .chip-purple { background: #EDE9FE; color: #6D28D9; }
+    }
+  }
+}
+
+/* Hub Section Title Bar */
+.hub-section-header {
+  margin-bottom: 1rem;
+
+  .hub-section-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #0F172A;
+    letter-spacing: -0.015em;
+    margin: 0;
+  }
+}
+
+/* Hub 4 Department Showcase Grid */
+.hub-departments-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.85rem;
+  margin-bottom: 1.15rem;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+
+  .dept-showcase-card {
+    min-height: 155px;
+    border-radius: 16px;
+    padding: 1.1rem 1.15rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1.5px solid transparent;
+
+    &:hover {
+      transform: translateY(-3px);
+
+      .dept-card-action .action-arrow {
+        transform: translateX(3px);
+      }
+    }
+
+    .dept-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.6rem;
+
+      .dept-card-icon-box {
+        width: 40px;
+        height: 40px;
+        border-radius: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #FFFFFF;
+        flex-shrink: 0;
+
+        .material-symbols-outlined {
+          font-size: 21px;
+        }
+      }
+
+      .dept-card-badge {
+        font-size: 0.65rem;
+        font-weight: 700;
+        padding: 0.2rem 0.55rem;
+        border-radius: 999px;
+        letter-spacing: 0.01em;
+        white-space: nowrap;
+      }
+    }
+
+    .dept-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      margin-bottom: 0.65rem;
+      flex: 1;
+
+      .dept-card-title {
+        font-size: 1.05rem;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+
+    .dept-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding-top: 0.65rem;
+      border-top: 1px solid rgba(0, 0, 0, 0.06);
+
+      .dept-card-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.775rem;
+        font-weight: 800;
+        margin-left: auto;
+        white-space: nowrap;
+
+        .action-arrow {
+          font-size: 15px;
+          transition: transform 0.2s ease;
+        }
+      }
+    }
+
+    /* THEME 1: DESIGNER */
+    &.dept-card-designer {
+      background: linear-gradient(145deg, #FFF1F2 0%, #FFE4E6 50%, #FECDD3 100%);
+      border-color: #FDA4AF;
+      box-shadow: 0 6px 20px rgba(244, 63, 94, 0.08), 0 2px 4px rgba(0, 0, 0, 0.02);
+
+      &:hover {
+        border-color: #F43F5E;
+        box-shadow: 0 12px 28px rgba(244, 63, 94, 0.18);
+      }
+
+      .dept-card-icon-box {
+        background: linear-gradient(135deg, #F43F5E 0%, #E11D48 100%);
+        box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3);
+      }
+
+      .dept-card-badge {
+        background: #FFE4E6;
+        color: #9F1239;
+        border: 1px solid #FECDD3;
+      }
+
+      .dept-card-title {
+        color: #881337;
+      }
+
+      .dept-card-footer {
+        border-top-color: rgba(225, 29, 72, 0.12);
+
+        .dept-card-action {
+          color: #E11D48;
+        }
+      }
+    }
+
+    /* THEME 2: DIGITAL MARKETING */
+    &.dept-card-digital_marketing {
+      background: linear-gradient(145deg, #FFFBEB 0%, #FEF3C7 50%, #FDE68A 100%);
+      border-color: #FCD34D;
+      box-shadow: 0 6px 20px rgba(245, 158, 11, 0.08), 0 2px 4px rgba(0, 0, 0, 0.02);
+
+      &:hover {
+        border-color: #F59E0B;
+        box-shadow: 0 12px 28px rgba(245, 158, 11, 0.18);
+      }
+
+      .dept-card-icon-box {
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+      }
+
+      .dept-card-badge {
+        background: #FEF3C7;
+        color: #92400E;
+        border: 1px solid #FDE68A;
+      }
+
+      .dept-card-title {
+        color: #78350F;
+      }
+
+      .dept-card-footer {
+        border-top-color: rgba(217, 119, 6, 0.12);
+
+        .dept-card-action {
+          color: #D97706;
+        }
+      }
+    }
+
+    /* THEME 3: TELECALLING */
+    &.dept-card-telecalling {
+      background: linear-gradient(145deg, #F5F3FF 0%, #EDE9FE 50%, #DDD6FE 100%);
+      border-color: #C4B5FD;
+      box-shadow: 0 6px 20px rgba(139, 92, 246, 0.08), 0 2px 4px rgba(0, 0, 0, 0.02);
+
+      &:hover {
+        border-color: #8B5CF6;
+        box-shadow: 0 12px 28px rgba(139, 92, 246, 0.18);
+      }
+
+      .dept-card-icon-box {
+        background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+      }
+
+      .dept-card-badge {
+        background: #EDE9FE;
+        color: #5B21B6;
+        border: 1px solid #DDD6FE;
+      }
+
+      .dept-card-title {
+        color: #3B0764;
+      }
+
+      .dept-card-footer {
+        border-top-color: rgba(109, 40, 217, 0.12);
+
+        .dept-card-action {
+          color: #7C3AED;
+        }
+      }
+    }
+
+    /* THEME 4: ANALYTICS */
+    &.dept-card-analytics {
+      background: linear-gradient(145deg, #ECFDF5 0%, #D1FAE5 50%, #A7F3D0 100%);
+      border-color: #6EE7B7;
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.08), 0 2px 4px rgba(0, 0, 0, 0.02);
+
+      &:hover {
+        border-color: #10B981;
+        box-shadow: 0 12px 28px rgba(16, 185, 129, 0.18);
+      }
+
+      .dept-card-icon-box {
+        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+      }
+
+      .dept-card-badge {
+        background: #D1FAE5;
+        color: #065F46;
+        border: 1px solid #A7F3D0;
+      }
+
+      .dept-card-title {
+        color: #064E3B;
+      }
+
+      .dept-card-footer {
+        border-top-color: rgba(5, 150, 105, 0.12);
+
+        .dept-card-action {
+          color: #059669;
+        }
+      }
+    }
+  }
+}
